@@ -17,6 +17,8 @@ public partial class Enemy : CharacterBody2D
 
 	private float _contactCd;
 	private Sprite2D _sprite;
+	private UnitSpriteAnim _anim;
+	private Vector2 _spriteBaseScale;
 	private float _summonCd;
 
 	public override void _Ready()
@@ -28,14 +30,10 @@ public partial class Enemy : CharacterBody2D
 
 		_sprite = new Sprite2D
 		{
-			Scale = new Vector2(IsElite ? 0.48f : 0.38f, IsElite ? 0.48f : 0.38f),
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
 		};
 		AddChild(_sprite);
-		string path = IsElite ? "res://assets/enemies/enemy_elite.png" : "res://assets/enemies/enemy_basic.png";
-		if (ResourceLoader.Exists(path))
-			_sprite.Texture = GD.Load<Texture2D>(path);
-		QueueRedraw();
+		ApplyVisual();
 	}
 
 	public void ConfigureBasic(float hpMul, float spdMul)
@@ -57,6 +55,28 @@ public partial class Enemy : CharacterBody2D
 		XpValue = 18f;
 		if (affix == "冲刺") Speed = 95f;
 		if (affix == "护盾") { MaxHp *= 1.4f; Hp = MaxHp; }
+		// AddChild 已触发 _Ready（当时还不是精英），此处补刷贴图与动效幅度
+		ApplyVisual();
+	}
+
+	private void ApplyVisual()
+	{
+		_spriteBaseScale = new Vector2(IsElite ? 0.48f : 0.38f, IsElite ? 0.48f : 0.38f);
+		if (_sprite != null)
+		{
+			string path = IsElite ? "res://assets/enemies/enemy_elite.png" : "res://assets/enemies/enemy_basic.png";
+			if (ResourceLoader.Exists(path))
+				_sprite.Texture = GD.Load<Texture2D>(path);
+			_sprite.Scale = _spriteBaseScale;
+		}
+		float phase = (float)GD.RandRange(0.0, 2.5);
+		_anim = new UnitSpriteAnim(
+			_sprite,
+			_spriteBaseScale,
+			hopAmp: IsElite ? 5.2f : 4.4f,
+			swayAmp: IsElite ? 0.14f : 0.16f,
+			phaseOffset: phase);
+		QueueRedraw();
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -87,10 +107,12 @@ public partial class Enemy : CharacterBody2D
 		float bodyR = IsElite ? 18f : 12f;
 		float contactRange = 14f + bodyR + 4f;
 		float stopRange = contactRange - 2f;
+		bool moving = false;
 		if (dist > stopRange)
 		{
 			Velocity = toHero.Normalized() * Speed * SlowFactor;
 			MoveAndSlide();
+			moving = true;
 		}
 		else
 		{
@@ -102,6 +124,16 @@ public partial class Enemy : CharacterBody2D
 		{
 			_contactCd = ContactCooldown;
 			hero.TakeDamage(ContactDamage);
+			_anim?.PlayAttack(0.24f);
+		}
+
+		if (_anim != null)
+		{
+			_anim.SetMoving(moving);
+			if (toHero.LengthSquared() > 0.0001f)
+				_anim.SetFacingX(toHero.X);
+			_anim.SetWalkHz(6.5f + Speed / 40f);
+			_anim.Update(dt);
 		}
 		QueueRedraw();
 	}
@@ -118,6 +150,7 @@ public partial class Enemy : CharacterBody2D
 	public void TakeDamage(float amount)
 	{
 		Hp -= amount;
+		_anim?.PlayHit();
 		QueueRedraw();
 		if (Hp <= 0f)
 		{

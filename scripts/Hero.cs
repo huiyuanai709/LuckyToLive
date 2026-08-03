@@ -20,6 +20,8 @@ public partial class Hero : CharacterBody2D
 	private readonly Dictionary<string, BeamEmitter> _beams = new();
 	private Enemy _target;
 	private Sprite2D _sprite;
+	private UnitSpriteAnim _anim;
+	private readonly Vector2 _spriteBaseScale = new(0.42f, 0.42f);
 	/// <summary>最后一次移动方向；站住时射线保持该朝向。</summary>
 	private Vector2 _facing = Vector2.Right;
 
@@ -32,10 +34,11 @@ public partial class Hero : CharacterBody2D
 
 		_sprite = new Sprite2D
 		{
-			Scale = new Vector2(0.42f, 0.42f),
+			Scale = _spriteBaseScale,
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
 		};
 		AddChild(_sprite);
+		_anim = new UnitSpriteAnim(_sprite, _spriteBaseScale, hopAmp: 4.2f, swayAmp: 0.12f);
 		ApplySprite();
 		EmitSignal(SignalName.HpChanged, Hp, MaxHp);
 		EmitSignal(SignalName.XpChanged, Level, Xp, XpToNext());
@@ -88,6 +91,7 @@ public partial class Hero : CharacterBody2D
 	public void TakeDamage(float amount)
 	{
 		Hp -= amount;
+		_anim?.PlayHit();
 		EmitSignal(SignalName.HpChanged, Hp, MaxHp);
 		QueueRedraw();
 		if (Hp <= 0f)
@@ -109,13 +113,24 @@ public partial class Hero : CharacterBody2D
 		Vector2 input = Input.GetVector("move_left", "move_right", "move_up", "move_down");
 		Velocity = input * MoveSpeed;
 		MoveAndSlide();
-		if (input.LengthSquared() > 0.0001f) _facing = input.Normalized();
+		bool moving = input.LengthSquared() > 0.0001f;
+		if (moving) _facing = input.Normalized();
 
 		if (RegenPerSec > 0) Heal(RegenPerSec * dt);
 
 		AcquireTarget();
 		TickWeapons(dt);
 		TickBeams(dt);
+		TickAnim(dt, moving);
+	}
+
+	private void TickAnim(float dt, bool moving)
+	{
+		if (_anim == null) return;
+		_anim.SetMoving(moving);
+		_anim.SetFacingX(_facing.X);
+		_anim.SetWalkHz(7.5f + MoveSpeed / 60f);
+		_anim.Update(dt);
 	}
 
 	/// <summary>持续射线自成节奏（持续/冷却），不走 TryFire 的攻速冷却。</summary>
@@ -174,18 +189,29 @@ public partial class Hero : CharacterBody2D
 		float dist = GlobalPosition.DistanceTo(_target.GlobalPosition);
 		if (dist > item.Range + 20f && item.WeaponStyle is not ("slash" or "charge")) return false;
 
+		Vector2 toTarget = _target.GlobalPosition - GlobalPosition;
+		if (toTarget.LengthSquared() > 0.0001f)
+			_anim?.SetFacingX(toTarget.X);
+
+		bool fired;
 		switch (item.WeaponStyle)
 		{
 			case "slash":
 				MeleeHit(item, item.Range);
-				return true;
+				fired = true;
+				break;
 			case "charge":
 				MeleeHit(item, item.Range);
-				return true;
+				fired = true;
+				break;
 			default:
 				FireProjectile(item);
-				return true;
+				fired = true;
+				break;
 		}
+		if (fired)
+			_anim?.PlayAttack(item.WeaponStyle is "slash" or "charge" ? 0.28f : 0.18f);
+		return fired;
 	}
 
 	private void MeleeHit(SlotItem item, float range)
