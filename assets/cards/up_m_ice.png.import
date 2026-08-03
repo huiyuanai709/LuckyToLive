@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://gca0x97tzcnju"
-path="res://.godot/imported/up_m_ice-d71d46219cdfb781f4a9688728d1de6c.ctex"
+uid="uid://cgu5d8blf4rr3"
+path="res://.godot/imported/up_m_ice.png-d71d46219cdfb781f4a9688728d1de6c.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/up_m_ice.png"
-dest_files=["res://.godot/imported/up_m_ice-d71d46219cdfb781f4a9688728d1de6c.ctex"]
+dest_files=["res://.godot/imported/up_m_ice.png-d71d46219cdfb781f4a9688728d1de6c.ctex"]
 
 [params]
 

@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://exx8vchsztkrg"
-path="res://.godot/imported/h_pet-2c524c8478349c3c25346af989197a2f.ctex"
+uid="uid://3kebakkgmo0o"
+path="res://.godot/imported/h_pet.png-2c524c8478349c3c25346af989197a2f.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/h_pet.png"
-dest_files=["res://.godot/imported/h_pet-2c524c8478349c3c25346af989197a2f.ctex"]
+dest_files=["res://.godot/imported/h_pet.png-2c524c8478349c3c25346af989197a2f.ctex"]
 
 [params]
 

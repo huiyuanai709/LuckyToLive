@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://wyovhariqz04q"
-path="res://.godot/imported/up_w_wall-ee51971ca88d861a04e4c7dfbb729e14.ctex"
+uid="uid://dnnjiy58w0ncw"
+path="res://.godot/imported/up_w_wall.png-ee51971ca88d861a04e4c7dfbb729e14.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/up_w_wall.png"
-dest_files=["res://.godot/imported/up_w_wall-ee51971ca88d861a04e4c7dfbb729e14.ctex"]
+dest_files=["res://.godot/imported/up_w_wall.png-ee51971ca88d861a04e4c7dfbb729e14.ctex"]
 
 [params]
 

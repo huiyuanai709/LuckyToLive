@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://muhe8i03gl4la"
-path="res://.godot/imported/up_h_trap-fd31fec48746ba77af562e932a39aef0.ctex"
+uid="uid://88shdacq0iby"
+path="res://.godot/imported/up_h_trap.png-fd31fec48746ba77af562e932a39aef0.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/up_h_trap.png"
-dest_files=["res://.godot/imported/up_h_trap-fd31fec48746ba77af562e932a39aef0.ctex"]
+dest_files=["res://.godot/imported/up_h_trap.png-fd31fec48746ba77af562e932a39aef0.ctex"]
 
 [params]
 

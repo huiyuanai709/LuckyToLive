@@ -83,7 +83,11 @@ public partial class Enemy : CharacterBody2D
 
 		Vector2 toHero = hero.GlobalPosition - GlobalPosition;
 		float dist = toHero.Length();
-		if (dist > 18f)
+		// 英雄圆半径 14 + 怪 12/18 ≈ 26/32；停步与接触距离必须大于该分离距离，否则贴身也打不到
+		float bodyR = IsElite ? 18f : 12f;
+		float contactRange = 14f + bodyR + 4f;
+		float stopRange = contactRange - 2f;
+		if (dist > stopRange)
 		{
 			Velocity = toHero.Normalized() * Speed * SlowFactor;
 			MoveAndSlide();
@@ -94,7 +98,7 @@ public partial class Enemy : CharacterBody2D
 		}
 
 		_contactCd -= dt;
-		if (dist < 22f && _contactCd <= 0f)
+		if (dist < contactRange && _contactCd <= 0f)
 		{
 			_contactCd = ContactCooldown;
 			hero.TakeDamage(ContactDamage);

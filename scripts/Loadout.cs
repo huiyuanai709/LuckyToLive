@@ -19,7 +19,7 @@ public class Loadout
 		{
 			var existing = GetItem(card.GrantsItemId);
 			if (existing == null) return null;
-			UpgradeItem(existing, card.UpgradeStat);
+			UpgradeItem(existing, card.UpgradeStat, card);
 			SyncEntityStats(existing);
 			return existing;
 		}
@@ -29,7 +29,7 @@ public class Loadout
 			if (HasItem(card.GrantsItemId))
 			{
 				var p = GetItem(card.GrantsItemId);
-				UpgradeItem(p, card.UpgradeStat);
+				UpgradeItem(p, card.UpgradeStat, card);
 				ApplyPassive(p, hero);
 				return p;
 			}
@@ -73,6 +73,8 @@ public class Loadout
 			BuildingStyle = card.BuildingStyle,
 			PetStyle = card.PetStyle,
 			Level = 1,
+			ProjectileTexture = card.ProjectileTexture,
+			BeamAnglesDeg = card.BeamAnglesDeg,
 		};
 		switch (card.WeaponStyle)
 		{
@@ -87,7 +89,10 @@ public class Loadout
 			case "fireball":
 				item.Damage = 16; item.FireRate = 0.75f; item.Range = 180; item.Splash = 50; break;
 			case "beam":
-				item.Damage = 8; item.FireRate = 4.0f; item.Range = 240; break;
+				// 持续射线：伤害为每次 tick 的量，tick 间隔由 BeamEmitter.TickInterval 全局决定
+				item.Damage = 8; item.Range = 240;
+				item.BeamDuration = 2.5f; item.BeamCooldown = 3.0f; item.BeamRays = 1;
+				break;
 		}
 		switch (card.BuildingStyle)
 		{
@@ -111,11 +116,31 @@ public class Loadout
 		return item;
 	}
 
-	private static void UpgradeItem(SlotItem item, string stat)
+	private static void UpgradeItem(SlotItem item, string stat, CardDef card = null)
 	{
 		item.Level += 1;
 		switch (stat)
 		{
+			case "beam_focus":
+				item.Damage += 3;
+				item.Range += 24 + (card?.BeamLengthAdd ?? 0f);
+				break;
+			case "beam_rays":
+				if (card?.BeamAnglesDeg != null && card.BeamAnglesDeg.Length > 0)
+				{
+					// 覆盖式：直接采用卡牌声明的角度列表
+					item.BeamAnglesDeg = card.BeamAnglesDeg;
+					item.BeamRays = card.BeamAnglesDeg.Length;
+				}
+				else
+				{
+					// 默认规则：只加条数，角度由 Beam.DefaultAngles 均分/对称推出
+					item.BeamRays += Mathf.Max(1, card?.BeamRaysAdd ?? 1);
+					item.BeamAnglesDeg = null;
+				}
+				item.Range += card?.BeamLengthAdd ?? 0f;
+				item.Damage += 2; // 重复选到时也有增益，避免死卡
+				break;
 			case "damage":
 				item.Damage += 4 + item.Level; break;
 			case "rate":

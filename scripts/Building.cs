@@ -6,6 +6,9 @@ public partial class Building : Node2D
 	public float Hp = 80f;
 	private float _cd;
 	private float _tick;
+	private Texture2D _tex;
+	/// <summary>建筑贴图在世界中的目标显示直径（像素）。</summary>
+	private float _visualSize = 64f;
 
 	public static Building SpawnNear(Node2D world, Hero hero, SlotItem item)
 	{
@@ -44,12 +47,21 @@ public partial class Building : Node2D
 	{
 		Item = item;
 		Hp = 60 + item.Level * 20;
+		_tex = LoadArt(item);
 		QueueRedraw();
+	}
+
+	private static Texture2D LoadArt(SlotItem item)
+	{
+		if (item == null || string.IsNullOrEmpty(item.ItemId)) return null;
+		string path = $"res://assets/cards/{item.ItemId}.png";
+		return ResourceLoader.Exists(path) ? GD.Load<Texture2D>(path) : null;
 	}
 
 	public override void _Ready()
 	{
 		AddToGroup("buildings");
+		if (Item != null) _tex = LoadArt(Item);
 		QueueRedraw();
 	}
 
@@ -142,6 +154,26 @@ public partial class Building : Node2D
 
 	public override void _Draw()
 	{
+		if (Item == null) return;
+
+		// 光环类建筑：先画范围圈，再叠贴图
+		if (Item.BuildingStyle is "slow_field" or "heal_totem")
+		{
+			Color aura = Item.BuildingStyle == "slow_field"
+				? new Color(0.4f, 0.75f, 1f, 0.35f)
+				: new Color(0.3f, 0.9f, 0.5f, 0.28f);
+			DrawCircle(Vector2.Zero, Item.Range, aura);
+		}
+
+		if (_tex != null)
+		{
+			Vector2 size = _tex.GetSize();
+			float scale = _visualSize / Mathf.Max(size.X, size.Y);
+			Vector2 draw = size * scale;
+			DrawTextureRect(_tex, new Rect2(-draw / 2f, draw), false);
+			return;
+		}
+
 		Color c = Item.BuildingStyle switch
 		{
 			"turret_fire" => new Color(0.95f, 0.4f, 0.15f),
@@ -151,9 +183,8 @@ public partial class Building : Node2D
 			"trap" => new Color(0.8f, 0.6f, 0.2f),
 			_ => new Color(0.55f, 0.55f, 0.6f),
 		};
-		if (Item.BuildingStyle is "slow_field" or "heal_totem")
-			DrawCircle(Vector2.Zero, Item.Range, c);
-		else
+		// 光环范围已在上方画过；此处只画实体占位
+		if (Item.BuildingStyle is not ("slow_field" or "heal_totem"))
 			DrawRect(new Rect2(-14, -14, 28, 28), c);
 		DrawCircle(Vector2.Zero, 6, c.Lightened(0.3f));
 	}

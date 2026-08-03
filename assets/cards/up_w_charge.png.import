@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ojmyw6hjnt4b3"
-path="res://.godot/imported/up_w_charge-6a9237215029f46e81487df74dac95a4.ctex"
+uid="uid://cxfd50prx8h1s"
+path="res://.godot/imported/up_w_charge.png-6a9237215029f46e81487df74dac95a4.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/up_w_charge.png"
-dest_files=["res://.godot/imported/up_w_charge-6a9237215029f46e81487df74dac95a4.ctex"]
+dest_files=["res://.godot/imported/up_w_charge.png-6a9237215029f46e81487df74dac95a4.ctex"]
 
 [params]
 

@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://e67xfr35achaq"
-path="res://.godot/imported/m_ice-9a299a387d9d22cbef02022bcb291ac0.ctex"
+uid="uid://bcs2tp6vo4liy"
+path="res://.godot/imported/m_ice.png-9a299a387d9d22cbef02022bcb291ac0.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/m_ice.png"
-dest_files=["res://.godot/imported/m_ice-9a299a387d9d22cbef02022bcb291ac0.ctex"]
+dest_files=["res://.godot/imported/m_ice.png-9a299a387d9d22cbef02022bcb291ac0.ctex"]
 
 [params]
 

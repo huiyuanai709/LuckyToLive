@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://mqrd1suq6eoz3"
-path="res://.godot/imported/up_m_field-f3fd0a0309ead2c9607cb3ce278d8de5.ctex"
+uid="uid://5jram30hr2qs"
+path="res://.godot/imported/up_m_field.png-f3fd0a0309ead2c9607cb3ce278d8de5.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/up_m_field.png"
-dest_files=["res://.godot/imported/up_m_field-f3fd0a0309ead2c9607cb3ce278d8de5.ctex"]
+dest_files=["res://.godot/imported/up_m_field.png-f3fd0a0309ead2c9607cb3ce278d8de5.ctex"]
 
 [params]
 

@@ -17,9 +17,11 @@ public partial class Hero : CharacterBody2D
 	public Loadout Loadout = new();
 
 	private readonly Dictionary<string, float> _cooldowns = new();
+	private readonly Dictionary<string, BeamEmitter> _beams = new();
 	private Enemy _target;
 	private Sprite2D _sprite;
-	private float _beamFlash;
+	/// <summary>最后一次移动方向；站住时射线保持该朝向。</summary>
+	private Vector2 _facing = Vector2.Right;
 
 	public override void _Ready()
 	{
@@ -107,12 +109,30 @@ public partial class Hero : CharacterBody2D
 		Vector2 input = Input.GetVector("move_left", "move_right", "move_up", "move_down");
 		Velocity = input * MoveSpeed;
 		MoveAndSlide();
+		if (input.LengthSquared() > 0.0001f) _facing = input.Normalized();
 
 		if (RegenPerSec > 0) Heal(RegenPerSec * dt);
 
 		AcquireTarget();
 		TickWeapons(dt);
-		if (_beamFlash > 0) { _beamFlash -= dt; QueueRedraw(); }
+		TickBeams(dt);
+	}
+
+	/// <summary>持续射线自成节奏（持续/冷却），不走 TryFire 的攻速冷却。</summary>
+	private void TickBeams(float dt)
+	{
+		foreach (var item in Loadout.Slots)
+		{
+			if (item.Kind != CardKind.Weapon || item.WeaponStyle != "beam") continue;
+			if (!_beams.TryGetValue(item.ItemId, out var beam) || !IsInstanceValid(beam))
+			{
+				beam = new BeamEmitter();
+				AddChild(beam);
+				beam.Setup(item);
+				_beams[item.ItemId] = beam;
+			}
+			beam.Tick(dt, _facing);
+		}
 	}
 
 	private void AcquireTarget()
@@ -136,6 +156,7 @@ public partial class Hero : CharacterBody2D
 		foreach (var item in Loadout.Slots)
 		{
 			if (item.Kind != CardKind.Weapon) continue;
+			if (item.WeaponStyle == "beam") continue; // 由 TickBeams 驱动
 			_cooldowns.TryGetValue(item.ItemId, out float cd);
 			cd -= dt;
 			if (cd <= 0f)
@@ -161,9 +182,6 @@ public partial class Hero : CharacterBody2D
 			case "charge":
 				MeleeHit(item, item.Range);
 				return true;
-			case "beam":
-				FireBeam(item);
-				return true;
 			default:
 				FireProjectile(item);
 				return true;
@@ -178,14 +196,6 @@ public partial class Hero : CharacterBody2D
 			if (GlobalPosition.DistanceTo(e.GlobalPosition) <= range)
 				e.TakeDamage(item.Damage);
 		}
-	}
-
-	private void FireBeam(SlotItem item)
-	{
-		if (_target == null) return;
-		_beamFlash = 0.08f;
-		_target.TakeDamage(item.Damage);
-		QueueRedraw();
 	}
 
 	private void FireProjectile(SlotItem item)
@@ -212,10 +222,5 @@ public partial class Hero : CharacterBody2D
 		float w = 28f;
 		DrawRect(new Rect2(-w / 2, -34, w, 4), new Color(0.2f, 0, 0));
 		DrawRect(new Rect2(-w / 2, -34, w * (Hp / MaxHp), 4), new Color(0.2f, 0.9f, 0.3f));
-
-		if (_beamFlash > 0 && _target != null && IsInstanceValid(_target))
-		{
-			DrawLine(Vector2.Zero, ToLocal(_target.GlobalPosition), new Color(0.7f, 0.4f, 1f, 0.85f), 3f);
-		}
 	}
 }

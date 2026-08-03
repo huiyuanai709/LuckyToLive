@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dwxevvnvba7ht"
-path="res://.godot/imported/up_m_fturret-1a5ac616b9d37583baf8900d7630fd15.ctex"
+path="res://.godot/imported/up_m_fturret.png-1a5ac616b9d37583baf8900d7630fd15.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/up_m_fturret.png"
-dest_files=["res://.godot/imported/up_m_fturret-1a5ac616b9d37583baf8900d7630fd15.ctex"]
+dest_files=["res://.godot/imported/up_m_fturret.png-1a5ac616b9d37583baf8900d7630fd15.ctex"]
 
 [params]
 

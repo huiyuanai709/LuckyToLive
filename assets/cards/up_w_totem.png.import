@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ux8we1dgq499m"
-path="res://.godot/imported/up_w_totem-54173fabed297bd242561613d6c3e1e8.ctex"
+uid="uid://bm7kgqq6w4whs"
+path="res://.godot/imported/up_w_totem.png-54173fabed297bd242561613d6c3e1e8.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/up_w_totem.png"
-dest_files=["res://.godot/imported/up_w_totem-54173fabed297bd242561613d6c3e1e8.ctex"]
+dest_files=["res://.godot/imported/up_w_totem.png-54173fabed297bd242561613d6c3e1e8.ctex"]
 
 [params]
 

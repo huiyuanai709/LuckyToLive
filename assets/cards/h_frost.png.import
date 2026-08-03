@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://uh6x8s2mbkbfz"
-path="res://.godot/imported/h_frost-a2acd967df9c3ea3ec0f6f9a8af41874.ctex"
+uid="uid://55mbjhdhjwm6"
+path="res://.godot/imported/h_frost.png-a2acd967df9c3ea3ec0f6f9a8af41874.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/h_frost.png"
-dest_files=["res://.godot/imported/h_frost-a2acd967df9c3ea3ec0f6f9a8af41874.ctex"]
+dest_files=["res://.godot/imported/h_frost.png-a2acd967df9c3ea3ec0f6f9a8af41874.ctex"]
 
 [params]
 

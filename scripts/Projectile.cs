@@ -14,6 +14,10 @@ public partial class Projectile : Node2D
 	private readonly HashSet<Enemy> _hit = new();
 	private Vector2 _dir = Vector2.Right;
 	private float _life = 2.5f;
+	private Texture2D _tex;
+	private bool _rotates;
+	/// <summary>贴图在世界中的目标显示直径（像素）。</summary>
+	private float _visualSize = 26f;
 
 	public void Setup(Enemy target, SlotItem item)
 	{
@@ -33,6 +37,9 @@ public partial class Projectile : Node2D
 			"pierce" => new Color(0.6f, 1f, 0.5f),
 			_ => Tint,
 		};
+		_tex = ProjectileArt.ForProjectile(item);
+		_rotates = ProjectileArt.RotatesWithVelocity(item);
+		_visualSize = Splash > 0 ? 34f : 26f;
 		if (target != null && IsInstanceValid(target))
 			_dir = (target.GlobalPosition - GlobalPosition).Normalized();
 		QueueRedraw();
@@ -40,7 +47,15 @@ public partial class Projectile : Node2D
 
 	public override void _Draw()
 	{
-		DrawCircle(Vector2.Zero, Splash > 0 ? 6 : 4, Tint);
+		if (_tex == null)
+		{
+			DrawCircle(Vector2.Zero, Splash > 0 ? 6 : 4, Tint);
+			return;
+		}
+		Vector2 size = _tex.GetSize();
+		float scale = _visualSize / Mathf.Max(size.X, size.Y);
+		Vector2 draw = size * scale;
+		DrawTextureRect(_tex, new Rect2(-draw / 2f, draw), false);
 	}
 
 	public override void _Process(double delta)
@@ -53,6 +68,8 @@ public partial class Projectile : Node2D
 			_dir = (Target.GlobalPosition - GlobalPosition).Normalized();
 
 		GlobalPosition += _dir * Speed * dt;
+		// 箭类朝速度方向；火球等近似圆形的保持不旋转
+		if (_rotates) Rotation = _dir.Angle();
 
 		foreach (var n in GetTree().GetNodesInGroup("enemies"))
 		{
