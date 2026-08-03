@@ -38,9 +38,12 @@ project.godot              — 项目名 Open Island Roguelike；Game 为 Autolo
 TDProject.csproj           — Godot.NET.Sdk / net8.0
 scenes/Main.tscn           — 主场景，挂载 Main.cs
 assets/characters|enemies  — 英雄与敌人贴图
+assets/environment         — 岛屿地面 / 树木 / 草丛 / 岩石等环境贴图
 scripts/
   Game.cs                  — 元进度（货币、解锁英雄、存档）与本局统计
-  Main.cs                  — 选人、开局、计时、选卡流程、结算
+  Main.cs                  — 选人、开局、计时、选卡流程、结算；岛屿地面绘制
+  EnvironmentArt.cs        — 环境贴图加载（res://assets/environment/）
+  IslandDecor.cs           — 开局铺设树木、草丛、灌木、岩石等装饰
   Hero.cs                  — 英雄移动、生命、经验、武器开火
   Loadout.cs               — 槽位列表；应用卡牌生成建筑/宠物/被动
   CardCatalog.cs           — 卡牌定义与三选一抽取池
@@ -54,14 +57,14 @@ scripts/
   ui/ResultScreen.cs       — 结算界面
 ```
 
-多数 UI 与实体由代码动态创建；岛屿与障碍在 `Main._Draw()` 中绘制。
+多数 UI 与实体由代码动态创建；岛屿海域 / 沙滩 / 草地 / 泥土在 `Main._Draw()` 中铺贴，树木与草丛等由 `IslandDecor` 在开局生成。
 
 ## 可扩展方向
 
 - 真实广告 SDK 接入「本局 +1 槽」  
 - 更丰富的精英词条（冲刺 / 护盾 / 召唤 / 远程已有占位）  
-- 障碍碰撞、更多岛屿布局与 Boss 分钟  
-- 音效、粒子与更完整的美术替换  
+- 障碍碰撞（岩石等装饰可挂 StaticBody2D）、更多岛屿布局与 Boss 分钟  
+- 音效、粒子与更高清手绘环境替换  
 - 数值平衡与更多公共被动 / 协同构筑  
 
 ## 已知限制（原型）
