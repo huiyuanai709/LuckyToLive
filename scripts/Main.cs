@@ -22,6 +22,8 @@ public partial class Main : Node2D
 
 	public override void _Ready()
 	{
+		// 树木等装饰与角色按 Y 排序遮挡；UI 为 CanvasLayer，不受影响
+		YSortEnabled = true;
 		ShowHeroSelect();
 	}
 
@@ -68,8 +70,9 @@ public partial class Main : Node2D
 		_elitesThisMinute = 0;
 		_minuteMark = 60f;
 
-		// 岛背景
+		// 岛背景 + 环境装饰（树木 / 草丛 / 岩石等）
 		QueueRedraw();
+		IslandDecor.Spawn(this, IslandRect);
 
 		_hero = new Hero();
 		AddChild(_hero);
@@ -119,12 +122,75 @@ public partial class Main : Node2D
 
 	public override void _Draw()
 	{
-		DrawRect(IslandRect, new Color(0.18f, 0.28f, 0.2f));
-		DrawRect(IslandRect, new Color(0.35f, 0.55f, 0.4f), false, 4);
-		// 简单障碍
-		DrawRect(new Rect2(600, 400, 120, 80), new Color(0.25f, 0.22f, 0.18f));
-		DrawRect(new Rect2(1400, 900, 160, 60), new Color(0.25f, 0.22f, 0.18f));
-		DrawRect(new Rect2(1000, 600, 80, 140), new Color(0.25f, 0.22f, 0.18f));
+		DrawOceanAndIsland();
+	}
+
+	private void DrawOceanAndIsland()
+	{
+		// 海域：铺开到岛屿外足够大，镜头跟随时仍可见水面
+		var ocean = IslandRect.Grow(900);
+		DrawRect(ocean, new Color(0.14f, 0.32f, 0.48f));
+		// 近岸浅水环
+		DrawRect(IslandRect.Grow(36), new Color(0.22f, 0.48f, 0.58f));
+
+		// 沙滩岸线
+		var sandTex = EnvironmentArt.GroundSand;
+		if (sandTex != null)
+			DrawTiled(sandTex, IslandRect);
+		else
+			DrawRect(IslandRect, new Color(0.78f, 0.70f, 0.45f));
+
+		// 草地主体（内缩露出沙滩边）
+		var grassRect = IslandRect.Grow(-28);
+		var grassTex = EnvironmentArt.GroundGrass;
+		if (grassTex != null)
+			DrawTiled(grassTex, grassRect);
+		else
+			DrawRect(grassRect, new Color(0.22f, 0.42f, 0.28f));
+
+		// 泥土斑块（旧障碍附近，增加地表变化）
+		var dirtTex = EnvironmentArt.GroundDirt;
+		var dirtPatches = new[]
+		{
+			new Rect2(600, 400, 140, 100),
+			new Rect2(1400, 880, 180, 90),
+			new Rect2(980, 580, 120, 160),
+			new Rect2(420, 1100, 160, 80),
+			new Rect2(1800, 320, 120, 100),
+		};
+		foreach (var r in dirtPatches)
+		{
+			if (dirtTex != null) DrawTiled(dirtTex, r);
+			else DrawRect(r, new Color(0.45f, 0.36f, 0.22f));
+		}
+
+		// 岛屿描边
+		DrawRect(IslandRect, new Color(0.40f, 0.62f, 0.45f), false, 3);
+		DrawRect(IslandRect.Grow(2), new Color(0.55f, 0.78f, 0.55f), false, 1.5f);
+	}
+
+	private void DrawTiled(Texture2D tex, Rect2 area)
+	{
+		int tw = tex.GetWidth();
+		int th = tex.GetHeight();
+		if (tw <= 0 || th <= 0) return;
+
+		float startX = area.Position.X;
+		float startY = area.Position.Y;
+		float endX = area.End.X;
+		float endY = area.End.Y;
+
+		for (float y = startY; y < endY; y += th)
+		{
+			for (float x = startX; x < endX; x += tw)
+			{
+				float w = Mathf.Min(tw, endX - x);
+				float h = Mathf.Min(th, endY - y);
+				var dst = new Rect2(x, y, w, h);
+				var src = new Rect2(0, 0, w, h);
+				DrawTextureRectRegion(tex, dst, src);
+			}
+		}
 	}
 
 	public override void _Process(double delta)
