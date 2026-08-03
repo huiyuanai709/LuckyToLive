@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://vmohp9tc3cbix"
-path="res://.godot/imported/p_hp-e8d424266a5ac1c822f49d97f1079a70.ctex"
+uid="uid://cbm4ry73abwp4"
+path="res://.godot/imported/p_hp.png-e8d424266a5ac1c822f49d97f1079a70.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/p_hp.png"
-dest_files=["res://.godot/imported/p_hp-e8d424266a5ac1c822f49d97f1079a70.ctex"]
+dest_files=["res://.godot/imported/p_hp.png-e8d424266a5ac1c822f49d97f1079a70.ctex"]
 
 [params]
 

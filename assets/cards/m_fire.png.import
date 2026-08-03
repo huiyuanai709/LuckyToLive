@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b0h7j9ywl2gyk"
-path="res://.godot/imported/m_fire-a4c82b7e8e9d7e9a13d80758efb282af.ctex"
+uid="uid://b0h7kaywl2gyk"
+path="res://.godot/imported/m_fire.png-a4c82b7e8e9d7e9a13d80758efb282af.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/m_fire.png"
-dest_files=["res://.godot/imported/m_fire-a4c82b7e8e9d7e9a13d80758efb282af.ctex"]
+dest_files=["res://.godot/imported/m_fire.png-a4c82b7e8e9d7e9a13d80758efb282af.ctex"]
 
 [params]
 

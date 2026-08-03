@@ -23,6 +23,10 @@ public class CardDef
 	public string BuildingStyle;  // turret_phys/turret_fire/slow_field/heal_totem/shield_wall/trap
 	public string PetStyle;       // wolf
 	public string UpgradeStat;    // damage/rate/range/special/hp/speed/regen
+	public string ProjectileTexture;   // 覆盖弹道贴图：res://assets/projectiles/{name}.png 的 name
+	public float[] BeamAnglesDeg;      // 覆盖射线角度（相对朝向，度）；null = 用默认规则
+	public int BeamRaysAdd;            // 升级时额外增加的射线数（走默认角度规则）
+	public float BeamLengthAdd;        // 升级时额外增加的射线长度
 }
 
 public class SlotItem
@@ -43,6 +47,18 @@ public class SlotItem
 	public Building BuildingRef;
 	public Pet PetRef;
 	public string UpgradeStatHolder;
+
+	// —— 弹道 / 射线表现与机制 ——
+	/// <summary>覆盖贴图名；空则按 WeaponStyle / BuildingStyle 取默认。</summary>
+	public string ProjectileTexture;
+	/// <summary>射线激活持续时间（秒）。</summary>
+	public float BeamDuration = 2.5f;
+	/// <summary>射线冷却时间（秒），从持续结束开始计。</summary>
+	public float BeamCooldown = 3.0f;
+	/// <summary>射线条数（默认角度规则按此数量排布）。</summary>
+	public int BeamRays = 1;
+	/// <summary>覆盖角度列表（相对朝向，度）；非空时忽略默认规则。</summary>
+	public float[] BeamAnglesDeg;
 }
 
 public static class CardCatalog
@@ -65,12 +81,13 @@ public static class CardCatalog
 		// —— 法师 ——
 		new CardDef { Id = "m_ice", Name = "冰矢", Desc = "冰系射击并减速", Kind = CardKind.Weapon, Hero = HeroId.Mage, GrantsItemId = "m_ice", IsNewItem = true, WeaponStyle = "ice_arrow" },
 		new CardDef { Id = "m_fire", Name = "火球", Desc = "火系爆炸伤害", Kind = CardKind.Weapon, Hero = HeroId.Mage, GrantsItemId = "m_fire", IsNewItem = true, WeaponStyle = "fireball" },
-		new CardDef { Id = "m_beam", Name = "元素射线", Desc = "持续射线伤害", Kind = CardKind.Weapon, Hero = HeroId.Mage, GrantsItemId = "m_beam", IsNewItem = true, WeaponStyle = "beam" },
+		new CardDef { Id = "m_beam", Name = "元素射线", Desc = "伸出固定长度射线，随移动方向扫射；有持续与冷却", Kind = CardKind.Weapon, Hero = HeroId.Mage, GrantsItemId = "m_beam", IsNewItem = true, WeaponStyle = "beam" },
 		new CardDef { Id = "m_ice_field", Name = "寒冰阵", Desc = "减速场建筑", Kind = CardKind.Building, Hero = HeroId.Mage, GrantsItemId = "m_ice_field", IsNewItem = true, BuildingStyle = "slow_field" },
 		new CardDef { Id = "m_fire_turret", Name = "火法塔", Desc = "火焰炮塔", Kind = CardKind.Building, Hero = HeroId.Mage, GrantsItemId = "m_fire_turret", IsNewItem = true, BuildingStyle = "turret_fire" },
 		new CardDef { Id = "up_m_ice", Name = "冰矢·深寒", Desc = "冰矢伤害与减速提升", Kind = CardKind.Upgrade, Hero = HeroId.Mage, GrantsItemId = "m_ice", IsNewItem = false, UpgradeStat = "special" },
 		new CardDef { Id = "up_m_fire", Name = "火球·爆炎", Desc = "火球伤害与溅射提升", Kind = CardKind.Upgrade, Hero = HeroId.Mage, GrantsItemId = "m_fire", IsNewItem = false, UpgradeStat = "special" },
-		new CardDef { Id = "up_m_beam", Name = "射线·聚焦", Desc = "射线伤害与射程提升", Kind = CardKind.Upgrade, Hero = HeroId.Mage, GrantsItemId = "m_beam", IsNewItem = false, UpgradeStat = "special" },
+		new CardDef { Id = "up_m_beam", Name = "射线·聚焦", Desc = "射线伤害与射程提升", Kind = CardKind.Upgrade, Hero = HeroId.Mage, GrantsItemId = "m_beam", IsNewItem = false, UpgradeStat = "beam_focus" },
+		new CardDef { Id = "up_m_beam_cross", Name = "射线·十字", Desc = "左右各增一条射线，形成十字", Kind = CardKind.Upgrade, Hero = HeroId.Mage, GrantsItemId = "m_beam", IsNewItem = false, UpgradeStat = "beam_rays", BeamAnglesDeg = new[] { 0f, 90f, -90f } },
 		new CardDef { Id = "up_m_field", Name = "寒冰阵·扩大", Desc = "减速场范围提升", Kind = CardKind.Upgrade, Hero = HeroId.Mage, GrantsItemId = "m_ice_field", IsNewItem = false, UpgradeStat = "range" },
 		new CardDef { Id = "up_m_fturret", Name = "火法塔·烈焰", Desc = "火法塔伤害提升", Kind = CardKind.Upgrade, Hero = HeroId.Mage, GrantsItemId = "m_fire_turret", IsNewItem = false, UpgradeStat = "damage" },
 

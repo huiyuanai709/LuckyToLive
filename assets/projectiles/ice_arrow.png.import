@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bbhtan0bqp8lg"
-path="res://.godot/imported/m_beam.png-83f4b4c0be698557377fbf01bf23182b.ctex"
+uid="uid://c3fgua5mwlnsl"
+path="res://.godot/imported/ice_arrow.png-b2bc5a93c41b74e45f49ad56402392ac.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/cards/m_beam.png"
-dest_files=["res://.godot/imported/m_beam.png-83f4b4c0be698557377fbf01bf23182b.ctex"]
+source_file="res://assets/projectiles/ice_arrow.png"
+dest_files=["res://.godot/imported/ice_arrow.png-b2bc5a93c41b74e45f49ad56402392ac.ctex"]
 
 [params]
 

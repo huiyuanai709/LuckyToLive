@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://egb3fx88qos5u"
-path="res://.godot/imported/up_w_slash_dmg-cd6ac9be7ad2e73850eb5049fcee3c97.ctex"
+uid="uid://kv7twcy6hxe3"
+path="res://.godot/imported/up_w_slash_dmg.png-cd6ac9be7ad2e73850eb5049fcee3c97.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/up_w_slash_dmg.png"
-dest_files=["res://.godot/imported/up_w_slash_dmg-cd6ac9be7ad2e73850eb5049fcee3c97.ctex"]
+dest_files=["res://.godot/imported/up_w_slash_dmg.png-cd6ac9be7ad2e73850eb5049fcee3c97.ctex"]
 
 [params]
 

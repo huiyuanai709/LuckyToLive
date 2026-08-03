@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ng1me6kigshd5"
-path="res://.godot/imported/p_speed-f68b287c69a8dfb68f008ab22875abc7.ctex"
+uid="uid://bus0m0sqq6t3u"
+path="res://.godot/imported/p_speed.png-f68b287c69a8dfb68f008ab22875abc7.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/p_speed.png"
-dest_files=["res://.godot/imported/p_speed-f68b287c69a8dfb68f008ab22875abc7.ctex"]
+dest_files=["res://.godot/imported/p_speed.png-f68b287c69a8dfb68f008ab22875abc7.ctex"]
 
 [params]
 

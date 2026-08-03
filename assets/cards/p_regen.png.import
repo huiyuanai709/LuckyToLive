@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://5i2xybz087x40"
-path="res://.godot/imported/p_regen-ab01755f386dfedc9c37f5a743fa9c11.ctex"
+uid="uid://dg7utwlabsttn"
+path="res://.godot/imported/p_regen.png-ab01755f386dfedc9c37f5a743fa9c11.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/p_regen.png"
-dest_files=["res://.godot/imported/p_regen-ab01755f386dfedc9c37f5a743fa9c11.ctex"]
+dest_files=["res://.godot/imported/p_regen.png-ab01755f386dfedc9c37f5a743fa9c11.ctex"]
 
 [params]
 

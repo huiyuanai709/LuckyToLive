@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://7d0hm9trcc2zo"
-path="res://.godot/imported/up_m_beam-f334c302cfe4edec29af1f7ff81c3f18.ctex"
+uid="uid://bgqiwthqsp2xk"
+path="res://.godot/imported/up_m_beam.png-f334c302cfe4edec29af1f7ff81c3f18.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/up_m_beam.png"
-dest_files=["res://.godot/imported/up_m_beam-f334c302cfe4edec29af1f7ff81c3f18.ctex"]
+dest_files=["res://.godot/imported/up_m_beam.png-f334c302cfe4edec29af1f7ff81c3f18.ctex"]
 
 [params]
 

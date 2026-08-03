@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://y2s5zo6eq4030"
-path="res://.godot/imported/m_ice_field-a73c1c3db20963537140ce8a8b11fb64.ctex"
+uid="uid://bvdxhdnvdwrkf"
+path="res://.godot/imported/m_ice_field.png-a73c1c3db20963537140ce8a8b11fb64.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/m_ice_field.png"
-dest_files=["res://.godot/imported/m_ice_field-a73c1c3db20963537140ce8a8b11fb64.ctex"]
+dest_files=["res://.godot/imported/m_ice_field.png-a73c1c3db20963537140ce8a8b11fb64.ctex"]
 
 [params]
 

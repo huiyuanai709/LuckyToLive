@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://v4ml0aqfx9tb5"
-path="res://.godot/imported/h_pierce-bc3f3bcf07da615c949d65c43748945f.ctex"
+uid="uid://csk81y455agjc"
+path="res://.godot/imported/h_pierce.png-bc3f3bcf07da615c949d65c43748945f.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/cards/h_pierce.png"
-dest_files=["res://.godot/imported/h_pierce-bc3f3bcf07da615c949d65c43748945f.ctex"]
+dest_files=["res://.godot/imported/h_pierce.png-bc3f3bcf07da615c949d65c43748945f.ctex"]
 
 [params]
 
