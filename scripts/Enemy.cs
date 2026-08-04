@@ -65,18 +65,26 @@ public partial class Enemy : CharacterBody2D
 		if (_sprite != null)
 		{
 			string path = IsElite ? "res://assets/enemies/enemy_elite.png" : "res://assets/enemies/enemy_basic.png";
-			if (ResourceLoader.Exists(path))
-				_sprite.Texture = GD.Load<Texture2D>(path);
+			_sprite.Texture = LoadTexture(path);
 			_sprite.Scale = _spriteBaseScale;
 		}
 		float phase = (float)GD.RandRange(0.0, 2.5);
 		_anim = new UnitSpriteAnim(
 			_sprite,
 			_spriteBaseScale,
-			hopAmp: IsElite ? 5.2f : 4.4f,
-			swayAmp: IsElite ? 0.14f : 0.16f,
+			hopAmp: IsElite ? 6.2f : 5.4f,
+			swayAmp: IsElite ? 0.18f : 0.2f,
 			phaseOffset: phase);
 		QueueRedraw();
+	}
+
+	private static Texture2D LoadTexture(string path)
+	{
+		if (!ResourceLoader.Exists(path)) return null;
+		var tex = GD.Load<Texture2D>(path);
+		if (tex != null) return tex;
+		var img = Image.LoadFromFile(ProjectSettings.GlobalizePath(path));
+		return img != null ? ImageTexture.CreateFromImage(img) : null;
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -170,7 +178,12 @@ public partial class Enemy : CharacterBody2D
 		if (_sprite?.Texture == null)
 		{
 			Color c = IsElite ? new Color(0.95f, 0.45f, 0.15f) : new Color(0.85f, 0.25f, 0.35f);
+			if (_anim != null && _anim.HitFlash) c = new Color(1f, 0.4f, 0.4f);
+			Vector2 o = _anim?.Offset ?? Vector2.Zero;
+			Vector2 s = _anim?.Squash ?? Vector2.One;
+			DrawSetTransform(o, _anim?.Rot ?? 0f, s);
 			DrawCircle(Vector2.Zero, IsElite ? 16 : 10, c);
+			DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
 		}
 		float w = IsElite ? 28f : 20f;
 		float pct = Mathf.Clamp(Hp / MaxHp, 0, 1);

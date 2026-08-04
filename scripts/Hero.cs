@@ -38,7 +38,7 @@ public partial class Hero : CharacterBody2D
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
 		};
 		AddChild(_sprite);
-		_anim = new UnitSpriteAnim(_sprite, _spriteBaseScale, hopAmp: 4.2f, swayAmp: 0.12f);
+		_anim = new UnitSpriteAnim(_sprite, _spriteBaseScale, hopAmp: 5.5f, swayAmp: 0.16f);
 		ApplySprite();
 		EmitSignal(SignalName.HpChanged, Hp, MaxHp);
 		EmitSignal(SignalName.XpChanged, Level, Xp, XpToNext());
@@ -66,9 +66,18 @@ public partial class Hero : CharacterBody2D
 			HeroId.Mage => "res://assets/characters/hero_mage.png",
 			_ => "res://assets/characters/hero_hunter.png",
 		};
-		if (ResourceLoader.Exists(path))
-			_sprite.Texture = GD.Load<Texture2D>(path);
+		_sprite.Texture = LoadTexture(path);
 		QueueRedraw();
+	}
+
+	private static Texture2D LoadTexture(string path)
+	{
+		if (!ResourceLoader.Exists(path)) return null;
+		var tex = GD.Load<Texture2D>(path);
+		if (tex != null) return tex;
+		// 导入缓存缺失时直接读 PNG，避免回退成色块
+		var img = Image.LoadFromFile(ProjectSettings.GlobalizePath(path));
+		return img != null ? ImageTexture.CreateFromImage(img) : null;
 	}
 
 	public float XpToNext() => 12f + Level * 8f;
@@ -122,6 +131,7 @@ public partial class Hero : CharacterBody2D
 		TickWeapons(dt);
 		TickBeams(dt);
 		TickAnim(dt, moving);
+		if (_sprite?.Texture == null) QueueRedraw();
 	}
 
 	private void TickAnim(float dt, bool moving)
@@ -242,8 +252,14 @@ public partial class Hero : CharacterBody2D
 				HeroId.Mage => new Color(0.45f, 0.4f, 0.9f),
 				_ => new Color(0.35f, 0.7f, 0.4f),
 			};
-			DrawCircle(new Vector2(0, -6), 16, body);
-			DrawCircle(new Vector2(0, 10), 12, body.Darkened(0.15f));
+			if (_anim != null && _anim.HitFlash) body = new Color(1f, 0.4f, 0.4f);
+			Vector2 o = _anim?.Offset ?? Vector2.Zero;
+			Vector2 s = _anim?.Squash ?? Vector2.One;
+			float face = _anim?.FacingX ?? 1f;
+			DrawSetTransform(o, _anim?.Rot ?? 0f, s);
+			DrawCircle(new Vector2(face * -2f, -6), 16, body);
+			DrawCircle(new Vector2(face * 2f, 10), 12, body.Darkened(0.15f));
+			DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
 		}
 		float w = 28f;
 		DrawRect(new Rect2(-w / 2, -34, w, 4), new Color(0.2f, 0, 0));

@@ -19,7 +19,14 @@ public sealed class UnitSpriteAnim
 	private float _facingX = 1f;
 	private float _walkHz = 9f;
 
-	public UnitSpriteAnim(Sprite2D sprite, Vector2 baseScale, float hopAmp = 3.8f, float swayAmp = 0.1f, float phaseOffset = 0f)
+	/// <summary>供无贴图回退绘制使用的当前视觉状态。</summary>
+	public Vector2 Offset { get; private set; }
+	public Vector2 Squash { get; private set; } = Vector2.One;
+	public float Rot { get; private set; }
+	public float FacingX => _facingX;
+	public bool HitFlash => _hitT > 0f;
+
+	public UnitSpriteAnim(Sprite2D sprite, Vector2 baseScale, float hopAmp = 4.8f, float swayAmp = 0.14f, float phaseOffset = 0f)
 	{
 		_sprite = sprite;
 		_baseScale = baseScale;
@@ -49,8 +56,6 @@ public sealed class UnitSpriteAnim
 
 	public void Update(float dt)
 	{
-		if (_sprite == null || !GodotObject.IsInstanceValid(_sprite)) return;
-
 		_time += dt;
 		if (_attackT > 0f) _attackT = Mathf.Max(0f, _attackT - dt);
 		if (_hitT > 0f) _hitT = Mathf.Max(0f, _hitT - dt);
@@ -65,11 +70,11 @@ public sealed class UnitSpriteAnim
 		{
 			float t = 1f - _attackT / _attackDur;
 			float punch = Mathf.Sin(t * Mathf.Pi);
-			offsetX = _facingX * punch * 8f;
-			offsetY = -punch * 2f;
-			squashX = 1f + punch * 0.16f;
-			squashY = 1f - punch * 0.12f;
-			rot = _facingX * punch * 0.12f;
+			offsetX = _facingX * punch * 10f;
+			offsetY = -punch * 3f;
+			squashX = 1f + punch * 0.22f;
+			squashY = 1f - punch * 0.16f;
+			rot = _facingX * punch * 0.18f;
 		}
 		else if (_moving)
 		{
@@ -78,26 +83,33 @@ public sealed class UnitSpriteAnim
 			offsetY = -hop * _hopAmp;
 			// 落地压扁、腾空拉长
 			float land = Mathf.Cos(phase * 2f);
-			squashX = 1f + land * 0.1f;
-			squashY = 1f - land * 0.12f;
+			squashX = 1f + land * 0.14f;
+			squashY = 1f - land * 0.16f;
 			rot = Mathf.Sin(phase) * _swayAmp;
-			offsetX = Mathf.Sin(phase) * 1.2f;
+			offsetX = Mathf.Sin(phase) * 1.8f;
 		}
 		else
 		{
-			float breathe = Mathf.Sin((_time + _phaseOffset) * 2.4f);
-			offsetY = breathe * 1.4f;
-			squashX = 1f + breathe * 0.035f;
-			squashY = 1f - breathe * 0.05f;
-			rot = breathe * 0.03f;
+			float breathe = Mathf.Sin((_time + _phaseOffset) * 2.6f);
+			offsetY = breathe * 2.0f;
+			squashX = 1f + breathe * 0.05f;
+			squashY = 1f - breathe * 0.07f;
+			rot = breathe * 0.045f;
 		}
 
-		_sprite.FlipH = _facingX < 0f;
-		_sprite.Position = new Vector2(offsetX, offsetY);
-		_sprite.Rotation = rot;
-		_sprite.Scale = new Vector2(_baseScale.X * squashX, _baseScale.Y * squashY);
-		_sprite.Modulate = _hitT > 0f
-			? new Color(1f, 0.4f, 0.4f)
-			: Colors.White;
+		Offset = new Vector2(offsetX, offsetY);
+		Squash = new Vector2(squashX, squashY);
+		Rot = rot;
+
+		if (_sprite != null && GodotObject.IsInstanceValid(_sprite))
+		{
+			_sprite.FlipH = _facingX < 0f;
+			_sprite.Position = Offset;
+			_sprite.Rotation = Rot;
+			_sprite.Scale = new Vector2(_baseScale.X * squashX, _baseScale.Y * squashY);
+			_sprite.Modulate = HitFlash
+				? new Color(1f, 0.4f, 0.4f)
+				: Colors.White;
+		}
 	}
 }
