@@ -4,13 +4,10 @@ using System.Collections.Generic;
 /// <summary>
 /// 岛屿装饰物：树木、草丛、灌木、岩石、小花等。
 /// 精灵作为 Main 的直接子节点，以便与英雄 / 敌人一起 Y 排序遮挡。
+/// 布局与种类随当前 <see cref="MapTheme"/> 变化。
 /// </summary>
 public partial class IslandDecor : Node2D
 {
-	private static readonly string[] TreeKinds = { "tree_round", "tree_pine" };
-	private static readonly string[] GrassKinds = { "grass_tuft", "grass_tuft_b" };
-	private static readonly string[] FlowerKinds = { "flower_yellow", "flower_red" };
-
 	/// <summary>固定障碍点（与旧版棕色方块位置对应）。</summary>
 	private static readonly Vector2[] LandmarkRocks =
 	{
@@ -19,46 +16,63 @@ public partial class IslandDecor : Node2D
 		new(1040, 670),
 	};
 
-	public static IslandDecor Spawn(Node2D world, Rect2 island)
+	public static IslandDecor Spawn(Node2D world, Rect2 island, MapTheme theme = null)
 	{
+		theme ??= MapCatalog.Island;
 		var decor = new IslandDecor();
 		world.AddChild(decor);
-		decor.Build(world, island);
+		decor.Build(world, island, theme);
 		return decor;
 	}
 
-	private void Build(Node2D world, Rect2 island)
+	private void Build(Node2D world, Rect2 island, MapTheme theme)
 	{
 		AddToGroup("island_decor");
 		var rng = new RandomNumberGenerator();
-		rng.Seed = 0x151A11D0; // 确定性布局，每局一致
+		rng.Seed = theme.DecorSeed;
 
 		var clearCenter = island.GetCenter();
 		const float clearRadius = 160f;
 
+		var rockKinds = theme.RockKinds is { Length: > 0 } ? theme.RockKinds : new[] { "rock" };
 		foreach (var p in LandmarkRocks)
 		{
 			if (island.HasPoint(p))
-				AddProp(world, "rock", p, rng.RandfRange(0.95f, 1.15f), feetAnchor: true);
+				AddProp(world, rockKinds[0], p, rng.RandfRange(0.95f, 1.15f), feetAnchor: true);
 		}
 
 		PlaceScatter(world, island, rng, clearCenter, clearRadius, count: 14, minSep: 90f,
-			kinds: new[] { "rock", "stump" }, scaleMin: 0.75f, scaleMax: 1.1f, edgeBias: 0.35f);
+			kinds: rockKinds, scaleMin: 0.75f, scaleMax: 1.1f, edgeBias: 0.35f);
 
-		PlaceScatter(world, island, rng, clearCenter, clearRadius + 40f, count: 48, minSep: 70f,
-			kinds: TreeKinds, scaleMin: 0.55f, scaleMax: 0.85f, edgeBias: 0.7f, margin: 50f);
+		if (theme.TreeKinds is { Length: > 0 } && theme.TreeCount > 0)
+		{
+			PlaceScatter(world, island, rng, clearCenter, clearRadius + 40f, count: theme.TreeCount, minSep: 70f,
+				kinds: theme.TreeKinds, scaleMin: 0.55f, scaleMax: 0.85f, edgeBias: 0.7f, margin: 50f);
+		}
 
-		PlaceScatter(world, island, rng, clearCenter, clearRadius * 0.6f, count: 36, minSep: 48f,
-			kinds: new[] { "bush" }, scaleMin: 0.7f, scaleMax: 1.1f, edgeBias: 0.45f);
+		if (theme.BushKinds is { Length: > 0 } && theme.BushCount > 0)
+		{
+			PlaceScatter(world, island, rng, clearCenter, clearRadius * 0.6f, count: theme.BushCount, minSep: 48f,
+				kinds: theme.BushKinds, scaleMin: 0.7f, scaleMax: 1.1f, edgeBias: 0.45f);
+		}
 
-		PlaceScatter(world, island, rng, clearCenter, 40f, count: 160, minSep: 28f,
-			kinds: GrassKinds, scaleMin: 0.7f, scaleMax: 1.25f, edgeBias: 0.2f, margin: 28f, zBehind: true);
+		if (theme.GrassKinds is { Length: > 0 } && theme.GrassCount > 0)
+		{
+			PlaceScatter(world, island, rng, clearCenter, 40f, count: theme.GrassCount, minSep: 28f,
+				kinds: theme.GrassKinds, scaleMin: 0.7f, scaleMax: 1.25f, edgeBias: 0.2f, margin: 28f, zBehind: true);
+		}
 
-		PlaceScatter(world, island, rng, clearCenter, 50f, count: 40, minSep: 40f,
-			kinds: FlowerKinds, scaleMin: 0.85f, scaleMax: 1.2f, edgeBias: 0.15f, zBehind: true);
+		if (theme.FlowerKinds is { Length: > 0 } && theme.FlowerCount > 0)
+		{
+			PlaceScatter(world, island, rng, clearCenter, 50f, count: theme.FlowerCount, minSep: 40f,
+				kinds: theme.FlowerKinds, scaleMin: 0.85f, scaleMax: 1.2f, edgeBias: 0.15f, zBehind: true);
+		}
 
-		PlaceScatter(world, island, rng, clearCenter, 80f, count: 18, minSep: 55f,
-			kinds: new[] { "mushroom" }, scaleMin: 0.8f, scaleMax: 1.15f, edgeBias: 0.4f, zBehind: true);
+		if (theme.ScatterExtra is { Length: > 0 } && theme.ExtraCount > 0)
+		{
+			PlaceScatter(world, island, rng, clearCenter, 80f, count: theme.ExtraCount, minSep: 55f,
+				kinds: theme.ScatterExtra, scaleMin: 0.8f, scaleMax: 1.15f, edgeBias: 0.4f, zBehind: true);
+		}
 	}
 
 	private void PlaceScatter(
@@ -76,6 +90,8 @@ public partial class IslandDecor : Node2D
 		float margin = 40f,
 		bool zBehind = false)
 	{
+		if (kinds == null || kinds.Length == 0 || count <= 0) return;
+
 		var placed = new List<Vector2>(count);
 		var inner = island.Grow(-margin);
 		if (inner.Size.X < 80 || inner.Size.Y < 80) inner = island;

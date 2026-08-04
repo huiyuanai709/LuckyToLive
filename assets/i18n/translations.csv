@@ -8,6 +8,17 @@ ui.hero_select.play,Play as {0},出战 {0}
 ui.hero_select.unlock,Unlock ({0} currency),解锁 ({0} 货币)
 ui.hero_select.not_enough,Not enough currency,货币不足
 ui.hero_select.lang,Language: {0},语言: {0}
+ui.map_select.title,Choose a map,选择地图
+ui.map_select.pick,Select,选择
+ui.map_select.selected,Selected,已选
+map.island.name,Green Island,绿岛
+map.island.desc,Classic shores · goblins & elites,经典海岛 · 哥布林与精英
+map.apocalypse.name,Apocalypse,末日废土
+map.apocalypse.desc,Ash wastes · zombies · Tyrant elites,灰烬废土 · 丧尸 · 暴君精英
+map.wilderness.name,Wilderness,荒野密林
+map.wilderness.desc,Dense wilds · beasts · dire elites,茂密荒野 · 野兽 · 恐兽精英
+map.desert.name,Desert,沙漠荒原
+map.desert.desc,Dunes · sandfiends · scarab elites,沙丘荒原 · 沙妖 · 圣甲虫精英
 ui.lang.zh,中文,中文
 ui.lang.en,English,English
 hero.warrior.name,Warrior,战士
@@ -20,6 +31,7 @@ ui.hud.countdown,Time {0}:{1:00},倒计时 {0}:{1:00}
 ui.hud.hp,HP {0}/{1},生命 {0}/{1}
 ui.hud.xp,Hero Lv{0}  XP {1}/{2},英雄 Lv{0}  XP {1}/{2}
 ui.hud.slots,Slots {0}/{1},槽位 {0}/{1}
+ui.hud.map,Map: {0},地图: {0}
 ui.hud.empty,Empty,空
 ui.hud.goal,Minute goal: kill 1 elite,分钟目标: 击杀 1 精英
 ui.hud.goal_progress,Minute goal: kill 1 elite ({0}/1),分钟目标: 击杀 1 精英 ({0}/1)
@@ -45,7 +57,7 @@ ui.result.defeat,Your hero fell,英雄倒下了
 ui.result.rank,Rank {0}  Score {1},评级 {0}  分数 {1}
 ui.result.stats,Kills {0}  Elites {1}  Minute goals {2},击杀 {0}  精英 {1}  分钟目标 {2}
 ui.result.currency,Currency +{0}  (total {1}),获得货币 +{0}  (总 {1})
-ui.result.continue,Back to hero select,返回选英雄
+ui.result.continue,Back to hero select,返回选英雄与地图
 affix.dash,Dash,冲刺
 affix.melee,Berserker,狂攻
 affix.shield,Shield,护盾
