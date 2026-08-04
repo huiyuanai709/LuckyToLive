@@ -315,7 +315,8 @@ public partial class Enemy : CharacterBody2D
 			&& _sprite.SpriteFrames.GetFrameCount(CharacterArt.AnimIdle) > 0;
 		if (!hasFrames)
 		{
-			Color c = IsElite ? new Color(0.95f, 0.45f, 0.15f) : new Color(0.85f, 0.25f, 0.35f);
+			var theme = MapCatalog.Get(Game.Instance?.SelectedMap ?? MapId.Island);
+			Color c = IsElite ? theme.EliteFallback : theme.BasicFallback;
 			if (_anim != null && _anim.HitFlash) c = new Color(1f, 0.4f, 0.4f);
 			DrawCircle(Vector2.Zero, IsElite ? 34 : 10, c);
 		}

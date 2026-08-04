@@ -7,6 +7,7 @@ public partial class Hud : CanvasLayer
 	public Label XpLabel;
 	public Label SlotsLabel;
 	public Label GoalLabel;
+	public Label MapLabel;
 	public Label MsgLabel;
 	public Button AdButton;
 	public Button LangButton;
@@ -36,6 +37,13 @@ public partial class Hud : CanvasLayer
 
 		GoalLabel = new Label { Position = new Vector2(16, 108), Text = I18n.T("ui.hud.goal") };
 		root.AddChild(GoalLabel);
+
+		MapLabel = new Label
+		{
+			Position = new Vector2(16, 132),
+			Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island)),
+		};
+		root.AddChild(MapLabel);
 
 		MsgLabel = new Label { Position = new Vector2(16, 540) };
 		root.AddChild(MsgLabel);
@@ -76,6 +84,8 @@ public partial class Hud : CanvasLayer
 		if (LangButton != null)
 			LangButton.Text = I18n.Instance?.LocaleDisplayName() ?? "";
 		GoalLabel.Text = I18n.T("ui.hud.goal");
+		if (MapLabel != null)
+			MapLabel.Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island));
 		if (Game.Instance != null)
 		{
 			AdButton.Text = Game.Instance.AdSlotsUnlocked >= Game.MaxAdSlots

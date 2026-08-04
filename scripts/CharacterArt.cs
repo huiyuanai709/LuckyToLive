@@ -25,12 +25,21 @@ public static class CharacterArt
 			$"res://assets/characters/{name}.png", 128);
 	}
 
-	public static SpriteFrames ForEnemy(bool elite)
+	public static SpriteFrames ForEnemy(bool elite, MapId? map = null)
 	{
-		string name = elite ? "enemy_elite" : "enemy_basic";
+		var theme = MapCatalog.Get(map ?? Game.Instance?.SelectedMap ?? MapId.Island);
+		string name = elite ? theme.EliteEnemy : theme.BasicEnemy;
 		int cell = elite ? 112 : 96;
-		return GetOrBuild($"res://assets/enemies/{name}_sheet.png",
+		var frames = GetOrBuild($"res://assets/enemies/{name}_sheet.png",
 			$"res://assets/enemies/{name}.png", cell);
+		// 缺主题贴图时回退到默认岛怪
+		if (frames == null && name != "enemy_basic" && name != "enemy_elite")
+		{
+			string fallback = elite ? "enemy_elite" : "enemy_basic";
+			frames = GetOrBuild($"res://assets/enemies/{fallback}_sheet.png",
+				$"res://assets/enemies/{fallback}.png", cell);
+		}
+		return frames;
 	}
 
 	private static SpriteFrames GetOrBuild(string sheetPath, string fallbackPath, int cell)

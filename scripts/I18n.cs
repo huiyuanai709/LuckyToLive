@@ -83,6 +83,22 @@ public partial class I18n : Node
 		_ => T("hero.hunter.desc"),
 	};
 
+	public static string MapName(MapId id) => id switch
+	{
+		MapId.Apocalypse => T("map.apocalypse.name"),
+		MapId.Wilderness => T("map.wilderness.name"),
+		MapId.Desert => T("map.desert.name"),
+		_ => T("map.island.name"),
+	};
+
+	public static string MapDesc(MapId id) => id switch
+	{
+		MapId.Apocalypse => T("map.apocalypse.desc"),
+		MapId.Wilderness => T("map.wilderness.desc"),
+		MapId.Desert => T("map.desert.desc"),
+		_ => T("map.island.desc"),
+	};
+
 	public static string KindLabel(CardKind kind) => kind switch
 	{
 		CardKind.Weapon => T("card.kind.weapon"),

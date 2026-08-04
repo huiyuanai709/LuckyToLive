@@ -21,6 +21,7 @@ public partial class Game : Node
 	public HashSet<HeroId> UnlockedHeroes = new();
 	public int MetaCurrency;
 	public HeroId SelectedHero = HeroId.Hunter;
+	public MapId SelectedMap = MapId.Island;
 
 	// 本局
 	public int AdSlotsUnlocked;

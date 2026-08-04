@@ -13,6 +13,7 @@ public partial class Main : Node2D
 	private float _timeLeft;
 	private bool _choosing;
 	private bool _ended;
+	private MapTheme _mapTheme = MapCatalog.Island;
 	private readonly RandomNumberGeneratorRng _rng = new();
 
 	private int _goalMinute = 1;
@@ -61,6 +62,7 @@ public partial class Main : Node2D
 		_popup = null;
 		_ended = false;
 		_choosing = false;
+		_mapTheme = MapCatalog.Get(Game.Instance?.SelectedMap ?? MapId.Island);
 	}
 
 	private void StartRun(HeroId heroId)
@@ -68,6 +70,7 @@ public partial class Main : Node2D
 		ClearWorld();
 		FloatingText.Prewarm(300);
 		Game.Instance.ResetRunStats();
+		_mapTheme = MapCatalog.Get(Game.Instance.SelectedMap);
 		_timeLeft = Game.RunDuration;
 		_goalMinute = 1;
 		_goalDone = false;
@@ -76,7 +79,7 @@ public partial class Main : Node2D
 
 		// 岛背景 + 环境装饰（树木 / 草丛 / 岩石等）
 		QueueRedraw();
-		IslandDecor.Spawn(this, IslandRect);
+		IslandDecor.Spawn(this, IslandRect, _mapTheme);
 
 		_hero = new Hero();
 		AddChild(_hero);
@@ -148,29 +151,31 @@ public partial class Main : Node2D
 
 	private void DrawOceanAndIsland()
 	{
+		var theme = _mapTheme ?? MapCatalog.Get(Game.Instance?.SelectedMap ?? MapId.Island);
+
 		// 海域：铺开到岛屿外足够大，镜头跟随时仍可见水面
 		var ocean = IslandRect.Grow(900);
-		DrawRect(ocean, new Color(0.14f, 0.32f, 0.48f));
+		DrawRect(ocean, theme.Ocean);
 		// 近岸浅水环
-		DrawRect(IslandRect.Grow(36), new Color(0.22f, 0.48f, 0.58f));
+		DrawRect(IslandRect.Grow(36), theme.Shallow);
 
-		// 沙滩岸线
-		var sandTex = EnvironmentArt.GroundSand;
-		if (sandTex != null)
-			DrawTiled(sandTex, IslandRect);
+		// 沙滩 / 岸线
+		var shoreTex = EnvironmentArt.Load(theme.ShoreGround);
+		if (shoreTex != null)
+			DrawTiled(shoreTex, IslandRect);
 		else
-			DrawRect(IslandRect, new Color(0.78f, 0.70f, 0.45f));
+			DrawRect(IslandRect, theme.ShoreFallback);
 
-		// 草地主体（内缩露出沙滩边）
-		var grassRect = IslandRect.Grow(-28);
-		var grassTex = EnvironmentArt.GroundGrass;
-		if (grassTex != null)
-			DrawTiled(grassTex, grassRect);
+		// 内陆主体（内缩露出岸边）
+		var inlandRect = IslandRect.Grow(-theme.InlandInset);
+		var inlandTex = EnvironmentArt.Load(theme.InlandGround);
+		if (inlandTex != null)
+			DrawTiled(inlandTex, inlandRect);
 		else
-			DrawRect(grassRect, new Color(0.22f, 0.42f, 0.28f));
+			DrawRect(inlandRect, theme.InlandFallback);
 
-		// 泥土斑块（旧障碍附近，增加地表变化）
-		var dirtTex = EnvironmentArt.GroundDirt;
+		// 地表斑块（增加变化）
+		var patchTex = EnvironmentArt.Load(theme.PatchGround);
 		var dirtPatches = new[]
 		{
 			new Rect2(600, 400, 140, 100),
@@ -181,13 +186,13 @@ public partial class Main : Node2D
 		};
 		foreach (var r in dirtPatches)
 		{
-			if (dirtTex != null) DrawTiled(dirtTex, r);
-			else DrawRect(r, new Color(0.45f, 0.36f, 0.22f));
+			if (patchTex != null) DrawTiled(patchTex, r);
+			else DrawRect(r, theme.ShoreFallback.Darkened(0.15f));
 		}
 
 		// 岛屿描边
-		DrawRect(IslandRect, new Color(0.40f, 0.62f, 0.45f), false, 3);
-		DrawRect(IslandRect.Grow(2), new Color(0.55f, 0.78f, 0.55f), false, 1.5f);
+		DrawRect(IslandRect, theme.Border, false, 3);
+		DrawRect(IslandRect.Grow(2), theme.BorderGlow, false, 1.5f);
 	}
 
 	private void DrawTiled(Texture2D tex, Rect2 area)
