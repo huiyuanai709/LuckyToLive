@@ -96,9 +96,12 @@ public partial class I18n : Node
 	public static string AffixLabel(string affixId) => affixId switch
 	{
 		"dash" => T("affix.dash"),
+		"melee" => T("affix.melee"),
 		"shield" => T("affix.shield"),
 		"summon" => T("affix.summon"),
 		"ranged" => T("affix.ranged"),
+		"orbit" => T("affix.orbit"),
+		"fire_ground" => T("affix.fire_ground"),
 		_ => affixId,
 	};
 

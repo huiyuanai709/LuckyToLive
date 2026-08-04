@@ -74,7 +74,8 @@ public partial class Projectile : Node2D
 		foreach (var n in GetTree().GetNodesInGroup("enemies"))
 		{
 			if (n is not Enemy e || !IsInstanceValid(e) || _hit.Contains(e)) continue;
-			if (GlobalPosition.DistanceTo(e.GlobalPosition) > 14f) continue;
+			// 命中半径随怪物体型放大（精英 BodyRadius 更大）
+			if (GlobalPosition.DistanceTo(e.GlobalPosition) > e.BodyRadius + 8f) continue;
 			Hit(e);
 			if (PierceLeft <= 0) { QueueFree(); return; }
 		}

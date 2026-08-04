@@ -53,7 +53,7 @@ public partial class Pet : CharacterBody2D
 		}
 
 		_cd -= dt;
-		if (target != null && best <= Item.Range + 8 && _cd <= 0)
+		if (target != null && best <= Item.Range + target.BodyRadius && _cd <= 0)
 		{
 			_cd = 1f / Mathf.Max(0.2f, Item.FireRate);
 			target.TakeDamage(Item.Damage);

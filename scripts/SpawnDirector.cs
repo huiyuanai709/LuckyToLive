@@ -11,7 +11,8 @@ public partial class SpawnDirector : Node
 	private int _lastMinuteEvent = -1;
 	private float _bonusEliteCd = 40f;
 	private readonly RandomNumberGeneratorRng _rng = new();
-	private static readonly string[] Affixes = { "dash", "shield", "summon", "ranged" };
+	// melee=快攻+冲锋；orbit=旋转球；fire_ground=脚下火（可躲）；shield/summon 保留
+	private static readonly string[] Affixes = { "melee", "orbit", "fire_ground", "shield", "summon" };
 
 	[Signal] public delegate void EliteSpawnedEventHandler(Enemy elite);
 	[Signal] public delegate void MinuteEventFiredEventHandler(int minute);
@@ -68,8 +69,6 @@ public partial class SpawnDirector : Node
 		e.GlobalPosition = EdgePoint();
 		string affix = Affixes[_rng.RandiRange(0, Affixes.Length - 1)];
 		e.ConfigureElite(1f + Elapsed / 100f, affix);
-		// 远程词条：提高接触伤害伪装为压迫（简化）
-		if (affix == "ranged") e.ContactDamage = 10f;
 		Wire(e);
 		EmitSignal(SignalName.EliteSpawned, e);
 		return e;

@@ -93,15 +93,16 @@ public partial class BeamEmitter : Node2D
 			if (n is not Enemy e || !IsInstanceValid(e)) continue;
 			Vector2 rel = e.GlobalPosition - GlobalPosition;
 			float dist = rel.Length();
-			if (dist > len + HitHalfWidth) continue;
+			float hitPad = HitHalfWidth + e.BodyRadius * 0.35f;
+			if (dist > len + hitPad) continue;
 
 			foreach (float ang in angles)
 			{
 				Vector2 dir = Vector2.Right.Rotated(ang);
 				float along = rel.Dot(dir);
-				if (along < -HitHalfWidth || along > len) continue;
+				if (along < -hitPad || along > len) continue;
 				float perp = Mathf.Abs(rel.Dot(new Vector2(-dir.Y, dir.X)));
-				if (perp > HitHalfWidth) continue;
+				if (perp > hitPad) continue;
 				e.TakeDamage(Item.Damage);
 				if (Item.SlowFactor < 1f) e.ApplySlow(Item.SlowFactor, 0.6f);
 				break; // 同一 tick 内一只怪只吃一条射线

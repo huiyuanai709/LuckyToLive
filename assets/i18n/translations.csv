@@ -47,9 +47,12 @@ ui.result.stats,Kills {0}  Elites {1}  Minute goals {2},击杀 {0}  精英 {1}  
 ui.result.currency,Currency +{0}  (total {1}),获得货币 +{0}  (总 {1})
 ui.result.continue,Back to hero select,返回选英雄
 affix.dash,Dash,冲刺
+affix.melee,Berserker,狂攻
 affix.shield,Shield,护盾
 affix.summon,Summon,召唤
 affix.ranged,Ranged,远程
+affix.orbit,Orbit Orbs,旋转球
+affix.fire_ground,Ground Fire,脚下火
 card.w_slash.name,Cleave,裂斩
 card.w_slash.desc,Melee swing that hits nearby enemies,近战挥击，伤害附近敌人
 card.w_charge.name,Charge Blade,冲锋刃
