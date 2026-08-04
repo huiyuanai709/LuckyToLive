@@ -59,6 +59,15 @@ public class SlotItem
 	public int BeamRays = 1;
 	/// <summary>覆盖角度列表（相对朝向，度）；非空时忽略默认规则。</summary>
 	public float[] BeamAnglesDeg;
+
+	/// <summary>单件武器射线条数上限；满后不再抽出增加射线的升级卡。</summary>
+	public const int MaxBeamRays = 3;
+
+	/// <summary>实际生效的射线条数（有覆盖角度时以角度表为准）。</summary>
+	public int EffectiveBeamRays =>
+		BeamAnglesDeg != null && BeamAnglesDeg.Length > 0
+			? BeamAnglesDeg.Length
+			: System.Math.Max(1, BeamRays);
 }
 
 public static class CardCatalog
@@ -126,6 +135,7 @@ public static class CardCatalog
 		var pool = All.Where(c =>
 		{
 			if (c.Hero != null && c.Hero != hero) return false;
+			if (!IsUpgradeStillUseful(c, loadout)) return false;
 			if (full)
 			{
 				if (c.IsNewItem) return false;
@@ -138,11 +148,27 @@ public static class CardCatalog
 
 		if (pool.Count == 0)
 		{
-			pool = All.Where(c => !c.IsNewItem && c.Hero == hero && loadout.HasItem(c.GrantsItemId)).ToList();
+			pool = All.Where(c =>
+				!c.IsNewItem && c.Hero == hero && loadout.HasItem(c.GrantsItemId)
+				&& IsUpgradeStillUseful(c, loadout)).ToList();
 		}
 
 		rng.Shuffle(pool);
 		return pool.Take(System.Math.Min(count, pool.Count)).ToList();
+	}
+
+	/// <summary>
+	/// 已达上限的升级不再进入抽取池（例如射线条数已满时隐藏 beam_rays）。
+	/// 后续新增「再增加射线」类卡也会走同一判定。
+	/// </summary>
+	public static bool IsUpgradeStillUseful(CardDef card, Loadout loadout)
+	{
+		if (card == null || card.IsNewItem) return true;
+		if (card.UpgradeStat != "beam_rays") return true;
+
+		var item = loadout.GetItem(card.GrantsItemId);
+		if (item == null) return true;
+		return item.EffectiveBeamRays < SlotItem.MaxBeamRays;
 	}
 }
 
