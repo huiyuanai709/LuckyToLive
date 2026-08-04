@@ -61,7 +61,7 @@ public partial class Enemy : CharacterBody2D
 
 	private void ApplyVisual()
 	{
-		_spriteBaseScale = new Vector2(IsElite ? 0.48f : 0.38f, IsElite ? 0.48f : 0.38f);
+		_spriteBaseScale = new Vector2(IsElite ? 0.62f : 0.52f, IsElite ? 0.62f : 0.52f);
 		if (_sprite != null)
 		{
 			_sprite.SpriteFrames = CharacterArt.ForEnemy(IsElite);

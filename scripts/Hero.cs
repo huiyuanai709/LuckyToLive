@@ -21,7 +21,7 @@ public partial class Hero : CharacterBody2D
 	private Enemy _target;
 	private AnimatedSprite2D _sprite;
 	private UnitSpriteAnim _anim;
-	private readonly Vector2 _spriteBaseScale = new(0.42f, 0.42f);
+	private readonly Vector2 _spriteBaseScale = new(0.58f, 0.58f);
 	/// <summary>最后一次移动方向；站住时射线保持该朝向。</summary>
 	private Vector2 _facing = Vector2.Right;
 

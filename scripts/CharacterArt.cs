@@ -41,6 +41,11 @@ public static class CharacterArt
 
 		var frames = BuildFromSheet(sheetPath, cell, 4, 3)
 			?? BuildSingleFrame(fallbackPath);
+		if (frames != null)
+		{
+			int walkFrames = frames.HasAnimation(AnimWalk) ? frames.GetFrameCount(AnimWalk) : 0;
+			GD.Print($"CharacterArt: {sheetPath} walk_frames={walkFrames}");
+		}
 		Cache[key] = frames;
 		return frames;
 	}
@@ -49,33 +54,42 @@ public static class CharacterArt
 	{
 		Texture2D sheet = LoadTexture(path);
 		if (sheet == null) return null;
-		if (sheet.GetWidth() < cell * cols || sheet.GetHeight() < cell * rows)
-			return null;
+		int w = sheet.GetWidth();
+		int h = sheet.GetHeight();
+		if (w < cell * cols || h < cell * rows) return null;
+
+		Image src = sheet.GetImage();
+		if (src == null)
+		{
+			// CompressedTexture2D 有时需要先拿不到 CPU 图，改走文件
+			string abs = ProjectSettings.GlobalizePath(path);
+			if (System.IO.File.Exists(abs))
+				src = Image.LoadFromFile(abs);
+		}
+		if (src == null) return null;
 
 		var frames = new SpriteFrames();
-		AddRowAnim(frames, AnimIdle, sheet, row: 0, cols, cell, fps: 5f, loop: true);
-		AddRowAnim(frames, AnimWalk, sheet, row: 1, cols, cell, fps: 10f, loop: true);
-		AddRowAnim(frames, AnimAttack, sheet, row: 2, cols, cell, fps: 14f, loop: false);
+		AddRowAnim(frames, AnimIdle, src, row: 0, cols, cell, fps: 7f, loop: true);
+		AddRowAnim(frames, AnimWalk, src, row: 1, cols, cell, fps: 12f, loop: true);
+		AddRowAnim(frames, AnimAttack, src, row: 2, cols, cell, fps: 14f, loop: false);
 		return frames;
 	}
 
-	private static void AddRowAnim(SpriteFrames frames, string anim, Texture2D sheet, int row, int cols, int cell, float fps, bool loop)
+	private static void AddRowAnim(SpriteFrames frames, string anim, Image src, int row, int cols, int cell, float fps, bool loop)
 	{
 		if (frames.HasAnimation(anim))
 			frames.RemoveAnimation(anim);
 		frames.AddAnimation(anim);
 		frames.SetAnimationSpeed(anim, fps);
-#pragma warning disable CS0618 // 兼容 Godot 4.7-dev 运行时；4.7.1 SDK 标记为过时
+#pragma warning disable CS0618 // 兼容 Godot 4.7-dev 运行时
 		frames.SetAnimationLoop(anim, loop);
 #pragma warning restore CS0618
 		for (int c = 0; c < cols; c++)
 		{
-			var atlas = new AtlasTexture
-			{
-				Atlas = sheet,
-				Region = new Rect2(c * cell, row * cell, cell, cell),
-			};
-			frames.AddFrame(anim, atlas);
+			var region = new Rect2I(c * cell, row * cell, cell, cell);
+			Image slice = src.GetRegion(region);
+			var tex = ImageTexture.CreateFromImage(slice);
+			frames.AddFrame(anim, tex, 1.0f);
 		}
 	}
 
