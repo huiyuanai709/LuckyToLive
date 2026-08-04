@@ -126,21 +126,30 @@ public class Loadout
 				item.Range += 24 + (card?.BeamLengthAdd ?? 0f);
 				break;
 			case "beam_rays":
+			{
+				int before = item.EffectiveBeamRays;
+				if (before >= SlotItem.MaxBeamRays) break; // 已满则不再加条数（抽取侧也应已过滤）
+
 				if (card?.BeamAnglesDeg != null && card.BeamAnglesDeg.Length > 0)
 				{
-					// 覆盖式：直接采用卡牌声明的角度列表
-					item.BeamAnglesDeg = card.BeamAnglesDeg;
-					item.BeamRays = card.BeamAnglesDeg.Length;
+					// 覆盖式：采用卡牌角度，但不超过上限
+					int n = Mathf.Min(card.BeamAnglesDeg.Length, SlotItem.MaxBeamRays);
+					var angles = new float[n];
+					System.Array.Copy(card.BeamAnglesDeg, angles, n);
+					item.BeamAnglesDeg = angles;
+					item.BeamRays = n;
 				}
 				else
 				{
 					// 默认规则：只加条数，角度由 Beam.DefaultAngles 均分/对称推出
-					item.BeamRays += Mathf.Max(1, card?.BeamRaysAdd ?? 1);
+					int add = Mathf.Max(1, card?.BeamRaysAdd ?? 1);
+					item.BeamRays = Mathf.Min(SlotItem.MaxBeamRays, before + add);
 					item.BeamAnglesDeg = null;
 				}
 				item.Range += card?.BeamLengthAdd ?? 0f;
-				item.Damage += 2; // 重复选到时也有增益，避免死卡
+				item.Damage += 2;
 				break;
+			}
 			case "damage":
 				item.Damage += 4 + item.Level; break;
 			case "rate":
