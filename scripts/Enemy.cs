@@ -290,7 +290,9 @@ public partial class Enemy : CharacterBody2D
 
 	public void TakeDamage(float amount)
 	{
+		if (amount <= 0f) return;
 		Hp -= amount;
+		FloatingText.ShowDamage(GlobalPosition, amount);
 		_anim?.PlayHit();
 		QueueRedraw();
 		if (Hp <= 0f)

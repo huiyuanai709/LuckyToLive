@@ -49,6 +49,7 @@ public partial class Main : Node2D
 	{
 		if (I18n.Instance != null)
 			I18n.Instance.LocaleChanged -= OnLocaleChanged;
+		FloatingText.ClearAll();
 		foreach (var c in GetChildren())
 		{
 			if (c is Game) continue;
@@ -65,6 +66,7 @@ public partial class Main : Node2D
 	private void StartRun(HeroId heroId)
 	{
 		ClearWorld();
+		FloatingText.Prewarm(300);
 		Game.Instance.ResetRunStats();
 		_timeLeft = Game.RunDuration;
 		_goalMinute = 1;
