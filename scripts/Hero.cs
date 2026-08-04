@@ -69,7 +69,9 @@ public partial class Hero : CharacterBody2D
 
 	public void AddXp(float amount)
 	{
+		if (amount <= 0f) return;
 		Xp += amount;
+		FloatingText.ShowXp(GlobalPosition, amount);
 		EmitSignal(SignalName.XpChanged, Level, Xp, XpToNext());
 	}
 
@@ -84,7 +86,9 @@ public partial class Hero : CharacterBody2D
 
 	public void TakeDamage(float amount)
 	{
+		if (amount <= 0f) return;
 		Hp -= amount;
+		FloatingText.ShowDamage(GlobalPosition, amount);
 		_anim?.PlayHit();
 		EmitSignal(SignalName.HpChanged, Hp, MaxHp);
 		QueueRedraw();

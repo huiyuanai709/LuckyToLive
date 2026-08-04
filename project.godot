@@ -22,6 +22,11 @@ config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 
 I18n="*res://scripts/I18n.cs"
 Game="*res://scripts/Game.cs"
+GodotxLabelUp="*res://addons/godotx_label_up/runtime/godotx_label_up.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godotx_label_up/plugin.cfg")
 
 [internationalization]
 
