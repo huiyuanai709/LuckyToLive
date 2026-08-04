@@ -19,7 +19,7 @@ public partial class Hero : CharacterBody2D
 	private readonly Dictionary<string, float> _cooldowns = new();
 	private readonly Dictionary<string, BeamEmitter> _beams = new();
 	private Enemy _target;
-	private Sprite2D _sprite;
+	private AnimatedSprite2D _sprite;
 	private UnitSpriteAnim _anim;
 	private readonly Vector2 _spriteBaseScale = new(0.42f, 0.42f);
 	/// <summary>最后一次移动方向；站住时射线保持该朝向。</summary>
@@ -32,13 +32,13 @@ public partial class Hero : CharacterBody2D
 		shape.Shape = new CircleShape2D { Radius = 14 };
 		AddChild(shape);
 
-		_sprite = new Sprite2D
+		_sprite = new AnimatedSprite2D
 		{
 			Scale = _spriteBaseScale,
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
 		};
 		AddChild(_sprite);
-		_anim = new UnitSpriteAnim(_sprite, _spriteBaseScale, hopAmp: 5.5f, swayAmp: 0.16f);
+		_anim = new UnitSpriteAnim(_sprite, _spriteBaseScale);
 		ApplySprite();
 		EmitSignal(SignalName.HpChanged, Hp, MaxHp);
 		EmitSignal(SignalName.XpChanged, Level, Xp, XpToNext());
@@ -60,24 +60,9 @@ public partial class Hero : CharacterBody2D
 	private void ApplySprite()
 	{
 		if (_sprite == null) return;
-		string path = HeroType switch
-		{
-			HeroId.Warrior => "res://assets/characters/hero_warrior.png",
-			HeroId.Mage => "res://assets/characters/hero_mage.png",
-			_ => "res://assets/characters/hero_hunter.png",
-		};
-		_sprite.Texture = LoadTexture(path);
+		_sprite.SpriteFrames = CharacterArt.ForHero(HeroType);
+		_sprite.Play(CharacterArt.AnimIdle);
 		QueueRedraw();
-	}
-
-	private static Texture2D LoadTexture(string path)
-	{
-		if (!ResourceLoader.Exists(path)) return null;
-		var tex = GD.Load<Texture2D>(path);
-		if (tex != null) return tex;
-		// 导入缓存缺失时直接读 PNG，避免回退成色块
-		var img = Image.LoadFromFile(ProjectSettings.GlobalizePath(path));
-		return img != null ? ImageTexture.CreateFromImage(img) : null;
 	}
 
 	public float XpToNext() => 12f + Level * 8f;
@@ -131,7 +116,7 @@ public partial class Hero : CharacterBody2D
 		TickWeapons(dt);
 		TickBeams(dt);
 		TickAnim(dt, moving);
-		if (_sprite?.Texture == null) QueueRedraw();
+		if (_sprite?.SpriteFrames == null) QueueRedraw();
 	}
 
 	private void TickAnim(float dt, bool moving)
@@ -203,25 +188,20 @@ public partial class Hero : CharacterBody2D
 		if (toTarget.LengthSquared() > 0.0001f)
 			_anim?.SetFacingX(toTarget.X);
 
-		bool fired;
 		switch (item.WeaponStyle)
 		{
 			case "slash":
 				MeleeHit(item, item.Range);
-				fired = true;
 				break;
 			case "charge":
 				MeleeHit(item, item.Range);
-				fired = true;
 				break;
 			default:
 				FireProjectile(item);
-				fired = true;
 				break;
 		}
-		if (fired)
-			_anim?.PlayAttack(item.WeaponStyle is "slash" or "charge" ? 0.28f : 0.18f);
-		return fired;
+		_anim?.PlayAttack(item.WeaponStyle is "slash" or "charge" ? 0.28f : 0.18f);
+		return true;
 	}
 
 	private void MeleeHit(SlotItem item, float range)
@@ -244,7 +224,10 @@ public partial class Hero : CharacterBody2D
 
 	public override void _Draw()
 	{
-		if (_sprite?.Texture == null)
+		bool hasFrames = _sprite?.SpriteFrames != null
+			&& _sprite.SpriteFrames.HasAnimation(CharacterArt.AnimIdle)
+			&& _sprite.SpriteFrames.GetFrameCount(CharacterArt.AnimIdle) > 0;
+		if (!hasFrames)
 		{
 			Color body = HeroType switch
 			{
@@ -253,13 +236,8 @@ public partial class Hero : CharacterBody2D
 				_ => new Color(0.35f, 0.7f, 0.4f),
 			};
 			if (_anim != null && _anim.HitFlash) body = new Color(1f, 0.4f, 0.4f);
-			Vector2 o = _anim?.Offset ?? Vector2.Zero;
-			Vector2 s = _anim?.Squash ?? Vector2.One;
-			float face = _anim?.FacingX ?? 1f;
-			DrawSetTransform(o, _anim?.Rot ?? 0f, s);
-			DrawCircle(new Vector2(face * -2f, -6), 16, body);
-			DrawCircle(new Vector2(face * 2f, 10), 12, body.Darkened(0.15f));
-			DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
+			DrawCircle(new Vector2(0, -6), 16, body);
+			DrawCircle(new Vector2(0, 10), 12, body.Darkened(0.15f));
 		}
 		float w = 28f;
 		DrawRect(new Rect2(-w / 2, -34, w, 4), new Color(0.2f, 0, 0));

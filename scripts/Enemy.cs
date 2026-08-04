@@ -16,7 +16,7 @@ public partial class Enemy : CharacterBody2D
 	public float SlowFactor = 1f;
 
 	private float _contactCd;
-	private Sprite2D _sprite;
+	private AnimatedSprite2D _sprite;
 	private UnitSpriteAnim _anim;
 	private Vector2 _spriteBaseScale;
 	private float _summonCd;
@@ -28,7 +28,7 @@ public partial class Enemy : CharacterBody2D
 		shape.Shape = new CircleShape2D { Radius = IsElite ? 18 : 12 };
 		AddChild(shape);
 
-		_sprite = new Sprite2D
+		_sprite = new AnimatedSprite2D
 		{
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
 		};
@@ -64,27 +64,15 @@ public partial class Enemy : CharacterBody2D
 		_spriteBaseScale = new Vector2(IsElite ? 0.48f : 0.38f, IsElite ? 0.48f : 0.38f);
 		if (_sprite != null)
 		{
-			string path = IsElite ? "res://assets/enemies/enemy_elite.png" : "res://assets/enemies/enemy_basic.png";
-			_sprite.Texture = LoadTexture(path);
+			_sprite.SpriteFrames = CharacterArt.ForEnemy(IsElite);
 			_sprite.Scale = _spriteBaseScale;
+			_sprite.Play(CharacterArt.AnimIdle);
 		}
-		float phase = (float)GD.RandRange(0.0, 2.5);
-		_anim = new UnitSpriteAnim(
-			_sprite,
-			_spriteBaseScale,
-			hopAmp: IsElite ? 6.2f : 5.4f,
-			swayAmp: IsElite ? 0.18f : 0.2f,
-			phaseOffset: phase);
+		if (_anim == null)
+			_anim = new UnitSpriteAnim(_sprite, _spriteBaseScale);
+		else
+			_anim.SetBaseScale(_spriteBaseScale);
 		QueueRedraw();
-	}
-
-	private static Texture2D LoadTexture(string path)
-	{
-		if (!ResourceLoader.Exists(path)) return null;
-		var tex = GD.Load<Texture2D>(path);
-		if (tex != null) return tex;
-		var img = Image.LoadFromFile(ProjectSettings.GlobalizePath(path));
-		return img != null ? ImageTexture.CreateFromImage(img) : null;
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -175,15 +163,14 @@ public partial class Enemy : CharacterBody2D
 
 	public override void _Draw()
 	{
-		if (_sprite?.Texture == null)
+		bool hasFrames = _sprite?.SpriteFrames != null
+			&& _sprite.SpriteFrames.HasAnimation(CharacterArt.AnimIdle)
+			&& _sprite.SpriteFrames.GetFrameCount(CharacterArt.AnimIdle) > 0;
+		if (!hasFrames)
 		{
 			Color c = IsElite ? new Color(0.95f, 0.45f, 0.15f) : new Color(0.85f, 0.25f, 0.35f);
 			if (_anim != null && _anim.HitFlash) c = new Color(1f, 0.4f, 0.4f);
-			Vector2 o = _anim?.Offset ?? Vector2.Zero;
-			Vector2 s = _anim?.Squash ?? Vector2.One;
-			DrawSetTransform(o, _anim?.Rot ?? 0f, s);
 			DrawCircle(Vector2.Zero, IsElite ? 16 : 10, c);
-			DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
 		}
 		float w = IsElite ? 28f : 20f;
 		float pct = Mathf.Clamp(Hp / MaxHp, 0, 1);
@@ -191,7 +178,6 @@ public partial class Enemy : CharacterBody2D
 		DrawRect(new Rect2(-w / 2, -24, w * pct, 4), new Color(0.2f, 1f, 0.3f));
 		if (IsElite && !string.IsNullOrEmpty(Affix))
 		{
-			// affix marker
 			DrawCircle(new Vector2(0, -30), 3, new Color(1f, 0.9f, 0.2f));
 		}
 	}
