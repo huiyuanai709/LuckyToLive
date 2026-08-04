@@ -65,7 +65,9 @@ public static class CharacterArt
 			frames.RemoveAnimation(anim);
 		frames.AddAnimation(anim);
 		frames.SetAnimationSpeed(anim, fps);
-		frames.SetAnimationLoopMode(anim, loop ? SpriteFrames.LoopMode.Linear : SpriteFrames.LoopMode.None);
+#pragma warning disable CS0618 // 兼容 Godot 4.7-dev 运行时；4.7.1 SDK 标记为过时
+		frames.SetAnimationLoop(anim, loop);
+#pragma warning restore CS0618
 		for (int c = 0; c < cols; c++)
 		{
 			var atlas = new AtlasTexture
@@ -85,7 +87,9 @@ public static class CharacterArt
 		{
 			frames.AddAnimation(anim);
 			frames.SetAnimationSpeed(anim, anim == AnimWalk ? 8f : 5f);
-			frames.SetAnimationLoopMode(anim, anim != AnimAttack ? SpriteFrames.LoopMode.Linear : SpriteFrames.LoopMode.None);
+#pragma warning disable CS0618
+			frames.SetAnimationLoop(anim, anim != AnimAttack);
+#pragma warning restore CS0618
 			if (tex != null)
 				frames.AddFrame(anim, tex);
 		}
