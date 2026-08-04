@@ -8,8 +8,18 @@ public partial class HeroSelect : CanvasLayer
 	public override void _Ready()
 	{
 		ProcessMode = ProcessModeEnum.Always;
+		if (I18n.Instance != null)
+			I18n.Instance.LocaleChanged += OnLocaleChanged;
 		Rebuild();
 	}
+
+	public override void _ExitTree()
+	{
+		if (I18n.Instance != null)
+			I18n.Instance.LocaleChanged -= OnLocaleChanged;
+	}
+
+	private void OnLocaleChanged(string _) => Rebuild();
 
 	public void Rebuild()
 	{
@@ -22,7 +32,9 @@ public partial class HeroSelect : CanvasLayer
 
 		var title = new Label
 		{
-			Text = Game.Instance.StarterHero == null ? "选择你的初始英雄（永久免费）" : "选择出战英雄",
+			Text = Game.Instance.StarterHero == null
+				? I18n.T("ui.hero_select.title_starter")
+				: I18n.T("ui.hero_select.title_play"),
 			Position = new Vector2(280, 60),
 		};
 		title.AddThemeColorOverride("font_color", Colors.White);
@@ -30,17 +42,26 @@ public partial class HeroSelect : CanvasLayer
 
 		var currency = new Label
 		{
-			Text = $"元进度货币: {Game.Instance.MetaCurrency}",
+			Text = I18n.T("ui.hero_select.currency", Game.Instance.MetaCurrency),
 			Position = new Vector2(280, 90),
 		};
 		AddChild(currency);
 
 		var hint = new Label
 		{
-			Text = "WASD 移动 · 自动攻击 · 撑满 5 分钟通关",
+			Text = I18n.T("ui.hero_select.hint"),
 			Position = new Vector2(280, 112),
 		};
 		AddChild(hint);
+
+		var langBtn = new Button
+		{
+			Text = I18n.T("ui.hero_select.lang", I18n.Instance?.LocaleDisplayName() ?? "中文"),
+			Position = new Vector2(980, 60),
+			Size = new Vector2(200, 36),
+		};
+		langBtn.Pressed += () => I18n.Instance?.ToggleLocale();
+		AddChild(langBtn);
 
 		var row = new HBoxContainer { Position = new Vector2(120, 160) };
 		AddChild(row);
@@ -58,18 +79,8 @@ public partial class HeroSelect : CanvasLayer
 		var box = new VBoxContainer();
 		box.CustomMinimumSize = new Vector2(220, 280);
 
-		string name = id switch
-		{
-			HeroId.Warrior => "战士",
-			HeroId.Mage => "法师",
-			_ => "猎人",
-		};
-		string desc = id switch
-		{
-			HeroId.Warrior => "近战裂斩 / 冲锋 / 盾墙战旗",
-			HeroId.Mage => "冰系+火系可同装 / 射线法阵",
-			_ => "穿透箭 / 冰箭 / 宠物占槽",
-		};
+		string name = I18n.HeroName(id);
+		string desc = I18n.HeroDesc(id);
 
 		string path = id switch
 		{
@@ -97,18 +108,20 @@ public partial class HeroSelect : CanvasLayer
 		var btn = new Button();
 		if (firstPick || unlocked)
 		{
-			btn.Text = firstPick ? $"选择 {name}" : $"出战 {name}";
+			btn.Text = firstPick
+				? I18n.T("ui.hero_select.pick", name)
+				: I18n.T("ui.hero_select.play", name);
 			btn.Pressed += () => EmitSignal(SignalName.HeroPicked, (int)id);
 		}
 		else
 		{
-			btn.Text = $"解锁 ({cost} 货币)";
+			btn.Text = I18n.T("ui.hero_select.unlock", cost);
 			btn.Pressed += () =>
 			{
 				if (Game.Instance.TryUnlockHero(id))
 					Rebuild();
 				else
-					btn.Text = "货币不足";
+					btn.Text = I18n.T("ui.hero_select.not_enough");
 			};
 		}
 		box.AddChild(btn);

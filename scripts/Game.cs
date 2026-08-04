@@ -101,6 +101,7 @@ public partial class Game : Node
 	public void Save()
 	{
 		var cfg = new ConfigFile();
+		cfg.Load(SavePath); // 保留 settings 等其它分区（如语言）
 		if (StarterHero != null) cfg.SetValue("meta", "starter", (int)StarterHero.Value);
 		cfg.SetValue("meta", "currency", MetaCurrency);
 		var arr = new Godot.Collections.Array();
