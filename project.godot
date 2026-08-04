@@ -20,7 +20,13 @@ config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 
 [autoload]
 
+I18n="*res://scripts/I18n.cs"
 Game="*res://scripts/Game.cs"
+
+[internationalization]
+
+locale/fallback="zh_CN"
+locale/locale_filter_mode=0
 
 [display]
 

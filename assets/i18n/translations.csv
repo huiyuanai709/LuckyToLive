@@ -1,0 +1,124 @@
+keys,en,zh_CN
+ui.hero_select.title_starter,Choose your starter hero (free forever),选择你的初始英雄（永久免费）
+ui.hero_select.title_play,Choose your hero,选择出战英雄
+ui.hero_select.currency,Meta currency: {0},元进度货币: {0}
+ui.hero_select.hint,WASD to move · Auto-attack · Survive 5 minutes,WASD 移动 · 自动攻击 · 撑满 5 分钟通关
+ui.hero_select.pick,Select {0},选择 {0}
+ui.hero_select.play,Play as {0},出战 {0}
+ui.hero_select.unlock,Unlock ({0} currency),解锁 ({0} 货币)
+ui.hero_select.not_enough,Not enough currency,货币不足
+ui.hero_select.lang,Language: {0},语言: {0}
+ui.lang.zh,中文,中文
+ui.lang.en,English,English
+hero.warrior.name,Warrior,战士
+hero.warrior.desc,Melee cleave / charge / shield & banner,近战裂斩 / 冲锋 / 盾墙战旗
+hero.mage.name,Mage,法师
+hero.mage.desc,Ice + fire together / beam arrays,冰系+火系可同装 / 射线法阵
+hero.hunter.name,Hunter,猎人
+hero.hunter.desc,Pierce arrows / frost arrows / pet slot,穿透箭 / 冰箭 / 宠物占槽
+ui.hud.countdown,Time {0}:{1:00},倒计时 {0}:{1:00}
+ui.hud.hp,HP {0}/{1},生命 {0}/{1}
+ui.hud.xp,Hero Lv{0}  XP {1}/{2},英雄 Lv{0}  XP {1}/{2}
+ui.hud.slots,Slots {0}/{1},槽位 {0}/{1}
+ui.hud.empty,Empty,空
+ui.hud.goal,Minute goal: kill 1 elite,分钟目标: 击杀 1 精英
+ui.hud.goal_progress,Minute goal: kill 1 elite ({0}/1),分钟目标: 击杀 1 精英 ({0}/1)
+ui.hud.goal_done,Minute goal: kill 1 elite Done,分钟目标: 击杀 1 精英 完成
+ui.hud.goal_minute,Minute goal: kill 1 elite (this min {0}),分钟目标: 击杀 1 精英 (本分钟 {0})
+ui.hud.goal_complete,Minute goal: complete,分钟目标: 完成
+ui.hud.ad_unlock,Ad unlock slot (+1),广告解锁槽位 (+1)
+ui.hud.ad_progress,Ad unlock slot ({0}/{1}),广告解锁槽位 ({0}/{1})
+ui.hud.ad_full,Ad slots full,广告槽已满
+ui.hud.ad_gained,Run slots +1 (ad placeholder),本局槽位 +1（广告占位）
+ui.hud.elite_wave,Minute {0} elite rush!,第 {0} 分钟精英冲击！
+ui.card.starter,Starter gear,开局装备
+ui.card.bonus,Bonus starter pick,额外起步卡
+ui.card.upgrade,Level-up pick,升级选择
+ui.card.elite_drop,Elite drop,精英掉落
+card.kind.weapon,Weapon,武器
+card.kind.building,Building,建筑
+card.kind.upgrade,Upgrade,升级
+card.kind.passive,Passive,被动
+card.kind.pet,Pet,宠物
+ui.result.victory,You survived!,生存成功！
+ui.result.defeat,Your hero fell,英雄倒下了
+ui.result.rank,Rank {0}  Score {1},评级 {0}  分数 {1}
+ui.result.stats,Kills {0}  Elites {1}  Minute goals {2},击杀 {0}  精英 {1}  分钟目标 {2}
+ui.result.currency,Currency +{0}  (total {1}),获得货币 +{0}  (总 {1})
+ui.result.continue,Back to hero select,返回选英雄
+affix.dash,Dash,冲刺
+affix.shield,Shield,护盾
+affix.summon,Summon,召唤
+affix.ranged,Ranged,远程
+card.w_slash.name,Cleave,裂斩
+card.w_slash.desc,Melee swing that hits nearby enemies,近战挥击，伤害附近敌人
+card.w_charge.name,Charge Blade,冲锋刃
+card.w_charge.desc,Periodically slash farther ahead,周期性向前斩击更远
+card.w_shield_wall.name,Shield Wall,盾墙
+card.w_shield_wall.desc,Blocks and reflects nearby enemies,阻挡并反伤靠近的敌人
+card.w_heal_totem.name,War Banner,战旗
+card.w_heal_totem.desc,Slowly heals inside its range,范围内缓慢回血
+card.w_turret.name,Spear Tower,矛塔
+card.w_turret.desc,Physical turret that auto-fires,物理炮塔自动射击
+card.up_w_slash_dmg.name,Cleave · Edge,裂斩·锋刃
+card.up_w_slash_dmg.desc,Increases Cleave damage,裂斩伤害提升
+card.up_w_slash_rate.name,Cleave · Flurry,裂斩·连斩
+card.up_w_slash_rate.desc,Increases Cleave attack speed,裂斩攻速提升
+card.up_w_charge.name,Charge · Breaker,冲锋·破阵
+card.up_w_charge.desc,Increases Charge Blade damage and range,冲锋刃伤害与距离提升
+card.up_w_wall.name,Shield Wall · Brace,盾墙·加固
+card.up_w_wall.desc,Increases Shield Wall HP and reflect,盾墙生命与反伤提升
+card.up_w_totem.name,Banner · Rally,战旗·鼓舞
+card.up_w_totem.desc,Increases War Banner healing,战旗回血加强
+card.up_w_turret.name,Spear Tower · Boost,矛塔·强化
+card.up_w_turret.desc,Increases Spear Tower damage,矛塔伤害提升
+card.m_ice.name,Ice Bolt,冰矢
+card.m_ice.desc,Ice shot that slows enemies,冰系射击并减速
+card.m_fire.name,Fireball,火球
+card.m_fire.desc,Explosive fire damage,火系爆炸伤害
+card.m_beam.name,Element Beam,元素射线
+card.m_beam.desc,Fires fixed-length beams that sweep with movement; has duration and cooldown,伸出固定长度射线，随移动方向扫射；有持续与冷却
+card.m_ice_field.name,Frost Field,寒冰阵
+card.m_ice_field.desc,Slow-field building,减速场建筑
+card.m_fire_turret.name,Flame Tower,火法塔
+card.m_fire_turret.desc,Fire turret,火焰炮塔
+card.up_m_ice.name,Ice Bolt · Deep Chill,冰矢·深寒
+card.up_m_ice.desc,Increases Ice Bolt damage and slow,冰矢伤害与减速提升
+card.up_m_fire.name,Fireball · Blast,火球·爆炎
+card.up_m_fire.desc,Increases Fireball damage and splash,火球伤害与溅射提升
+card.up_m_beam.name,Beam · Focus,射线·聚焦
+card.up_m_beam.desc,Increases beam damage and range,射线伤害与射程提升
+card.up_m_beam_cross.name,Beam · Cross,射线·十字
+card.up_m_beam_cross.desc,Adds side beams to form a cross,左右各增一条射线，形成十字
+card.up_m_field.name,Frost Field · Expand,寒冰阵·扩大
+card.up_m_field.desc,Increases slow-field range,减速场范围提升
+card.up_m_fturret.name,Flame Tower · Inferno,火法塔·烈焰
+card.up_m_fturret.desc,Increases Flame Tower damage,火法塔伤害提升
+card.h_pierce.name,Pierce Arrow,穿透箭
+card.h_pierce.desc,Pierces multiple enemies,穿透多名敌人
+card.h_frost.name,Frost Arrow,冰箭
+card.h_frost.desc,Arrows that slow on hit,箭矢附带减速
+card.h_pet.name,Summon Wolf,召唤狼宠
+card.h_pet.desc,Pet takes one slot and auto-bites,宠物占一槽，自动撕咬
+card.h_trap.name,Bear Trap,捕兽夹
+card.h_trap.desc,Trap building: damage and slow on trigger,陷阱建筑，触发伤害并减速
+card.h_camp.name,Camp Watchtower,营地哨塔
+card.h_camp.desc,Hunter turret,猎人炮塔
+card.up_h_pierce.name,Pierce · Volley,穿透·连射
+card.up_h_pierce.desc,Increases pierce count and damage,穿透数与伤害提升
+card.up_h_frost.name,Frost Arrow · Freeze,冰箭·霜冻
+card.up_h_frost.desc,Increases Frost Arrow damage and slow,冰箭伤害与减速提升
+card.up_h_pet.name,Wolf · Feral,狼宠·野性
+card.up_h_pet.desc,Increases pet damage and attack speed,宠物伤害与攻速提升
+card.up_h_trap.name,Bear Trap · Sharp,捕兽夹·锋利
+card.up_h_trap.desc,Increases trap damage,陷阱伤害提升
+card.up_h_camp.name,Watchtower · Calibrate,哨塔·校准
+card.up_h_camp.desc,Increases watchtower range and damage,哨塔射程与伤害提升
+card.p_hp.name,Fortify,强体
+card.p_hp.desc,Max HP +25,最大生命 +25
+card.p_speed.name,Swift Step,疾步
+card.p_speed.desc,Increases move speed,移动速度提升
+card.p_regen.name,Regen,再生
+card.p_regen.desc,Slowly regenerates HP,缓慢回复生命
+card.up_p_hp.name,Fortify · Reforge,强体·再锻
+card.up_p_hp.desc,Another +20 max HP,再 +20 最大生命

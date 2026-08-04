@@ -17,12 +17,12 @@ public partial class ResultScreen : CanvasLayer
 
 		var v = new VBoxContainer();
 		panel.AddChild(v);
-		v.AddChild(new Label { Text = victory ? "生存成功！" : "英雄倒下了" });
-		v.AddChild(new Label { Text = $"评级 {rank}  分数 {score}" });
-		v.AddChild(new Label { Text = $"击杀 {kills}  精英 {elites}  分钟目标 {goals}" });
-		v.AddChild(new Label { Text = $"获得货币 +{currencyGain}  (总 {Game.Instance.MetaCurrency})" });
+		v.AddChild(new Label { Text = victory ? I18n.T("ui.result.victory") : I18n.T("ui.result.defeat") });
+		v.AddChild(new Label { Text = I18n.T("ui.result.rank", rank, score) });
+		v.AddChild(new Label { Text = I18n.T("ui.result.stats", kills, elites, goals) });
+		v.AddChild(new Label { Text = I18n.T("ui.result.currency", currencyGain, Game.Instance.MetaCurrency) });
 
-		var btn = new Button { Text = "返回选英雄" };
+		var btn = new Button { Text = I18n.T("ui.result.continue") };
 		btn.Pressed += () => EmitSignal(SignalName.ContinuePressed);
 		v.AddChild(btn);
 	}

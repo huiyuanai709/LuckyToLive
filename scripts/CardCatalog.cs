@@ -27,6 +27,9 @@ public class CardDef
 	public float[] BeamAnglesDeg;      // 覆盖射线角度（相对朝向，度）；null = 用默认规则
 	public int BeamRaysAdd;            // 升级时额外增加的射线数（走默认角度规则）
 	public float BeamLengthAdd;        // 升级时额外增加的射线长度
+
+	public string LocalizedName => I18n.CardName(Id);
+	public string LocalizedDesc => I18n.CardDesc(Id);
 }
 
 public class SlotItem

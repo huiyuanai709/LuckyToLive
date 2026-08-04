@@ -53,8 +53,8 @@ public partial class Enemy : CharacterBody2D
 		Speed = 55f;
 		ContactDamage = 14f;
 		XpValue = 18f;
-		if (affix == "冲刺") Speed = 95f;
-		if (affix == "护盾") { MaxHp *= 1.4f; Hp = MaxHp; }
+		if (affix == "dash") Speed = 95f;
+		if (affix == "shield") { MaxHp *= 1.4f; Hp = MaxHp; }
 		// AddChild 已触发 _Ready（当时还不是精英），此处补刷贴图与动效幅度
 		ApplyVisual();
 	}
@@ -87,7 +87,7 @@ public partial class Enemy : CharacterBody2D
 		var hero = GetTree().GetFirstNodeInGroup("hero") as Hero;
 		if (hero == null || !IsInstanceValid(hero)) return;
 
-		if (Affix == "召唤")
+		if (Affix == "summon")
 		{
 			_summonCd -= dt;
 			if (_summonCd <= 0)

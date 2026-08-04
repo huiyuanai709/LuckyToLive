@@ -2,6 +2,10 @@
 
 开放岛屿生存 Roguelike 原型（Godot 4.x + C#）。在限时岛屿上操控英雄杀怪升级、构筑武器 / 建筑 / 宠物槽位，撑过 5 分钟或倒下结算。
 
+## 语言
+
+选英雄界面与局内 HUD 右上角可切换 **中文 / English**；偏好写入本地存档 `user://save.cfg` 的 `settings.locale`。文案表见 `assets/i18n/translations.csv`（Godot TranslationServer）。
+
 ## 如何运行
 
 1. 安装 **.NET SDK 8.0**：https://dotnet.microsoft.com/download  
@@ -40,6 +44,7 @@ scenes/Main.tscn           — 主场景，挂载 Main.cs
 assets/characters|enemies  — 英雄与敌人贴图
 assets/environment         — 岛屿地面 / 树木 / 草丛 / 岩石等环境贴图
 scripts/
+  I18n.cs                  — 国际化 Autoload（CSV → TranslationServer，中英切换）
   Game.cs                  — 元进度（货币、解锁英雄、存档）与本局统计
   Main.cs                  — 选人、开局、计时、选卡流程、结算；岛屿地面绘制
   EnvironmentArt.cs        — 环境贴图加载（res://assets/environment/）
@@ -51,10 +56,11 @@ scripts/
   Enemy.cs / Projectile.cs — 敌人与投射物
   Building.cs / Pet.cs     — 建筑与宠物实体
   BigItemDrop.cs           — 精英大件掉落
-  ui/HeroSelect.cs         — 选英雄界面
-  ui/Hud.cs                — HUD（时间、生命、经验、槽位、广告槽）
+  ui/HeroSelect.cs         — 选英雄界面（含语言切换）
+  ui/Hud.cs                — HUD（时间、生命、经验、槽位、广告槽、语言切换）
   ui/CardPopup.cs          — 暂停时的选卡弹窗
   ui/ResultScreen.cs       — 结算界面
+assets/i18n/translations.csv — 中英对照文案表
 ```
 
 多数 UI 与实体由代码动态创建；岛屿海域 / 沙滩 / 草地 / 泥土在 `Main._Draw()` 中铺贴，树木与草丛等由 `IslandDecor` 在开局生成。

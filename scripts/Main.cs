@@ -47,6 +47,8 @@ public partial class Main : Node2D
 
 	private void ClearWorld()
 	{
+		if (I18n.Instance != null)
+			I18n.Instance.LocaleChanged -= OnLocaleChanged;
 		foreach (var c in GetChildren())
 		{
 			if (c is Game) continue;
@@ -79,8 +81,14 @@ public partial class Main : Node2D
 		_hero.GlobalPosition = IslandRect.GetCenter();
 		_hero.Setup(heroId);
 		_hero.Died += OnHeroDied;
-		_hero.HpChanged += (hp, max) => { if (_hud != null) _hud.HpLabel.Text = $"生命 {hp:0}/{max:0}"; };
-		_hero.XpChanged += (lv, xp, need) => { if (_hud != null) _hud.XpLabel.Text = $"英雄 Lv{lv}  XP {xp:0}/{need:0}"; };
+		_hero.HpChanged += (hp, max) =>
+		{
+			if (_hud != null) _hud.HpLabel.Text = I18n.T("ui.hud.hp", $"{hp:0}", $"{max:0}");
+		};
+		_hero.XpChanged += (lv, xp, need) =>
+		{
+			if (_hud != null) _hud.XpLabel.Text = I18n.T("ui.hud.xp", lv, $"{xp:0}", $"{need:0}");
+		};
 
 		_cam = new Camera2D { PositionSmoothingEnabled = true, PositionSmoothingSpeed = 8 };
 		_hero.AddChild(_cam);
@@ -91,26 +99,37 @@ public partial class Main : Node2D
 		_spawner.EliteSpawned += OnEliteSpawned;
 		_spawner.MinuteEventFired += m =>
 		{
-			_hud.MsgLabel.Text = $"第 {m} 分钟精英冲击！";
+			_hud.MsgLabel.Text = I18n.T("ui.hud.elite_wave", m);
 		};
 
 		_hud = new Hud();
 		AddChild(_hud);
 		_hud.AdPressed += OnAdPressed;
 		_hud.RefreshSlots(_hero.Loadout);
-		_hud.HpLabel.Text = $"生命 {_hero.Hp:0}/{_hero.MaxHp:0}";
+		_hud.HpLabel.Text = I18n.T("ui.hud.hp", $"{_hero.Hp:0}", $"{_hero.MaxHp:0}");
+		if (I18n.Instance != null)
+			I18n.Instance.LocaleChanged += OnLocaleChanged;
 
 		// 开局选卡（暂停）
 		string starterId = CardCatalog.StarterCardId(heroId);
 		var starter = CardCatalog.Get(starterId);
-		OpenCardPick("开局装备", new List<CardDef> { starter }, forcedSingle: true, afterStarter: true);
+		OpenCardPick(I18n.T("ui.card.starter"), new List<CardDef> { starter }, forcedSingle: true, afterStarter: true);
+	}
+
+	private void OnLocaleChanged(string _)
+	{
+		if (_ended || _hero == null || _hud == null) return;
+		_hud.HpLabel.Text = I18n.T("ui.hud.hp", $"{_hero.Hp:0}", $"{_hero.MaxHp:0}");
+		_hud.XpLabel.Text = I18n.T("ui.hud.xp", _hero.Level, $"{_hero.Xp:0}", $"{_hero.XpToNext():0}");
+		_hud.RefreshSlots(_hero.Loadout);
+		_hud.SetTime(_timeLeft);
 	}
 
 	private void OnAdPressed()
 	{
 		if (Game.Instance.TryUnlockAdSlot())
 		{
-			_hud.MsgLabel.Text = "本局槽位 +1（广告占位）";
+			_hud.MsgLabel.Text = I18n.T("ui.hud.ad_gained");
 			_hud.RefreshSlots(_hero.Loadout);
 		}
 	}
@@ -217,12 +236,14 @@ public partial class Main : Node2D
 			_elitesThisMinute = 0;
 			_minuteMark += 60f;
 			_hud.GoalLabel.Text = _goalMinute <= 5
-				? $"分钟目标: 击杀 1 精英 (本分钟 {_elitesThisMinute})"
-				: "分钟目标: 完成";
+				? I18n.T("ui.hud.goal_minute", _elitesThisMinute)
+				: I18n.T("ui.hud.goal_complete");
 		}
 		else
 		{
-			_hud.GoalLabel.Text = $"分钟目标: 击杀 1 精英 {( _goalDone ? "完成" : $"({_elitesThisMinute}/1)")}";
+			_hud.GoalLabel.Text = _goalDone
+				? I18n.T("ui.hud.goal_done")
+				: I18n.T("ui.hud.goal_progress", _elitesThisMinute);
 		}
 
 		// 拾取高亮大件
@@ -231,7 +252,7 @@ public partial class Main : Node2D
 			if (n is BigItemDrop drop && IsInstanceValid(drop) &&
 				_hero.GlobalPosition.DistanceTo(drop.GlobalPosition) < 28)
 			{
-				OpenCardPick("精英掉落", new List<CardDef> { drop.Card }, forcedSingle: true);
+				OpenCardPick(I18n.T("ui.card.elite_drop"), new List<CardDef> { drop.Card }, forcedSingle: true);
 				drop.QueueFree();
 				break;
 			}
@@ -242,7 +263,7 @@ public partial class Main : Node2D
 		{
 			var opts = CardCatalog.RollOptions(Game.Instance.SelectedHero, _hero.Loadout, 3, _rng);
 			if (opts.Count == 0) break;
-			OpenCardPick("升级选择", opts);
+			OpenCardPick(I18n.T("ui.card.upgrade"), opts);
 			break; // OpenCardPick pauses; next levels after resume via queue
 		}
 
@@ -282,21 +303,21 @@ public partial class Main : Node2D
 			{
 				// 开局后再给一次三选一扩构筑
 				var opts = CardCatalog.RollOptions(Game.Instance.SelectedHero, _hero.Loadout, 3, _rng);
-				OpenCardPick("额外起步卡", opts);
+				OpenCardPick(I18n.T("ui.card.bonus"), opts);
 				return;
 			}
 
 			// 处理连升
 			if (_pendingPicks.Count > 0)
 			{
-				OpenCardPick("升级选择", _pendingPicks.Dequeue());
+				OpenCardPick(I18n.T("ui.card.upgrade"), _pendingPicks.Dequeue());
 				return;
 			}
 			while (_hero.TryLevelUp())
 			{
 				var opts = CardCatalog.RollOptions(Game.Instance.SelectedHero, _hero.Loadout, 3, _rng);
 				if (opts.Count == 0) break;
-				OpenCardPick("升级选择", opts);
+				OpenCardPick(I18n.T("ui.card.upgrade"), opts);
 				return;
 			}
 		};

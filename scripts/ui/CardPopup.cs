@@ -70,7 +70,7 @@ public partial class CardPopup : CanvasLayer
 
 		var text = new Label
 		{
-			Text = $"{card.Name}\n\n{card.Desc}\n\n{KindLabel(card.Kind)}",
+			Text = $"{card.LocalizedName}\n\n{card.LocalizedDesc}\n\n{I18n.KindLabel(card.Kind)}",
 			HorizontalAlignment = HorizontalAlignment.Center,
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
 			CustomMinimumSize = new Vector2(160, 110),
@@ -82,14 +82,4 @@ public partial class CardPopup : CanvasLayer
 		btn.Pressed += () => EmitSignal(SignalName.Chosen, id);
 		return btn;
 	}
-
-	private static string KindLabel(CardKind kind) => kind switch
-	{
-		CardKind.Weapon => "武器",
-		CardKind.Building => "建筑",
-		CardKind.Upgrade => "升级",
-		CardKind.Passive => "被动",
-		CardKind.Pet => "宠物",
-		_ => "",
-	};
 }
