@@ -119,11 +119,12 @@ public class Loadout
 	private static void UpgradeItem(SlotItem item, string stat, CardDef card = null)
 	{
 		item.Level += 1;
+		// 升级成长对齐敌人约 5 分钟 ~4–5× 血量缩放：每张升级卡应有明显体感（~30–50% 首升）。
 		switch (stat)
 		{
 			case "beam_focus":
-				item.Damage += 3;
-				item.Range += 24 + (card?.BeamLengthAdd ?? 0f);
+				item.Damage += 4f + item.Level * 1.5f;
+				item.Range += 28f + (card?.BeamLengthAdd ?? 0f);
 				break;
 			case "beam_rays":
 			{
@@ -147,22 +148,27 @@ public class Loadout
 					item.BeamAnglesDeg = null;
 				}
 				item.Range += card?.BeamLengthAdd ?? 0f;
-				item.Damage += 2;
+				item.Damage += 3f + item.Level;
 				break;
 			}
 			case "damage":
-				item.Damage += 4 + item.Level; break;
+				// 纯伤害：高成长，后续升级仍有感
+				item.Damage += 6f + item.Level * 2f;
+				break;
 			case "rate":
-				item.FireRate += 0.15f; break;
+				item.FireRate += 0.22f;
+				break;
 			case "range":
-				item.Range += 18; break;
+				item.Range += 26f;
+				break;
 			case "special":
-				item.Damage += 3;
-				item.FireRate += 0.08f;
-				item.Range += 10;
+				// 多数武器唯一升级路径：伤害为主，附带攻速/射程/特效
+				item.Damage += 5f + item.Level;
+				item.FireRate += 0.12f;
+				item.Range += 14f;
 				if (item.Pierce > 0) item.Pierce += 1;
-				if (item.Splash > 0) item.Splash += 8;
-				if (item.SlowFactor < 1f) item.SlowFactor = Mathf.Max(0.3f, item.SlowFactor - 0.05f);
+				if (item.Splash > 0) item.Splash += 12f;
+				if (item.SlowFactor < 1f) item.SlowFactor = Mathf.Max(0.25f, item.SlowFactor - 0.08f);
 				break;
 			case "hp":
 			case "speed":
