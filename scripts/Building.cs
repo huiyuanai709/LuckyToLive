@@ -105,7 +105,7 @@ public partial class Building : Node2D
 		foreach (var n in GetTree().GetNodesInGroup("enemies"))
 		{
 			if (n is not Enemy e || !IsInstanceValid(e)) continue;
-			float d = GlobalPosition.DistanceTo(e.GlobalPosition);
+			float d = GlobalPosition.DistanceTo(e.GlobalPosition) - e.BodyRadius * 0.35f;
 			if (d < bestD) { bestD = d; best = e; }
 		}
 		if (best == null) return;
@@ -120,7 +120,8 @@ public partial class Building : Node2D
 	{
 		foreach (var n in GetTree().GetNodesInGroup("enemies"))
 		{
-			if (n is Enemy e && IsInstanceValid(e) && GlobalPosition.DistanceTo(e.GlobalPosition) <= Item.Range)
+			if (n is Enemy e && IsInstanceValid(e)
+				&& GlobalPosition.DistanceTo(e.GlobalPosition) <= Item.Range + e.BodyRadius * 0.35f)
 				e.ApplySlow(Item.SlowFactor, 0.35f);
 		}
 	}
@@ -130,7 +131,7 @@ public partial class Building : Node2D
 		foreach (var n in GetTree().GetNodesInGroup("enemies"))
 		{
 			if (n is not Enemy e || !IsInstanceValid(e)) continue;
-			if (GlobalPosition.DistanceTo(e.GlobalPosition) > Item.Range) continue;
+			if (GlobalPosition.DistanceTo(e.GlobalPosition) > Item.Range + e.BodyRadius * 0.4f) continue;
 			if (reflect && _cd <= 0)
 			{
 				e.TakeDamage(Item.Damage);
@@ -144,7 +145,7 @@ public partial class Building : Node2D
 		foreach (var n in GetTree().GetNodesInGroup("enemies"))
 		{
 			if (n is not Enemy e || !IsInstanceValid(e)) continue;
-			if (GlobalPosition.DistanceTo(e.GlobalPosition) > Item.Range) continue;
+			if (GlobalPosition.DistanceTo(e.GlobalPosition) > Item.Range + e.BodyRadius * 0.4f) continue;
 			e.TakeDamage(Item.Damage);
 			e.ApplySlow(Item.SlowFactor, 1.5f);
 			QueueFree();

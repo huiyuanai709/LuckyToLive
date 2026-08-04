@@ -182,7 +182,8 @@ public partial class Hero : CharacterBody2D
 	{
 		if (_target == null || !IsInstanceValid(_target)) return false;
 		float dist = GlobalPosition.DistanceTo(_target.GlobalPosition);
-		if (dist > item.Range + 20f && item.WeaponStyle is not ("slash" or "charge")) return false;
+		if (dist > item.Range + 20f + (_target?.BodyRadius ?? 0f) * 0.35f
+			&& item.WeaponStyle is not ("slash" or "charge")) return false;
 
 		Vector2 toTarget = _target.GlobalPosition - GlobalPosition;
 		if (toTarget.LengthSquared() > 0.0001f)
@@ -209,7 +210,8 @@ public partial class Hero : CharacterBody2D
 		foreach (var n in GetTree().GetNodesInGroup("enemies"))
 		{
 			if (n is not Enemy e || !IsInstanceValid(e)) continue;
-			if (GlobalPosition.DistanceTo(e.GlobalPosition) <= range)
+			// 命中按怪物体型外扩，避免精英放大后近战「够不着中心」
+			if (GlobalPosition.DistanceTo(e.GlobalPosition) <= range + e.BodyRadius * 0.45f)
 				e.TakeDamage(item.Damage);
 		}
 	}
