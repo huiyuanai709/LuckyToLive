@@ -2,6 +2,7 @@ using Godot;
 
 /// <summary>
 /// 驱动 AnimatedSprite2D 的 idle / walk / attack 帧动画，并处理朝向翻转与受击闪红。
+/// 多帧图集到位后不再叠程序化弹跳，避免「抖动」盖过真正的帧动画。
 /// 移动时优先播 walk，避免自动开火一直占住 attack 导致看不出走路帧。
 /// </summary>
 public sealed class UnitSpriteAnim
@@ -15,6 +16,7 @@ public sealed class UnitSpriteAnim
 	private float _walkSpeed = 10f;
 	private float _time;
 	private string _current = "";
+	private bool _multiFrame;
 
 	public Vector2 Offset { get; private set; }
 	public Vector2 Squash => Vector2.One;
@@ -28,6 +30,7 @@ public sealed class UnitSpriteAnim
 		_baseScale = baseScale;
 		if (_sprite != null)
 			_sprite.Scale = _baseScale;
+		RefreshMultiFrameFlag();
 	}
 
 	public void SetBaseScale(Vector2 scale) => _baseScale = scale;
@@ -42,14 +45,29 @@ public sealed class UnitSpriteAnim
 
 	public void SetWalkHz(float hz) => _walkSpeed = Mathf.Clamp(hz, 5f, 16f);
 
+	/// <summary>贴图刚换上时调用，重新判断是否有可用多帧。</summary>
+	public void RefreshMultiFrameFlag()
+	{
+		_multiFrame = false;
+		if (_sprite?.SpriteFrames == null) return;
+		var sf = _sprite.SpriteFrames;
+		_multiFrame = sf.HasAnimation(CharacterArt.AnimWalk)
+			&& sf.GetFrameCount(CharacterArt.AnimWalk) > 1;
+	}
+
 	public void PlayAttack(float duration = 0.28f)
 	{
 		if (_sprite?.SpriteFrames == null) return;
 		if (!_sprite.SpriteFrames.HasAnimation(CharacterArt.AnimAttack)) return;
-		if (_sprite.SpriteFrames.GetFrameCount(CharacterArt.AnimAttack) <= 0) return;
+		int count = _sprite.SpriteFrames.GetFrameCount(CharacterArt.AnimAttack);
+		if (count <= 0) return;
 		// 已在播攻击则不重置，保证完整播完
 		if (_attackT > 0f) return;
-		_attackT = Mathf.Max(0.16f, duration);
+
+		float fps = (float)_sprite.SpriteFrames.GetAnimationSpeed(CharacterArt.AnimAttack);
+		float sheetDur = fps > 0.01f ? count / fps : duration;
+		_attackT = Mathf.Max(0.16f, Mathf.Max(duration, sheetDur * 0.92f));
+
 		// 站立时立刻切攻击姿；移动中只记状态，由 Update 决定是否展示
 		if (!_moving)
 			PlayAnim(CharacterArt.AnimAttack, 1f);
@@ -64,10 +82,19 @@ public sealed class UnitSpriteAnim
 		if (_attackT > 0f) _attackT = Mathf.Max(0f, _attackT - dt);
 		if (_sprite == null || !GodotObject.IsInstanceValid(_sprite)) return;
 
-		// 帧动画为主；行走时再叠一点弹跳，远距离也更容易看出在动
-		float bob = _moving ? -Mathf.Abs(Mathf.Sin(_time * _walkSpeed)) * 3.5f
-			: Mathf.Sin(_time * 2.6f) * 1.2f;
-		Offset = new Vector2(0f, bob);
+		// 多帧：脚底对齐后的图集自带动作，不再叠 Y 向弹跳
+		// 单帧回退：保留轻微呼吸/迈步，避免完全静止
+		if (_multiFrame)
+		{
+			Offset = Vector2.Zero;
+		}
+		else
+		{
+			float bob = _moving
+				? -Mathf.Abs(Mathf.Sin(_time * _walkSpeed)) * 3.5f
+				: Mathf.Sin(_time * 2.6f) * 1.2f;
+			Offset = new Vector2(0f, bob);
+		}
 
 		_sprite.FlipH = _facingX < 0f;
 		_sprite.Position = Offset;
@@ -77,7 +104,8 @@ public sealed class UnitSpriteAnim
 
 		if (_moving)
 		{
-			EnsureAnim(CharacterArt.AnimWalk, _walkSpeed / 8f);
+			// walk 基础 fps≈10，再按移速微调到约 0.9–1.4x
+			EnsureAnim(CharacterArt.AnimWalk, Mathf.Clamp(_walkSpeed / 10f, 0.85f, 1.4f));
 			return;
 		}
 
