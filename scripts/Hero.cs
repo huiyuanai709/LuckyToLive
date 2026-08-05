@@ -61,6 +61,7 @@ public partial class Hero : CharacterBody2D
 	{
 		if (_sprite == null) return;
 		_sprite.SpriteFrames = CharacterArt.ForHero(HeroType);
+		_anim?.RefreshMultiFrameFlag();
 		_sprite.Play(CharacterArt.AnimIdle);
 		QueueRedraw();
 	}
