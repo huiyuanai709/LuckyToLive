@@ -174,16 +174,16 @@ public partial class Main : Node2D
 		else
 			DrawRect(inlandRect, theme.InlandFallback);
 
-		// 地表斑块（增加变化）
+		// 地表斑块：与主题障碍阵列对齐，强化阻隔物可读性
 		var patchTex = EnvironmentArt.Load(theme.PatchGround);
-		var dirtPatches = new[]
-		{
-			new Rect2(600, 400, 140, 100),
-			new Rect2(1400, 880, 180, 90),
-			new Rect2(980, 580, 120, 160),
-			new Rect2(420, 1100, 160, 80),
-			new Rect2(1800, 320, 120, 100),
-		};
+		var dirtPatches = theme.GroundPatches is { Length: > 0 }
+			? theme.GroundPatches
+			: new[]
+			{
+				new Rect2(600, 400, 140, 100),
+				new Rect2(1400, 880, 180, 90),
+				new Rect2(980, 580, 120, 160),
+			};
 		foreach (var r in dirtPatches)
 		{
 			if (patchTex != null) DrawTiled(patchTex, r);

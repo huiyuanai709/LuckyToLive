@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://r8u0k0lvugqlw"
-path="res://.godot/imported/tree_pine.png-f65169eccdb935975f90de0f40fda197.ctex"
+uid="uid://cr8i7rwvlm8ku"
+path="res://.godot/imported/tree_pine.png-9ac04a50db38fa4346c1c032f4e1d262.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/environment/tree_pine.png"
-dest_files=["res://.godot/imported/tree_pine.png-f65169eccdb935975f90de0f40fda197.ctex"]
+dest_files=["res://.godot/imported/tree_pine.png-9ac04a50db38fa4346c1c032f4e1d262.ctex"]
 
 [params]
 

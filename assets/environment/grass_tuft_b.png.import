@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://8fk6gubbqkzgy"
-path="res://.godot/imported/grass_tuft_b.png-781108cd4622b575abe4b68e60379e6c.ctex"
+uid="uid://cib7qexa7x0eu"
+path="res://.godot/imported/grass_tuft_b.png-15b45543c0fe4b21f14d153515a2af6f.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/environment/grass_tuft_b.png"
-dest_files=["res://.godot/imported/grass_tuft_b.png-781108cd4622b575abe4b68e60379e6c.ctex"]
+dest_files=["res://.godot/imported/grass_tuft_b.png-15b45543c0fe4b21f14d153515a2af6f.ctex"]
 
 [params]
 
