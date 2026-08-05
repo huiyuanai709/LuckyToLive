@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://kviwmtvyv0fu8"
-path="res://.godot/imported/bush.png-37aeffaebc8945cafada201b3800b6cc.ctex"
+uid="uid://c5o6gp2hrlodp"
+path="res://.godot/imported/bush.png-5873c4eb44f0d0fd89fb7a4ab22f77ce.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/environment/bush.png"
-dest_files=["res://.godot/imported/bush.png-37aeffaebc8945cafada201b3800b6cc.ctex"]
+dest_files=["res://.godot/imported/bush.png-5873c4eb44f0d0fd89fb7a4ab22f77ce.ctex"]
 
 [params]
 
