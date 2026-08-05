@@ -48,7 +48,8 @@ scripts/
   Game.cs                  — 元进度（货币、解锁英雄、存档）与本局统计
   Main.cs                  — 选人、开局、计时、选卡流程、结算；岛屿地面绘制
   EnvironmentArt.cs        — 环境贴图加载（res://assets/environment/）
-  IslandDecor.cs           — 开局铺设树木、草丛、灌木、岩石等装饰
+  IslandDecor.cs           — 开局铺设主题障碍（可碰撞）与树木 / 草丛等装饰
+  MapCatalog.cs            — 地图主题（地表、敌人、障碍阵列）
   Hero.cs                  — 英雄移动、生命、经验、武器开火
   Loadout.cs               — 槽位列表；应用卡牌生成建筑/宠物/被动
   CardCatalog.cs           — 卡牌定义与三选一抽取池
@@ -69,7 +70,7 @@ assets/i18n/translations.csv — 中英对照文案表
 
 - 真实广告 SDK 接入「本局 +1 槽」  
 - 更丰富的精英词条（冲刺 / 护盾 / 召唤 / 远程已有占位）  
-- 障碍碰撞（岩石等装饰可挂 StaticBody2D）、更多岛屿布局与 Boss 分钟  
+- 更多岛屿布局与 Boss 分钟  
 - 音效、粒子与更高清手绘环境替换  
 - 数值平衡与更多公共被动 / 协同构筑  
 

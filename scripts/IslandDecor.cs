@@ -2,20 +2,11 @@ using Godot;
 using System.Collections.Generic;
 
 /// <summary>
-/// 岛屿装饰物：树木、草丛、灌木、岩石、小花等。
-/// 精灵作为 Main 的直接子节点，以便与英雄 / 敌人一起 Y 排序遮挡。
-/// 布局与种类随当前 <see cref="MapTheme"/> 变化。
+/// 岛屿装饰与障碍：主题障碍阵列（可碰撞）+ 氛围装饰。
+/// 精灵挂在 Main 下以便与英雄 / 敌人一起 Y 排序遮挡。
 /// </summary>
 public partial class IslandDecor : Node2D
 {
-	/// <summary>固定障碍点（与旧版棕色方块位置对应）。</summary>
-	private static readonly Vector2[] LandmarkRocks =
-	{
-		new(660, 440),
-		new(1480, 930),
-		new(1040, 670),
-	};
-
 	public static IslandDecor Spawn(Node2D world, Rect2 island, MapTheme theme = null)
 	{
 		theme ??= MapCatalog.Island;
@@ -32,47 +23,169 @@ public partial class IslandDecor : Node2D
 		rng.Seed = theme.DecorSeed;
 
 		var clearCenter = island.GetCenter();
-		const float clearRadius = 160f;
+		float clearRadius = theme.ClearRadius > 0f ? theme.ClearRadius : 170f;
+		var occupied = new List<Vector2>(128);
 
-		var rockKinds = theme.RockKinds is { Length: > 0 } ? theme.RockKinds : new[] { "rock" };
-		foreach (var p in LandmarkRocks)
+		var blockKinds = theme.BlockKinds is { Length: > 0 }
+			? theme.BlockKinds
+			: (theme.RockKinds is { Length: > 0 } ? theme.RockKinds : new[] { "rock" });
+
+		// 1) 主题障碍阵列：真正阻挡走位
+		if (theme.Barriers != null)
 		{
-			if (island.HasPoint(p))
-				AddProp(world, rockKinds[0], p, rng.RandfRange(0.95f, 1.15f), feetAnchor: true);
+			foreach (var barrier in theme.Barriers)
+			{
+				if (barrier == null) continue;
+				var kinds = barrier.Kinds is { Length: > 0 } ? barrier.Kinds : blockKinds;
+				PlaceBarrier(world, island, rng, clearCenter, clearRadius, barrier, kinds, occupied);
+			}
 		}
 
-		PlaceScatter(world, island, rng, clearCenter, clearRadius, count: 14, minSep: 90f,
-			kinds: rockKinds, scaleMin: 0.75f, scaleMax: 1.1f, edgeBias: 0.35f);
+		// 2) 少量散落硬障碍（填空，不破坏主通道）
+		int scatterRocks = theme.ScatterRockCount > 0 ? theme.ScatterRockCount : 6;
+		PlaceScatter(world, island, rng, clearCenter, clearRadius + 30f, count: scatterRocks, minSep: 110f,
+			kinds: blockKinds, scaleMin: 1.05f, scaleMax: 1.4f, edgeBias: 0.55f,
+			occupied: occupied, blocking: true, margin: 60f);
 
+		// 3) 氛围装饰（树 / 灌木可轻阻挡；草花等不挡）
 		if (theme.TreeKinds is { Length: > 0 } && theme.TreeCount > 0)
 		{
-			PlaceScatter(world, island, rng, clearCenter, clearRadius + 40f, count: theme.TreeCount, minSep: 70f,
-				kinds: theme.TreeKinds, scaleMin: 0.55f, scaleMax: 0.85f, edgeBias: 0.7f, margin: 50f);
+			bool treesBlock = theme.Id is MapId.Wilderness or MapId.Desert or MapId.Apocalypse;
+			PlaceScatter(world, island, rng, clearCenter, clearRadius + 50f, count: theme.TreeCount, minSep: 78f,
+				kinds: theme.TreeKinds, scaleMin: 0.55f, scaleMax: 0.9f, edgeBias: 0.75f,
+				occupied: occupied, blocking: treesBlock, margin: 55f);
 		}
 
 		if (theme.BushKinds is { Length: > 0 } && theme.BushCount > 0)
 		{
-			PlaceScatter(world, island, rng, clearCenter, clearRadius * 0.6f, count: theme.BushCount, minSep: 48f,
-				kinds: theme.BushKinds, scaleMin: 0.7f, scaleMax: 1.1f, edgeBias: 0.45f);
+			PlaceScatter(world, island, rng, clearCenter, clearRadius * 0.55f, count: theme.BushCount, minSep: 52f,
+				kinds: theme.BushKinds, scaleMin: 0.75f, scaleMax: 1.15f, edgeBias: 0.4f,
+				occupied: occupied, blocking: true, margin: 40f);
 		}
 
 		if (theme.GrassKinds is { Length: > 0 } && theme.GrassCount > 0)
 		{
 			PlaceScatter(world, island, rng, clearCenter, 40f, count: theme.GrassCount, minSep: 28f,
-				kinds: theme.GrassKinds, scaleMin: 0.7f, scaleMax: 1.25f, edgeBias: 0.2f, margin: 28f, zBehind: true);
+				kinds: theme.GrassKinds, scaleMin: 0.7f, scaleMax: 1.25f, edgeBias: 0.2f,
+				occupied: occupied, blocking: false, margin: 28f, zBehind: true);
 		}
 
 		if (theme.FlowerKinds is { Length: > 0 } && theme.FlowerCount > 0)
 		{
 			PlaceScatter(world, island, rng, clearCenter, 50f, count: theme.FlowerCount, minSep: 40f,
-				kinds: theme.FlowerKinds, scaleMin: 0.85f, scaleMax: 1.2f, edgeBias: 0.15f, zBehind: true);
+				kinds: theme.FlowerKinds, scaleMin: 0.85f, scaleMax: 1.2f, edgeBias: 0.15f,
+				occupied: occupied, blocking: false, zBehind: true);
 		}
 
 		if (theme.ScatterExtra is { Length: > 0 } && theme.ExtraCount > 0)
 		{
-			PlaceScatter(world, island, rng, clearCenter, 80f, count: theme.ExtraCount, minSep: 55f,
-				kinds: theme.ScatterExtra, scaleMin: 0.8f, scaleMax: 1.15f, edgeBias: 0.4f, zBehind: true);
+			PlaceScatter(world, island, rng, clearCenter, 90f, count: theme.ExtraCount, minSep: 58f,
+				kinds: theme.ScatterExtra, scaleMin: 0.85f, scaleMax: 1.2f, edgeBias: 0.35f,
+				occupied: occupied, blocking: false, zBehind: true);
 		}
+	}
+
+	private void PlaceBarrier(
+		Node2D world,
+		Rect2 island,
+		RandomNumberGenerator rng,
+		Vector2 clearCenter,
+		float clearRadius,
+		BarrierSpec spec,
+		string[] kinds,
+		List<Vector2> occupied)
+	{
+		var points = SampleBarrierPoints(spec, rng);
+		foreach (var raw in points)
+		{
+			var p = raw;
+			p.X = Mathf.Clamp(p.X, island.Position.X + 36, island.End.X - 36);
+			p.Y = Mathf.Clamp(p.Y, island.Position.Y + 36, island.End.Y - 36);
+			if (p.DistanceTo(clearCenter) < clearRadius) continue;
+			if (TooClose(occupied, p, 34f)) continue;
+
+			string kind = kinds[rng.RandiRange(0, kinds.Length - 1)];
+			float scale = rng.RandfRange(spec.ScaleMin, spec.ScaleMax);
+			if (AddProp(world, kind, p, scale, feetAnchor: true, blocking: true))
+				occupied.Add(p);
+		}
+	}
+
+	private static List<Vector2> SampleBarrierPoints(BarrierSpec spec, RandomNumberGenerator rng)
+	{
+		var pts = new List<Vector2>(spec.Count);
+		var c = spec.Center;
+		float sx = Mathf.Max(40f, spec.SpanX);
+		float sy = Mathf.Max(40f, spec.SpanY);
+
+		switch (spec.Shape)
+		{
+			case BarrierShape.LineH:
+				for (int i = 0; i < spec.Count; i++)
+				{
+					float t = spec.Count == 1 ? 0.5f : i / (float)(spec.Count - 1);
+					float x = c.X - sx * 0.5f + t * sx;
+					float y = c.Y + rng.RandfRange(-sy * 0.35f, sy * 0.35f);
+					pts.Add(new Vector2(x, y));
+				}
+				break;
+
+			case BarrierShape.LineV:
+				for (int i = 0; i < spec.Count; i++)
+				{
+					float t = spec.Count == 1 ? 0.5f : i / (float)(spec.Count - 1);
+					float y = c.Y - sy * 0.5f + t * sy;
+					float x = c.X + rng.RandfRange(-sx * 0.35f, sx * 0.35f);
+					pts.Add(new Vector2(x, y));
+				}
+				break;
+
+			case BarrierShape.LShape:
+			{
+				int arm = Mathf.Max(2, spec.Count / 2);
+				for (int i = 0; i < arm; i++)
+				{
+					float t = arm == 1 ? 0.5f : i / (float)(arm - 1);
+					pts.Add(new Vector2(c.X - sx * 0.5f + t * sx, c.Y + rng.RandfRange(-10f, 10f)));
+				}
+				for (int i = 1; i < spec.Count - arm + 1; i++)
+				{
+					float t = i / (float)Mathf.Max(1, spec.Count - arm);
+					pts.Add(new Vector2(c.X + rng.RandfRange(-10f, 10f), c.Y + t * sy * 0.5f));
+				}
+				break;
+			}
+
+			case BarrierShape.Arc:
+			{
+				// 开口朝向地图中心，形成半围掩体
+				float start = rng.RandfRange(-0.35f, 0.35f);
+				float sweep = Mathf.Pi * 0.95f;
+				float rx = sx * 0.5f;
+				float ry = sy * 0.5f;
+				for (int i = 0; i < spec.Count; i++)
+				{
+					float t = spec.Count == 1 ? 0.5f : i / (float)(spec.Count - 1);
+					float ang = start + t * sweep;
+					float jx = rng.RandfRange(-8f, 8f);
+					float jy = rng.RandfRange(-8f, 8f);
+					pts.Add(c + new Vector2(Mathf.Cos(ang) * rx + jx, Mathf.Sin(ang) * ry + jy));
+				}
+				break;
+			}
+
+			default: // Clump
+				pts.Add(c);
+				for (int i = 1; i < spec.Count; i++)
+				{
+					float ang = rng.Randf() * Mathf.Tau;
+					float rad = rng.RandfRange(18f, Mathf.Max(28f, Mathf.Min(sx, sy) * 0.45f));
+					pts.Add(c + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * rad);
+				}
+				break;
+		}
+
+		return pts;
 	}
 
 	private void PlaceScatter(
@@ -87,16 +200,17 @@ public partial class IslandDecor : Node2D
 		float scaleMin,
 		float scaleMax,
 		float edgeBias,
+		List<Vector2> occupied,
+		bool blocking,
 		float margin = 40f,
 		bool zBehind = false)
 	{
 		if (kinds == null || kinds.Length == 0 || count <= 0) return;
 
-		var placed = new List<Vector2>(count);
 		var inner = island.Grow(-margin);
 		if (inner.Size.X < 80 || inner.Size.Y < 80) inner = island;
 
-		for (int attempt = 0, made = 0; attempt < count * 12 && made < count; attempt++)
+		for (int attempt = 0, made = 0; attempt < count * 14 && made < count; attempt++)
 		{
 			Vector2 p;
 			if (rng.Randf() < edgeBias)
@@ -120,47 +234,120 @@ public partial class IslandDecor : Node2D
 			}
 
 			if (p.DistanceTo(clearCenter) < clearRadius) continue;
-
-			bool near = false;
-			foreach (var q in placed)
-			{
-				if (q.DistanceTo(p) < minSep) { near = true; break; }
-			}
-			if (near) continue;
+			if (TooClose(occupied, p, minSep)) continue;
 
 			string kind = kinds[rng.RandiRange(0, kinds.Length - 1)];
 			float scale = rng.RandfRange(scaleMin, scaleMax);
-			if (AddProp(world, kind, p, scale, feetAnchor: !zBehind, zBehind: zBehind))
+			bool useBlock = blocking && IsBlockingKind(kind);
+			if (AddProp(world, kind, p, scale, feetAnchor: !zBehind, blocking: useBlock, zBehind: zBehind))
 			{
-				placed.Add(p);
+				occupied.Add(p);
 				made++;
 			}
 		}
 	}
 
-	private static bool AddProp(Node2D world, string kind, Vector2 pos, float scale, bool feetAnchor, bool zBehind = false)
+	private static bool TooClose(List<Vector2> occupied, Vector2 p, float minSep)
+	{
+		foreach (var q in occupied)
+		{
+			if (q.DistanceTo(p) < minSep) return true;
+		}
+		return false;
+	}
+
+	private static bool IsBlockingKind(string kind)
+	{
+		if (string.IsNullOrEmpty(kind)) return false;
+		return kind.StartsWith("rock")
+			|| kind.StartsWith("tree")
+			|| kind.StartsWith("bush")
+			|| kind.StartsWith("cactus")
+			|| kind is "stump" or "bone_pile";
+	}
+
+	private static float CollisionRadius(string kind, float scale)
+	{
+		float bas = kind switch
+		{
+			"rock" or "rock_rubble" or "rock_sand" => 26f,
+			"stump" or "bone_pile" => 20f,
+			"cactus" => 18f,
+			"cactus_small" => 12f,
+			_ when kind.StartsWith("tree") => 15f,
+			_ when kind.StartsWith("bush") => 14f,
+			_ => 0f,
+		};
+		return bas * Mathf.Clamp(scale, 0.7f, 2.2f);
+	}
+
+	private static bool AddProp(
+		Node2D world,
+		string kind,
+		Vector2 pos,
+		float scale,
+		bool feetAnchor,
+		bool blocking = false,
+		bool zBehind = false)
 	{
 		var tex = EnvironmentArt.Load(kind);
 		if (tex == null) return false;
 
-		var sprite = new Sprite2D
+		float radius = blocking ? CollisionRadius(kind, scale) : 0f;
+		Node2D root;
+		Sprite2D sprite;
+
+		if (radius > 0.5f)
 		{
-			Texture = tex,
-			TextureFilter = TextureFilterEnum.Nearest,
-			Scale = new Vector2(scale, scale),
-			Position = pos,
-			Centered = true,
-		};
-		sprite.AddToGroup("island_decor");
+			var body = new StaticBody2D
+			{
+				Position = pos,
+				CollisionLayer = 1,
+				CollisionMask = 0,
+			};
+			body.AddToGroup("island_decor");
+			body.AddToGroup("island_obstacles");
 
-		if (feetAnchor)
-			sprite.Offset = new Vector2(0, -tex.GetHeight() * 0.5f + 6f);
+			sprite = new Sprite2D
+			{
+				Texture = tex,
+				TextureFilter = TextureFilterEnum.Nearest,
+				Scale = new Vector2(scale, scale),
+				Centered = true,
+			};
+			if (feetAnchor)
+				sprite.Offset = new Vector2(0, -tex.GetHeight() * 0.5f + 6f);
+			body.AddChild(sprite);
 
-		// 矮植被固定压在角色脚下；树木靠 YSort + 底部锚点遮挡
+			var col = new CollisionShape2D
+			{
+				Shape = new CircleShape2D { Radius = radius },
+				// 脚底略前，贴合阴影位置
+				Position = new Vector2(0, -2f),
+			};
+			body.AddChild(col);
+			root = body;
+		}
+		else
+		{
+			sprite = new Sprite2D
+			{
+				Texture = tex,
+				TextureFilter = TextureFilterEnum.Nearest,
+				Scale = new Vector2(scale, scale),
+				Position = pos,
+				Centered = true,
+			};
+			sprite.AddToGroup("island_decor");
+			if (feetAnchor)
+				sprite.Offset = new Vector2(0, -tex.GetHeight() * 0.5f + 6f);
+			root = sprite;
+		}
+
 		if (zBehind)
-			sprite.ZIndex = -1;
+			root.ZIndex = -1;
 
-		world.AddChild(sprite);
+		world.AddChild(root);
 		return true;
 	}
 }
