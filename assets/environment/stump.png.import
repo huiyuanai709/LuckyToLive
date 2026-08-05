@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://1owgnl46f6gq0"
-path="res://.godot/imported/stump.png-756e392ca0240083551ea01e44fda8f6.ctex"
+uid="uid://dig74amn1x67f"
+path="res://.godot/imported/stump.png-3c97b4af78daa2109f8776b74ba2e595.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/environment/stump.png"
-dest_files=["res://.godot/imported/stump.png-756e392ca0240083551ea01e44fda8f6.ctex"]
+dest_files=["res://.godot/imported/stump.png-3c97b4af78daa2109f8776b74ba2e595.ctex"]
 
 [params]
 
