@@ -171,6 +171,7 @@ public partial class Hero : CharacterBody2D
 		if (streak >= 12) return 1.55f;
 		if (streak >= 8) return 1.35f;
 		if (streak >= 5) return 1.2f;
+		if (streak >= 3) return 1.1f;
 		return 1f;
 	}
 
