@@ -110,6 +110,13 @@ public partial class Main : Node2D
 		{
 			if (_hud != null) _hud.XpLabel.Text = I18n.T("ui.hud.xp", lv, $"{xp:0}", $"{need:0}");
 		};
+		_hero.FrenzyChanged += (streak, mul) =>
+		{
+			if (_hud == null) return;
+			_hud.MsgLabel.Text = streak >= 3
+				? I18n.T("ui.hud.frenzy", streak, $"{mul:0.00}")
+				: "";
+		};
 
 		_cam = new Camera2D { PositionSmoothingEnabled = true, PositionSmoothingSpeed = 8 };
 		_hero.AddChild(_cam);
@@ -282,10 +289,18 @@ public partial class Main : Node2D
 		}
 
 		// 拾取高亮大件
+		float pickup = _hero.PickupRange;
 		foreach (var n in GetTree().GetNodesInGroup("big_drops"))
 		{
-			if (n is BigItemDrop drop && IsInstanceValid(drop) &&
-				_hero.GlobalPosition.DistanceTo(drop.GlobalPosition) < 28)
+			if (n is not BigItemDrop drop || !IsInstanceValid(drop)) continue;
+			float dist = _hero.GlobalPosition.DistanceTo(drop.GlobalPosition);
+			// 磁吸：较远时缓慢拉近，进入拾取半径再开卡
+			if (dist < pickup * 2.4f && dist > pickup)
+			{
+				drop.GlobalPosition = drop.GlobalPosition.MoveToward(_hero.GlobalPosition, 420f * dt);
+				continue;
+			}
+			if (dist < pickup)
 			{
 				OpenCardPick(I18n.T("ui.card.elite_drop"), new List<CardDef> { drop.Card }, forcedSingle: true);
 				drop.QueueFree();
@@ -362,7 +377,11 @@ public partial class Main : Node2D
 	{
 		if (_ended || _hero == null) return;
 		Game.Instance.KillCount += 1;
-		_hero.AddXp(enemy.XpValue);
+		float xp = enemy.XpValue;
+		float mul = _hero.RegisterKill();
+		// 连杀略加经验，强化「清群→升级回满」的节奏
+		if (mul > 1f) xp *= 1f + (mul - 1f) * 0.5f;
+		_hero.AddXp(xp);
 		if (enemy.IsElite)
 		{
 			Game.Instance.EliteKills += 1;

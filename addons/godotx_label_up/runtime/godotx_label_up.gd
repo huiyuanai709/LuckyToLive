@@ -50,6 +50,13 @@ func show_xp(position: Vector2, amount: float) -> int:
 	var style: GodotxLabelUpStyle = GodotxLabelUpStyles.get_instance().get_style(GodotxLabelUpStyles.XP)
 	return show(position, "+%d XP" % roundi(amount), style)
 
+## Convenience for C# / gameplay: heal / full restore at world position.
+func show_heal(position: Vector2, amount: float) -> int:
+	if amount <= 0.0:
+		return -1
+	var style: GodotxLabelUpStyle = GodotxLabelUpStyles.get_instance().get_style(GodotxLabelUpStyles.HEAL)
+	return show(position, "+%d" % roundi(amount), style)
+
 func show_xy(x: float, y: float, text: String, style: GodotxLabelUpStyle) -> int:
 	return show(Vector2(x, y), text, style)
 

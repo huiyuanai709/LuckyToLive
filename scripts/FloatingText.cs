@@ -31,6 +31,12 @@ public static class FloatingText
 		_api.Call("show_xp", worldPos + new Vector2(0, -36), amount);
 	}
 
+	public static void ShowHeal(Vector2 worldPos, float amount)
+	{
+		if (amount <= 0f || !Ensure()) return;
+		_api.Call("show_heal", worldPos + new Vector2(0, -28), amount);
+	}
+
 	private static bool Ensure()
 	{
 		if (_api != null && GodotObject.IsInstanceValid(_api))
