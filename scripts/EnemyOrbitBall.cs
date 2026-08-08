@@ -40,9 +40,21 @@ public partial class EnemyOrbitBall : Node2D
 
 	public override void _Draw()
 	{
-		// 外环 + 内核，远距离也容易辨认旋转轨迹
-		DrawCircle(Vector2.Zero, 12f, new Color(0.55f, 0.2f, 0.95f, 0.85f));
-		DrawCircle(Vector2.Zero, 7f, new Color(0.95f, 0.65f, 1f, 0.95f));
-		DrawArc(Vector2.Zero, 14f, 0f, Mathf.Tau, 16, new Color(0.8f, 0.4f, 1f, 0.45f), 2f);
+		// 紫晶刺球：菱形核 + 尖刺，避免再画成双圆史莱姆
+		var core = new Color(0.72f, 0.35f, 1f, 0.95f);
+		var glow = new Color(0.95f, 0.7f, 1f, 0.55f);
+		var tip = new Color(0.55f, 0.2f, 0.95f, 0.9f);
+		DrawCircle(Vector2.Zero, 11f, glow);
+		DrawColoredPolygon(new[]
+		{
+			new Vector2(0, -10), new Vector2(8, 0), new Vector2(0, 10), new Vector2(-8, 0),
+		}, core);
+		for (int i = 0; i < 6; i++)
+		{
+			float a = i * Mathf.Tau / 6f + Angle * 0.35f;
+			var dir = Vector2.Right.Rotated(a);
+			DrawLine(dir * 6f, dir * 15f, tip, 2.2f);
+		}
+		DrawCircle(new Vector2(-2, -2), 2.2f, new Color(1f, 0.9f, 1f, 0.85f));
 	}
 }
