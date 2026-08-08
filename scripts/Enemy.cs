@@ -339,10 +339,23 @@ public partial class Enemy : CharacterBody2D
 				"summon" => new Color(0.4f, 1f, 0.45f),
 				_ => new Color(1f, 0.9f, 0.2f),
 			};
+			// 词条色环贴身描边：远距离也能和贴图一起认出精英类型
+			float ringR = BodyRadius + 6f;
+			DrawArc(Vector2.Zero, ringR, 0f, Mathf.Tau, 28, new Color(mark.R, mark.G, mark.B, 0.55f), 3.2f);
 			DrawCircle(new Vector2(0, barY - 8f), 5, mark);
 			// 冲锋预警：即将冲刺时闪一下
 			if (Affix == "melee" && !_charging && _chargeCd < 0.35f)
 				DrawArc(Vector2.Zero, BodyRadius + 10f, 0f, Mathf.Tau, 20, new Color(1f, 0.3f, 0.15f, 0.55f), 2.5f);
+			if (Affix == "shield")
+				DrawArc(Vector2.Zero, BodyRadius + 14f, 0f, Mathf.Tau, 24, new Color(0.55f, 0.85f, 1f, 0.4f), 2f);
+			if (Affix == "fire_ground")
+			{
+				for (int i = 0; i < 3; i++)
+				{
+					float a = i * Mathf.Tau / 3f + (float)Time.GetTicksMsec() * 0.004f;
+					DrawCircle(Vector2.Right.Rotated(a) * (BodyRadius + 18f), 3.5f, new Color(1f, 0.45f, 0.1f, 0.7f));
+				}
+			}
 		}
 	}
 }
