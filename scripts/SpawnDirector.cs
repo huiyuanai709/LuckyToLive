@@ -1,15 +1,26 @@
 using Godot;
+using System;
 
 public partial class SpawnDirector : Node
 {
 	public Rect2 Island;
 	public Node2D World;
 	public float Elapsed;
+	/// <summary>新怪生成时回调（用于 Main 接线 Died 等，避免每帧扫 group）。</summary>
+	public Action<Enemy> EnemySpawned;
+
+	/// <summary>当前局刷怪器；召唤物等旁路生成时用来补接线。</summary>
+	public static SpawnDirector Active { get; private set; }
+
+	/// <summary>场上存活敌人软上限；超过后只补精英波，停普通刷怪。</summary>
+	public const int MaxAliveEnemies = 64;
 
 	private float _spawnCd = 1.2f;
 	private float _density = 1f;
 	private int _lastMinuteEvent = -1;
 	private float _bonusEliteCd = 40f;
+	private int _pendingEliteWave;
+	private float _pendingEliteCd;
 	private readonly RandomNumberGeneratorRng _rng = new();
 	// melee=快攻+冲锋；orbit=旋转球；fire_ground=脚下火（可躲）；shield/summon 保留
 	private static readonly string[] Affixes = { "melee", "orbit", "fire_ground", "shield", "summon" };
@@ -17,38 +28,67 @@ public partial class SpawnDirector : Node
 	[Signal] public delegate void EliteSpawnedEventHandler(Enemy elite);
 	[Signal] public delegate void MinuteEventFiredEventHandler(int minute);
 
+	public override void _EnterTree() => Active = this;
+
+	public override void _ExitTree()
+	{
+		if (Active == this) Active = null;
+	}
+
 	public override void _Process(double delta)
 	{
 		if (World == null || !Game.Instance.RunActive) return;
 		float dt = (float)delta;
 		Elapsed += dt;
-		_density = 1f + Elapsed / 60f * 0.85f;
-		if (Elapsed > 240f) _density += 1.2f;
+		// 后期加密度，但不再在最后一分钟陡增到刷怪爆炸
+		_density = 1f + Elapsed / 60f * 0.75f;
+		if (Elapsed > 240f) _density += 0.55f;
 
 		_spawnCd -= dt;
 		if (_spawnCd <= 0)
 		{
-			_spawnCd = Mathf.Max(0.35f, 1.3f / _density);
-			SpawnBasic();
+			// 地板 0.5s，避免软件渲染下敌人数把帧率打崩
+			_spawnCd = Mathf.Max(0.5f, 1.35f / _density);
+			if (AliveEnemyCount() < MaxAliveEnemies)
+				SpawnBasic();
 		}
 
 		_bonusEliteCd -= dt;
 		if (_bonusEliteCd <= 0)
 		{
 			_bonusEliteCd = 50f;
-			SpawnElite();
+			if (AliveEnemyCount() < MaxAliveEnemies + 8)
+				SpawnElite();
 		}
 
 		int minute = (int)(Elapsed / 60f);
 		if (minute >= 1 && minute <= 4 && minute != _lastMinuteEvent && Elapsed >= minute * 60f)
 		{
 			_lastMinuteEvent = minute;
-			SpawnEliteWave(1 + minute / 2);
+			QueueEliteWave(1 + minute / 2);
 			EmitSignal(SignalName.MinuteEventFired, minute);
 		}
 
 		if (Elapsed >= 270f && Elapsed < 271f)
-			SpawnEliteWave(4);
+			QueueEliteWave(4);
+
+		// 精英波错峰生成，避免同一帧塞进多个大体积精英
+		if (_pendingEliteWave > 0)
+		{
+			_pendingEliteCd -= dt;
+			if (_pendingEliteCd <= 0f)
+			{
+				_pendingEliteCd = 0.55f;
+				_pendingEliteWave--;
+				SpawnElite();
+			}
+		}
+	}
+
+	private int AliveEnemyCount()
+	{
+		if (World == null) return 0;
+		return World.GetTree().GetNodesInGroup("enemies").Count;
 	}
 
 	private void SpawnBasic()
@@ -58,7 +98,6 @@ public partial class SpawnDirector : Node
 		e.GlobalPosition = EdgePoint();
 		float hpMul = 1f + Elapsed / 80f;
 		e.ConfigureBasic(hpMul, 1f + Elapsed / 400f);
-		if (e.Affix == "" && _rng.Randf() < 0.05f) { } // keep simple
 		Wire(e);
 	}
 
@@ -74,18 +113,16 @@ public partial class SpawnDirector : Node
 		return e;
 	}
 
-	private void SpawnEliteWave(int count)
+	private void QueueEliteWave(int count)
 	{
-		for (int i = 0; i < count; i++) SpawnElite();
+		_pendingEliteWave += count;
+		if (_pendingEliteCd > 0.55f)
+			_pendingEliteCd = 0.15f;
 	}
 
-	private void Wire(Enemy e)
-	{
-		e.Died += enemy =>
-		{
-			// Main listens via group/callback separately
-		};
-	}
+	public void Register(Enemy e) => EnemySpawned?.Invoke(e);
+
+	private void Wire(Enemy e) => Register(e);
 
 	private Vector2 EdgePoint()
 	{

@@ -101,7 +101,7 @@ public partial class Main : Node2D
 
 		_spawner = new SpawnDirector { World = this, Island = IslandRect };
 		AddChild(_spawner);
-		_spawner.EliteSpawned += OnEliteSpawned;
+		_spawner.EnemySpawned = WireEnemy;
 		_spawner.MinuteEventFired += m =>
 		{
 			_hud.MsgLabel.Text = I18n.T("ui.hud.elite_wave", m);
@@ -139,9 +139,11 @@ public partial class Main : Node2D
 		}
 	}
 
-	private void OnEliteSpawned(Enemy elite)
+	private void WireEnemy(Enemy enemy)
 	{
-		elite.Died += OnEnemyDied;
+		if (enemy == null || !IsInstanceValid(enemy) || enemy.HasMeta("wired")) return;
+		enemy.SetMeta("wired", true);
+		enemy.Died += OnEnemyDied;
 	}
 
 	public override void _Draw()
@@ -328,19 +330,6 @@ public partial class Main : Node2D
 				return;
 			}
 		};
-	}
-
-	public override void _PhysicsProcess(double delta)
-	{
-		if (_hero == null || _ended) return;
-		foreach (var n in GetTree().GetNodesInGroup("enemies"))
-		{
-			if (n is Enemy e && IsInstanceValid(e) && !e.HasMeta("wired"))
-			{
-				e.SetMeta("wired", true);
-				e.Died += OnEnemyDied;
-			}
-		}
 	}
 
 	private void OnEnemyDied(Enemy enemy)

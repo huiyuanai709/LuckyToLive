@@ -95,7 +95,7 @@ public partial class Building : Node2D
 				TriggerTrap();
 				break;
 		}
-		QueueRedraw();
+		// 建筑外观静态，不必每帧重绘
 	}
 
 	private void TryShoot()
