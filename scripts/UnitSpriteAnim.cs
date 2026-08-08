@@ -4,7 +4,7 @@ using Godot;
 /// 驱动 AnimatedSprite2D 的 idle / walk / attack 帧动画，并处理朝向翻转与受击闪红。
 /// 多帧图集到位后不再叠程序化弹跳，避免「抖动」盖过真正的帧动画。
 /// 移动时优先播 walk，避免自动开火一直占住 attack 导致看不出走路帧。
-/// 贴图约定：角色/怪物图集默认朝左；向右移动时 FlipH。
+/// FlipH 依据贴图默认朝向：朝右图集在往左时翻；朝左图集在往右时翻。
 /// </summary>
 public sealed class UnitSpriteAnim
 {
@@ -18,6 +18,8 @@ public sealed class UnitSpriteAnim
 	private float _time;
 	private string _current = "";
 	private bool _multiFrame;
+	/// <summary>贴图未翻转时是否朝右（猎人/战士朝右；法师/多数敌人朝左）。</summary>
+	private bool _artFacesRight;
 
 	public Vector2 Offset { get; private set; }
 	public Vector2 Squash => Vector2.One;
@@ -35,6 +37,8 @@ public sealed class UnitSpriteAnim
 	}
 
 	public void SetBaseScale(Vector2 scale) => _baseScale = scale;
+
+	public void SetArtFacesRight(bool facesRight) => _artFacesRight = facesRight;
 
 	public void SetMoving(bool moving) => _moving = moving;
 
@@ -97,8 +101,8 @@ public sealed class UnitSpriteAnim
 			Offset = new Vector2(0f, bob);
 		}
 
-		// 图集默认朝左：往右走才需要水平翻转
-		_sprite.FlipH = _facingX > 0f;
+		// 朝右图集：往左翻；朝左图集：往右翻
+		_sprite.FlipH = _artFacesRight ? _facingX < 0f : _facingX > 0f;
 		_sprite.Position = Offset;
 		_sprite.Scale = _baseScale;
 		_sprite.Modulate = HitFlash ? new Color(1f, 0.4f, 0.4f) : Colors.White;

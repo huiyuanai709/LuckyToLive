@@ -5,7 +5,7 @@ using System.Collections.Generic;
 /// 角色 / 怪物多帧图集。约定：res://assets/{characters|enemies}/{name}_sheet.png
 /// 布局：4 列 × 3 行（idle / walk / attack），单元格正方形。
 /// 切片时按 idle 首帧脚底与水平重心对齐，避免帧间跳动看起来像抖动。
-/// 图集默认朝左；运行时由 UnitSpriteAnim 在向右时 FlipH。
+/// 各图集默认朝向不一：见 <see cref="HeroArtFacesRight"/> / 敌人默认朝左。
 /// </summary>
 public static class CharacterArt
 {
@@ -14,6 +14,13 @@ public static class CharacterArt
 	public const string AnimAttack = "attack";
 
 	private static readonly Dictionary<string, SpriteFrames> Cache = new();
+
+	/// <summary>猎人/战士图集默认朝右；法师默认朝左。</summary>
+	public static bool HeroArtFacesRight(HeroId id) =>
+		id is HeroId.Hunter or HeroId.Warrior;
+
+	/// <summary>敌人图集默认朝左。</summary>
+	public static bool EnemyArtFacesRight(bool elite = false, MapId? map = null) => false;
 
 	public static SpriteFrames ForHero(HeroId id)
 	{

@@ -149,6 +149,7 @@ public partial class Enemy : CharacterBody2D
 			_anim = new UnitSpriteAnim(_sprite, _spriteBaseScale);
 		else
 			_anim.SetBaseScale(_spriteBaseScale);
+		_anim?.SetArtFacesRight(CharacterArt.EnemyArtFacesRight(IsElite));
 		_anim?.RefreshMultiFrameFlag();
 		QueueRedraw();
 	}
