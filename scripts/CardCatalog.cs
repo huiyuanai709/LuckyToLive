@@ -119,7 +119,11 @@ public static class CardCatalog
 		new CardDef { Id = "p_hp", Name = "强体", Desc = "最大生命 +25", Kind = CardKind.Passive, Hero = null, GrantsItemId = "p_hp", IsNewItem = true, UpgradeStat = "hp" },
 		new CardDef { Id = "p_speed", Name = "疾步", Desc = "移动速度提升", Kind = CardKind.Passive, Hero = null, GrantsItemId = "p_speed", IsNewItem = true, UpgradeStat = "speed" },
 		new CardDef { Id = "p_regen", Name = "再生", Desc = "缓慢回复生命", Kind = CardKind.Passive, Hero = null, GrantsItemId = "p_regen", IsNewItem = true, UpgradeStat = "regen" },
+		new CardDef { Id = "p_vamp", Name = "嗜血", Desc = "造成伤害时回复少量生命", Kind = CardKind.Passive, Hero = null, GrantsItemId = "p_vamp", IsNewItem = true, UpgradeStat = "vamp" },
+		new CardDef { Id = "p_magnet", Name = "磁吸", Desc = "更易拾取精英掉落", Kind = CardKind.Passive, Hero = null, GrantsItemId = "p_magnet", IsNewItem = true, UpgradeStat = "magnet" },
 		new CardDef { Id = "up_p_hp", Name = "强体·再锻", Desc = "再 +20 最大生命", Kind = CardKind.Upgrade, Hero = null, GrantsItemId = "p_hp", IsNewItem = false, UpgradeStat = "hp" },
+		new CardDef { Id = "up_p_vamp", Name = "嗜血·深化", Desc = "吸血比例再提升", Kind = CardKind.Upgrade, Hero = null, GrantsItemId = "p_vamp", IsNewItem = false, UpgradeStat = "vamp" },
+		new CardDef { Id = "up_p_magnet", Name = "磁吸·扩域", Desc = "拾取范围再扩大", Kind = CardKind.Upgrade, Hero = null, GrantsItemId = "p_magnet", IsNewItem = false, UpgradeStat = "magnet" },
 	};
 
 	public static CardDef Get(string id) => All.FirstOrDefault(c => c.Id == id);

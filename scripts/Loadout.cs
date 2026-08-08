@@ -173,6 +173,8 @@ public class Loadout
 			case "hp":
 			case "speed":
 			case "regen":
+			case "vamp":
+			case "magnet":
 				break;
 		}
 	}
@@ -198,6 +200,13 @@ public class Loadout
 				break;
 			case "p_regen":
 				hero.RegenPerSec += 1.2f;
+				break;
+			case "p_vamp":
+				// 首张约 5%，每次升级 +3%
+				hero.Lifesteal += item.Level == 1 ? 0.05f : 0.03f;
+				break;
+			case "p_magnet":
+				hero.PickupRange += item.Level == 1 ? 48f : 28f;
 				break;
 		}
 	}

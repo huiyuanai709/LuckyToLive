@@ -2,7 +2,7 @@ keys,en,zh_CN
 ui.hero_select.title_starter,Choose your starter hero (free forever),选择你的初始英雄（永久免费）
 ui.hero_select.title_play,Choose your hero,选择出战英雄
 ui.hero_select.currency,Meta currency: {0},元进度货币: {0}
-ui.hero_select.hint,WASD to move · Auto-attack · Survive 5 minutes,WASD 移动 · 自动攻击 · 撑满 5 分钟通关
+ui.hero_select.hint,WASD move · Space dash · Auto-attack · Survive 5 minutes,WASD 移动 · 空格冲刺 · 自动攻击 · 撑满 5 分钟通关
 ui.hero_select.pick,Select {0},选择 {0}
 ui.hero_select.play,Play as {0},出战 {0}
 ui.hero_select.unlock,Unlock ({0} currency),解锁 ({0} 货币)
@@ -43,6 +43,7 @@ ui.hud.ad_progress,Ad unlock slot ({0}/{1}),广告解锁槽位 ({0}/{1})
 ui.hud.ad_full,Ad slots full,广告槽已满
 ui.hud.ad_gained,Run slots +1 (ad placeholder),本局槽位 +1（广告占位）
 ui.hud.elite_wave,Minute {0} elite rush!,第 {0} 分钟精英冲击！
+ui.hud.frenzy,Frenzy x{0}  DMG x{1},连杀 x{0}  伤害 x{1}
 ui.card.starter,Starter gear,开局装备
 ui.card.bonus,Bonus starter pick,额外起步卡
 ui.card.upgrade,Level-up pick,升级选择
@@ -135,5 +136,13 @@ card.p_speed.name,Swift Step,疾步
 card.p_speed.desc,Increases move speed,移动速度提升
 card.p_regen.name,Regen,再生
 card.p_regen.desc,Slowly regenerates HP,缓慢回复生命
+card.p_vamp.name,Bloodlust,嗜血
+card.p_vamp.desc,Heal a little when dealing damage,造成伤害时回复少量生命
+card.p_magnet.name,Magnet,磁吸
+card.p_magnet.desc,Pick up elite drops from farther away,更易拾取精英掉落
 card.up_p_hp.name,Fortify · Reforge,强体·再锻
 card.up_p_hp.desc,Another +20 max HP,再 +20 最大生命
+card.up_p_vamp.name,Bloodlust · Deepen,嗜血·深化
+card.up_p_vamp.desc,Increases lifesteal further,吸血比例再提升
+card.up_p_magnet.name,Magnet · Expand,磁吸·扩域
+card.up_p_magnet.desc,Further increases pickup range,拾取范围再扩大

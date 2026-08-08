@@ -103,7 +103,13 @@ public partial class BeamEmitter : Node2D
 				if (along < -hitPad || along > len) continue;
 				float perp = Mathf.Abs(rel.Dot(new Vector2(-dir.Y, dir.X)));
 				if (perp > hitPad) continue;
-				e.TakeDamage(Item.Damage);
+				float dmg = Item.Damage;
+				if (GetParent() is Hero hero)
+				{
+					dmg = hero.ScaleDamage(Item.Damage);
+					hero.OnDealtDamage(dmg);
+				}
+				e.TakeDamage(dmg);
 				if (Item.SlowFactor < 1f) e.ApplySlow(Item.SlowFactor, 0.6f);
 				break; // 同一 tick 内一只怪只吃一条射线
 			}

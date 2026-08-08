@@ -18,11 +18,13 @@ public partial class Projectile : Node2D
 	private bool _rotates;
 	/// <summary>贴图在世界中的目标显示直径（像素）。</summary>
 	private float _visualSize = 26f;
+	private Hero _owner;
 
-	public void Setup(Enemy target, SlotItem item)
+	public void Setup(Enemy target, SlotItem item, Hero owner = null)
 	{
 		Target = target;
-		Damage = item.Damage;
+		_owner = owner;
+		Damage = owner != null ? owner.ScaleDamage(item.Damage) : item.Damage;
 		PierceLeft = Mathf.Max(1, item.Pierce);
 		Splash = item.Splash;
 		if (item.SlowFactor < 1f)
@@ -91,7 +93,9 @@ public partial class Projectile : Node2D
 				if (n is Enemy other && IsInstanceValid(other) &&
 					other.GlobalPosition.DistanceTo(e.GlobalPosition) <= Splash)
 				{
-					other.TakeDamage(Damage * (other == e ? 1f : 0.65f));
+					float dmg = Damage * (other == e ? 1f : 0.65f);
+					other.TakeDamage(dmg);
+					_owner?.OnDealtDamage(dmg);
 					if (SlowFactor < 1f) other.ApplySlow(SlowFactor, SlowDuration);
 				}
 			}
@@ -100,6 +104,7 @@ public partial class Projectile : Node2D
 		}
 
 		e.TakeDamage(Damage);
+		_owner?.OnDealtDamage(Damage);
 		if (SlowFactor < 1f) e.ApplySlow(SlowFactor, SlowDuration);
 		PierceLeft -= 1;
 	}
