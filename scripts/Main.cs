@@ -31,6 +31,22 @@ public partial class Main : Node2D
 	private void ShowHeroSelect()
 	{
 		ClearWorld();
+		// 云测 / 无指针环境：LUCKY_AUTOSTART=mage|warrior|hunter 跳过选人
+		string auto = OS.GetEnvironment("LUCKY_AUTOSTART");
+		if (!string.IsNullOrEmpty(auto))
+		{
+			var heroId = auto.Trim().ToLowerInvariant() switch
+			{
+				"mage" or "1" => HeroId.Mage,
+				"warrior" or "0" => HeroId.Warrior,
+				_ => HeroId.Hunter,
+			};
+			Game.Instance.SelectedHero = heroId;
+			if (Game.Instance.StarterHero == null)
+				Game.Instance.ChooseStarter(heroId);
+			CallDeferred(MethodName.StartRun, (int)heroId);
+			return;
+		}
 		var select = new HeroSelect();
 		AddChild(select);
 		select.HeroPicked += id =>
@@ -101,7 +117,7 @@ public partial class Main : Node2D
 
 		_spawner = new SpawnDirector { World = this, Island = IslandRect };
 		AddChild(_spawner);
-		_spawner.EliteSpawned += OnEliteSpawned;
+		_spawner.EnemySpawned = WireEnemy;
 		_spawner.MinuteEventFired += m =>
 		{
 			_hud.MsgLabel.Text = I18n.T("ui.hud.elite_wave", m);
@@ -115,9 +131,19 @@ public partial class Main : Node2D
 		if (I18n.Instance != null)
 			I18n.Instance.LocaleChanged += OnLocaleChanged;
 
-		// 开局选卡（暂停）
+		// 开局选卡（暂停）；自动开局时直接发牌，方便无指针环境验证
 		string starterId = CardCatalog.StarterCardId(heroId);
 		var starter = CardCatalog.Get(starterId);
+		if (!string.IsNullOrEmpty(OS.GetEnvironment("LUCKY_AUTOSTART")))
+		{
+			if (starter != null)
+				_hero.Loadout.ApplyCard(starter, _hero, this);
+			var bonus = CardCatalog.RollOptions(heroId, _hero.Loadout, 1, _rng);
+			if (bonus.Count > 0)
+				_hero.Loadout.ApplyCard(bonus[0], _hero, this);
+			_hud.RefreshSlots(_hero.Loadout);
+			return;
+		}
 		OpenCardPick(I18n.T("ui.card.starter"), new List<CardDef> { starter }, forcedSingle: true, afterStarter: true);
 	}
 
@@ -139,9 +165,11 @@ public partial class Main : Node2D
 		}
 	}
 
-	private void OnEliteSpawned(Enemy elite)
+	private void WireEnemy(Enemy enemy)
 	{
-		elite.Died += OnEnemyDied;
+		if (enemy == null || !IsInstanceValid(enemy) || enemy.HasMeta("wired")) return;
+		enemy.SetMeta("wired", true);
+		enemy.Died += OnEnemyDied;
 	}
 
 	public override void _Draw()
@@ -328,19 +356,6 @@ public partial class Main : Node2D
 				return;
 			}
 		};
-	}
-
-	public override void _PhysicsProcess(double delta)
-	{
-		if (_hero == null || _ended) return;
-		foreach (var n in GetTree().GetNodesInGroup("enemies"))
-		{
-			if (n is Enemy e && IsInstanceValid(e) && !e.HasMeta("wired"))
-			{
-				e.SetMeta("wired", true);
-				e.Died += OnEnemyDied;
-			}
-		}
 	}
 
 	private void OnEnemyDied(Enemy enemy)

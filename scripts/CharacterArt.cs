@@ -5,6 +5,7 @@ using System.Collections.Generic;
 /// 角色 / 怪物多帧图集。约定：res://assets/{characters|enemies}/{name}_sheet.png
 /// 布局：4 列 × 3 行（idle / walk / attack），单元格正方形。
 /// 切片时按 idle 首帧脚底与水平重心对齐，避免帧间跳动看起来像抖动。
+/// 图集默认朝左；运行时由 UnitSpriteAnim 在向右时 FlipH。
 /// </summary>
 public static class CharacterArt
 {

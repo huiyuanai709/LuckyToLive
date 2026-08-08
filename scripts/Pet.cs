@@ -58,7 +58,6 @@ public partial class Pet : CharacterBody2D
 			_cd = 1f / Mathf.Max(0.2f, Item.FireRate);
 			target.TakeDamage(Item.Damage);
 		}
-		QueueRedraw();
 	}
 
 	public override void _Draw()

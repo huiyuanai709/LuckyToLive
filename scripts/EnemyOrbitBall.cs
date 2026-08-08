@@ -14,6 +14,8 @@ public partial class EnemyOrbitBall : Node2D
 
 	private float _hitCd;
 
+	public override void _Ready() => QueueRedraw();
+
 	public override void _Process(double delta)
 	{
 		float dt = (float)delta;
@@ -35,7 +37,7 @@ public partial class EnemyOrbitBall : Node2D
 			hero.TakeDamage(Damage);
 		}
 
-		QueueRedraw();
+		// 球体贴图/色块静态；位置变化不需要每帧 _Draw
 	}
 
 	public override void _Draw()

@@ -25,6 +25,9 @@ public partial class Enemy : CharacterBody2D
 	private CollisionShape2D _colShape;
 	private float _summonCd;
 	private float _skillCd;
+	private Hero _hero;
+	private float _cosmeticDrawCd;
+	private bool _chargeWarnDrawn;
 
 	// 近战冲锋
 	private bool _charging;
@@ -159,8 +162,9 @@ public partial class Enemy : CharacterBody2D
 			if (SlowTimer <= 0) SlowFactor = 1f;
 		}
 
-		var hero = GetTree().GetFirstNodeInGroup("hero") as Hero;
-		if (hero == null || !IsInstanceValid(hero)) return;
+		if (_hero == null || !IsInstanceValid(_hero))
+			_hero = GetTree().GetFirstNodeInGroup("hero") as Hero;
+		if (_hero == null || !IsInstanceValid(_hero)) return;
 
 		if (Affix == "summon")
 		{
@@ -168,21 +172,23 @@ public partial class Enemy : CharacterBody2D
 			if (_summonCd <= 0)
 			{
 				_summonCd = 6f;
-				SpawnMinion();
+				// 场上已挤时不再召唤，避免后期叠怪卡顿
+				if (GetTree().GetNodesInGroup("enemies").Count < SpawnDirector.MaxAliveEnemies)
+					SpawnMinion();
 			}
 		}
 
 		if (Affix == "fire_ground")
-			TickFireGround(dt, hero);
+			TickFireGround(dt, _hero);
 
-		Vector2 toHero = hero.GlobalPosition - GlobalPosition;
+		Vector2 toHero = _hero.GlobalPosition - GlobalPosition;
 		float dist = toHero.Length();
 		// 英雄圆半径 14 + 怪体半径；停步与接触距离必须大于该分离距离，否则贴身也打不到
 		float contactRange = 14f + BodyRadius + 4f;
 		float stopRange = contactRange - 2f;
 		bool moving = false;
 
-		if (Affix == "melee" && TickMeleeCharge(dt, toHero, dist, contactRange, hero))
+		if (Affix == "melee" && TickMeleeCharge(dt, toHero, dist, contactRange, _hero))
 		{
 			moving = true;
 		}
@@ -201,7 +207,7 @@ public partial class Enemy : CharacterBody2D
 		if (dist < contactRange && _contactCd <= 0f)
 		{
 			_contactCd = ContactCooldown;
-			hero.TakeDamage(ContactDamage);
+			_hero.TakeDamage(ContactDamage);
 			_anim?.PlayAttack(Affix == "melee" ? 0.16f : 0.24f);
 		}
 
@@ -213,7 +219,23 @@ public partial class Enemy : CharacterBody2D
 			_anim.SetWalkHz(6.5f + Speed / 40f);
 			_anim.Update(dt);
 		}
-		QueueRedraw();
+
+		// 血条/受击只在状态变化时重绘；精英词条特效降频，避免百级怪每帧 _Draw
+		bool chargeWarn = Affix == "melee" && !_charging && _chargeCd < 0.35f;
+		if (chargeWarn != _chargeWarnDrawn)
+		{
+			_chargeWarnDrawn = chargeWarn;
+			QueueRedraw();
+		}
+		else if (IsElite && (Affix == "fire_ground" || Affix == "melee"))
+		{
+			_cosmeticDrawCd -= dt;
+			if (_cosmeticDrawCd <= 0f)
+			{
+				_cosmeticDrawCd = 0.12f;
+				QueueRedraw();
+			}
+		}
 	}
 
 	/// <summary>
@@ -287,6 +309,7 @@ public partial class Enemy : CharacterBody2D
 		e.GlobalPosition = GlobalPosition + new Vector2(28, 0);
 		e.ConfigureBasic(0.5f, 1.1f);
 		e.XpValue = 2f;
+		SpawnDirector.Active?.Register(e);
 	}
 
 	public void TakeDamage(float amount)
