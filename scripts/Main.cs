@@ -156,10 +156,39 @@ public partial class Main : Node2D
 			var bonus = CardCatalog.RollOptions(heroId, _hero.Loadout, 1, _rng);
 			if (bonus.Count > 0)
 				_hero.Loadout.ApplyCard(bonus[0], _hero, this);
+			// 云测可视化：强制给一座建筑 + 一只宝箱，方便截图验收
+			if (!string.IsNullOrEmpty(OS.GetEnvironment("LUCKY_DEBUG_VISUAL")))
+				SpawnDebugVisuals(heroId);
 			_hud.RefreshSlots(_hero.Loadout);
 			return;
 		}
 		OpenCardPick(I18n.T("ui.card.starter"), new List<CardDef> { starter }, forcedSingle: true, afterStarter: true);
+	}
+
+	private void SpawnDebugVisuals(HeroId heroId)
+	{
+		string buildId = heroId switch
+		{
+			HeroId.Warrior => "w_turret",
+			HeroId.Hunter => "h_camp",
+			_ => "m_fire_turret",
+		};
+		var buildCard = CardCatalog.Get(buildId);
+		if (buildCard != null && !_hero.Loadout.HasItem(buildCard.GrantsItemId))
+			_hero.Loadout.ApplyCard(buildCard, _hero, this);
+
+		var dropCard = CardCatalog.Get(CardCatalog.StarterCardId(heroId));
+		if (dropCard == null)
+		{
+			var rolled = CardCatalog.RollOptions(heroId, _hero.Loadout, 1, _rng);
+			if (rolled.Count > 0) dropCard = rolled[0];
+		}
+		if (dropCard != null)
+		{
+			var drop = new BigItemDrop { Card = dropCard };
+			AddChild(drop);
+			drop.GlobalPosition = _hero.GlobalPosition + new Vector2(70, 20);
+		}
 	}
 
 	private void OnLocaleChanged(string _)
