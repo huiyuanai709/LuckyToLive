@@ -22,16 +22,7 @@ config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 
 I18n="*res://scripts/I18n.cs"
 Game="*res://scripts/Game.cs"
-GodotxLabelUp="*res://addons/godotx_label_up/runtime/godotx_label_up.gd"
-
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/godotx_label_up/plugin.cfg")
-
-[internationalization]
-
-locale/fallback="zh_CN"
-locale/locale_filter_mode=0
+GodotxLabelUp="*uid://c5ckokjmesj66"
 
 [display]
 
@@ -41,6 +32,10 @@ window/size/viewport_height=720
 [dotnet]
 
 project/assembly_name="TDProject"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godotx_label_up/plugin.cfg")
 
 [input]
 
@@ -74,3 +69,8 @@ dash={
 , Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194325,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
+
+[internationalization]
+
+locale/fallback="zh_CN"
+locale/locale_filter_mode=0
