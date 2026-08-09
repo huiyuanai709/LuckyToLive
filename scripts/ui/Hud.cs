@@ -14,7 +14,7 @@ public partial class Hud : CanvasLayer
 	public Button LangButton;
 	public HBoxContainer SlotBox;
 
-	private ColorRect _progressFill;
+	private ColorRect _eliteFill;
 	private ColorRect _xpFill;
 	private const float BarW = 200f;
 	private const float BarH = 6f;
@@ -30,16 +30,16 @@ public partial class Hud : CanvasLayer
 		root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		AddChild(root);
 
-		// 局内进度条（上）+ 右侧生存时间；经验条（下）— 细条样式贴近头顶血条
-		var progressTrack = MakeBarTrack(new Vector2(16, 14));
-		_progressFill = MakeBarFill(new Color(0.95f, 0.75f, 0.25f));
-		progressTrack.AddChild(_progressFill);
-		root.AddChild(progressTrack);
+		// 精英击杀进度（上细条）+ 旁侧倒计时；经验条（下）
+		var eliteTrack = MakeBarTrack(new Vector2(16, 14));
+		_eliteFill = MakeBarFill(new Color(0.95f, 0.55f, 0.2f));
+		eliteTrack.AddChild(_eliteFill);
+		root.AddChild(eliteTrack);
 
 		TimeLabel = new Label
 		{
 			Position = new Vector2(16 + BarW + 10, 8),
-			Text = "0:00",
+			Text = "5:00",
 		};
 		TimeLabel.AddThemeColorOverride("font_color", Colors.White);
 		root.AddChild(TimeLabel);
@@ -49,11 +49,13 @@ public partial class Hud : CanvasLayer
 		xpTrack.AddChild(_xpFill);
 		root.AddChild(xpTrack);
 
-		// 兼容旧引用：生命已在角色头顶显示，HUD 不再叠文字
+		// 兼容旧引用：生命在头顶；精英进度改用细条
 		HpLabel = new Label { Visible = false };
 		root.AddChild(HpLabel);
 		XpLabel = new Label { Visible = false };
 		root.AddChild(XpLabel);
+		EliteProgressLabel = new Label { Visible = false };
+		root.AddChild(EliteProgressLabel);
 
 		SlotsLabel = new Label { Position = new Vector2(16, 48) };
 		root.AddChild(SlotsLabel);
@@ -61,16 +63,9 @@ public partial class Hud : CanvasLayer
 		GoalLabel = new Label { Position = new Vector2(16, 72), Text = I18n.T("ui.hud.goal") };
 		root.AddChild(GoalLabel);
 
-		EliteProgressLabel = new Label
-		{
-			Position = new Vector2(16, 96),
-			Text = I18n.T("ui.hud.elite_progress", 0, 14),
-		};
-		root.AddChild(EliteProgressLabel);
-
 		MapLabel = new Label
 		{
-			Position = new Vector2(16, 120),
+			Position = new Vector2(16, 96),
 			Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island)),
 		};
 		root.AddChild(MapLabel);
@@ -146,16 +141,10 @@ public partial class Hud : CanvasLayer
 		// 槽位名等由 Main.OnLocaleChanged 里 RefreshSlots 刷新
 	}
 
-	/// <summary>剩余时间 → 进度条填充 + 右侧生存时长。</summary>
+	/// <summary>局内倒计时，显示在精英进度条右侧。</summary>
 	public void SetTime(float remaining)
 	{
-		float duration = Game.RunDuration;
-		float elapsed = Mathf.Clamp(duration - remaining, 0f, duration);
-		float t = duration > 0.01f ? elapsed / duration : 0f;
-		if (_progressFill != null)
-			_progressFill.Size = new Vector2(BarW * t, BarH);
-
-		int sec = Mathf.Max(0, Mathf.FloorToInt(elapsed));
+		int sec = Mathf.Max(0, Mathf.CeilToInt(remaining));
 		TimeLabel.Text = $"{sec / 60}:{sec % 60:00}";
 	}
 
@@ -172,6 +161,9 @@ public partial class Hud : CanvasLayer
 	{
 		_eliteProg = Mathf.Max(0, progress);
 		_eliteNeed = Mathf.Max(1, threshold);
+		float t = Mathf.Clamp(_eliteProg / (float)_eliteNeed, 0f, 1f);
+		if (_eliteFill != null)
+			_eliteFill.Size = new Vector2(BarW * t, BarH);
 		if (EliteProgressLabel != null)
 			EliteProgressLabel.Text = I18n.T("ui.hud.elite_progress", _eliteProg, _eliteNeed);
 	}
