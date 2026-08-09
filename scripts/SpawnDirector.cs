@@ -18,7 +18,6 @@ public partial class SpawnDirector : Node
 	private float _spawnCd = 1.2f;
 	private float _density = 1f;
 	private int _lastMinuteEvent = -1;
-	private float _bonusEliteCd = 40f;
 	private int _pendingEliteWave;
 	private float _pendingEliteCd;
 	private float _basicSuppressLeft;
@@ -29,9 +28,17 @@ public partial class SpawnDirector : Node
 	// melee=快攻+冲锋；orbit=旋转球；fire_ground=脚下火（可躲）；shield/summon 保留
 	private static readonly string[] Affixes = { "melee", "orbit", "fire_ground", "shield", "summon" };
 
+	/// <summary>普通怪击杀叠加的精英刷新进度（精英/Boss 不计）。</summary>
+	public int KillProgress { get; private set; }
+
+	/// <summary>进度满值；随时间略升，避免后期密度过高时精英过于频繁。</summary>
+	public int KillThreshold => Mathf.Max(10, 14 + (int)(Elapsed / 60f) * 3);
+
 	[Signal] public delegate void EliteSpawnedEventHandler(Enemy elite);
 	[Signal] public delegate void MinuteEventFiredEventHandler(int minute);
 	[Signal] public delegate void BossSpawnedEventHandler(string bossId);
+	[Signal] public delegate void EliteProgressChangedEventHandler(int progress, int threshold);
+	[Signal] public delegate void EliteChargeReadyEventHandler();
 
 	public override void _EnterTree() => Active = this;
 
@@ -61,14 +68,6 @@ public partial class SpawnDirector : Node
 			_spawnCd = Mathf.Max(0.5f, 1.35f / _density);
 			if (!suppressBasic && AliveEnemyCount() < MaxAliveEnemies)
 				SpawnBasic();
-		}
-
-		_bonusEliteCd -= dt;
-		if (_bonusEliteCd <= 0)
-		{
-			_bonusEliteCd = 50f;
-			if (AliveEnemyCount() < MaxAliveEnemies + 8)
-				SpawnElite();
 		}
 
 		int minute = (int)(Elapsed / 60f);
@@ -114,6 +113,36 @@ public partial class SpawnDirector : Node
 	{
 		if (World == null) return 0;
 		return World.GetTree().GetNodesInGroup("enemies").Count;
+	}
+
+	/// <summary>
+	/// 击杀普通怪叠精英进度；满则刷新一只精英（溢出可连刷）。
+	/// 分钟波 / Boss 时间轴不变。
+	/// </summary>
+	public void RegisterKill(Enemy enemy)
+	{
+		if (enemy == null || enemy.IsElite || enemy.IsBoss) return;
+		KillProgress += 1;
+		bool charged = TrySpawnFromKillProgress();
+		EmitSignal(SignalName.EliteProgressChanged, KillProgress, KillThreshold);
+		if (charged)
+			EmitSignal(SignalName.EliteChargeReady);
+	}
+
+	private bool TrySpawnFromKillProgress()
+	{
+		int guard = 8;
+		bool fired = false;
+		while (KillProgress >= KillThreshold && guard-- > 0)
+		{
+			KillProgress -= KillThreshold;
+			fired = true;
+			if (AliveEnemyCount() < MaxAliveEnemies + 8)
+				SpawnElite();
+			else
+				QueueEliteWave(1);
+		}
+		return fired;
 	}
 
 	private void SpawnBasic()
