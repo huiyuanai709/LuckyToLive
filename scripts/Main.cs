@@ -133,6 +133,20 @@ public partial class Main : Node2D
 			if (_hud == null) return;
 			_hud.MsgLabel.Text = I18n.T("ui.hud.boss_spawn", I18n.BossName(bossId));
 		};
+		_spawner.EliteProgressChanged += (prog, need) =>
+		{
+			_hud?.SetEliteProgress(prog, need);
+		};
+		_spawner.EliteChargeReady += () =>
+		{
+			if (_hud == null) return;
+			_hud.MsgLabel.Text = I18n.T("ui.hud.elite_ready");
+		};
+		_spawner.EliteSpawned += _ =>
+		{
+			if (_hud == null || _spawner == null) return;
+			_hud.SetEliteProgress(_spawner.KillProgress, _spawner.KillThreshold);
+		};
 
 		_hud = new Hud();
 		AddChild(_hud);
@@ -140,6 +154,7 @@ public partial class Main : Node2D
 		_hud.RefreshSlots(_hero.Loadout);
 		_hud.SetXp(_hero.Level, _hero.Xp, _hero.XpToNext());
 		_hud.SetTime(_timeLeft);
+		_hud.SetEliteProgress(_spawner.KillProgress, _spawner.KillThreshold);
 		if (I18n.Instance != null)
 			I18n.Instance.LocaleChanged += OnLocaleChanged;
 
@@ -194,6 +209,8 @@ public partial class Main : Node2D
 		_hud.SetXp(_hero.Level, _hero.Xp, _hero.XpToNext());
 		_hud.RefreshSlots(_hero.Loadout);
 		_hud.SetTime(_timeLeft);
+		if (_spawner != null)
+			_hud.SetEliteProgress(_spawner.KillProgress, _spawner.KillThreshold);
 	}
 
 	private void OnAdPressed()
@@ -351,6 +368,9 @@ public partial class Main : Node2D
 				: I18n.T("ui.hud.goal_progress", _elitesThisMinute);
 		}
 
+		// 精英击杀进度阈值随时间变化，每帧对齐 HUD
+		_hud.SetEliteProgress(_spawner.KillProgress, _spawner.KillThreshold);
+
 		// 拾取高亮大件
 		float pickup = _hero.PickupRange;
 		foreach (var n in GetTree().GetNodesInGroup("big_drops"))
@@ -471,6 +491,8 @@ public partial class Main : Node2D
 		// 连杀略加经验，强化「清群→升级回满」的节奏
 		if (mul > 1f) xp *= 1f + (mul - 1f) * 0.5f;
 		_hero.AddXp(xp);
+		// 普通怪叠精英刷新进度；满则刷精英
+		_spawner?.RegisterKill(enemy);
 		if (enemy.IsBoss)
 		{
 			if (enemy.BossId == "tide_guard") Game.Instance.TideGuardKilled = true;

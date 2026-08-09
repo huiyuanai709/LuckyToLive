@@ -7,6 +7,7 @@ public partial class Hud : CanvasLayer
 	public Label XpLabel;
 	public Label SlotsLabel;
 	public Label GoalLabel;
+	public Label EliteProgressLabel;
 	public Label MapLabel;
 	public Label MsgLabel;
 	public Button AdButton;
@@ -17,6 +18,8 @@ public partial class Hud : CanvasLayer
 	private ColorRect _xpFill;
 	private const float BarW = 200f;
 	private const float BarH = 6f;
+	private int _eliteProg;
+	private int _eliteNeed = 14;
 
 	[Signal] public delegate void AdPressedEventHandler();
 
@@ -27,7 +30,7 @@ public partial class Hud : CanvasLayer
 		root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		AddChild(root);
 
-		// 进度条（上）+ 右侧生存时间；经验条（下）— 细条样式贴近头顶血条
+		// 局内进度条（上）+ 右侧生存时间；经验条（下）— 细条样式贴近头顶血条
 		var progressTrack = MakeBarTrack(new Vector2(16, 14));
 		_progressFill = MakeBarFill(new Color(0.95f, 0.75f, 0.25f));
 		progressTrack.AddChild(_progressFill);
@@ -58,9 +61,16 @@ public partial class Hud : CanvasLayer
 		GoalLabel = new Label { Position = new Vector2(16, 72), Text = I18n.T("ui.hud.goal") };
 		root.AddChild(GoalLabel);
 
-		MapLabel = new Label
+		EliteProgressLabel = new Label
 		{
 			Position = new Vector2(16, 96),
+			Text = I18n.T("ui.hud.elite_progress", 0, 14),
+		};
+		root.AddChild(EliteProgressLabel);
+
+		MapLabel = new Label
+		{
+			Position = new Vector2(16, 120),
 			Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island)),
 		};
 		root.AddChild(MapLabel);
@@ -124,6 +134,7 @@ public partial class Hud : CanvasLayer
 		if (LangButton != null)
 			LangButton.Text = I18n.Instance?.LocaleDisplayName() ?? "";
 		GoalLabel.Text = I18n.T("ui.hud.goal");
+		SetEliteProgress(_eliteProg, _eliteNeed);
 		if (MapLabel != null)
 			MapLabel.Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island));
 		if (Game.Instance != null)
@@ -155,6 +166,14 @@ public partial class Hud : CanvasLayer
 			_xpFill.Size = new Vector2(BarW * t, BarH);
 		if (XpLabel != null)
 			XpLabel.Text = I18n.T("ui.hud.xp", level, $"{xp:0}", $"{need:0}");
+	}
+
+	public void SetEliteProgress(int progress, int threshold)
+	{
+		_eliteProg = Mathf.Max(0, progress);
+		_eliteNeed = Mathf.Max(1, threshold);
+		if (EliteProgressLabel != null)
+			EliteProgressLabel.Text = I18n.T("ui.hud.elite_progress", _eliteProg, _eliteNeed);
 	}
 
 	public void RefreshSlots(Loadout loadout)
