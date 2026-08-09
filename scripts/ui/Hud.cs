@@ -7,11 +7,15 @@ public partial class Hud : CanvasLayer
 	public Label XpLabel;
 	public Label SlotsLabel;
 	public Label GoalLabel;
+	public Label EliteProgressLabel;
 	public Label MapLabel;
 	public Label MsgLabel;
 	public Button AdButton;
 	public Button LangButton;
 	public HBoxContainer SlotBox;
+
+	private int _eliteProg;
+	private int _eliteNeed = 14;
 
 	[Signal] public delegate void AdPressedEventHandler();
 
@@ -38,9 +42,16 @@ public partial class Hud : CanvasLayer
 		GoalLabel = new Label { Position = new Vector2(16, 108), Text = I18n.T("ui.hud.goal") };
 		root.AddChild(GoalLabel);
 
-		MapLabel = new Label
+		EliteProgressLabel = new Label
 		{
 			Position = new Vector2(16, 132),
+			Text = I18n.T("ui.hud.elite_progress", 0, 14),
+		};
+		root.AddChild(EliteProgressLabel);
+
+		MapLabel = new Label
+		{
+			Position = new Vector2(16, 156),
 			Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island)),
 		};
 		root.AddChild(MapLabel);
@@ -84,6 +95,7 @@ public partial class Hud : CanvasLayer
 		if (LangButton != null)
 			LangButton.Text = I18n.Instance?.LocaleDisplayName() ?? "";
 		GoalLabel.Text = I18n.T("ui.hud.goal");
+		SetEliteProgress(_eliteProg, _eliteNeed);
 		if (MapLabel != null)
 			MapLabel.Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island));
 		if (Game.Instance != null)
@@ -99,6 +111,14 @@ public partial class Hud : CanvasLayer
 	{
 		int sec = Mathf.Max(0, Mathf.CeilToInt(remaining));
 		TimeLabel.Text = I18n.T("ui.hud.countdown", sec / 60, sec % 60);
+	}
+
+	public void SetEliteProgress(int progress, int threshold)
+	{
+		_eliteProg = Mathf.Max(0, progress);
+		_eliteNeed = Mathf.Max(1, threshold);
+		if (EliteProgressLabel != null)
+			EliteProgressLabel.Text = I18n.T("ui.hud.elite_progress", _eliteProg, _eliteNeed);
 	}
 
 	public void RefreshSlots(Loadout loadout)

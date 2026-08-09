@@ -38,6 +38,8 @@ ui.hud.goal_progress,Minute goal: kill 1 elite ({0}/1),分钟目标: 击杀 1 �
 ui.hud.goal_done,Minute goal: kill 1 elite Done,分钟目标: 击杀 1 精英 完成
 ui.hud.goal_minute,Minute goal: kill 1 elite (this min {0}),分钟目标: 击杀 1 精英 (本分钟 {0})
 ui.hud.goal_complete,Minute goal: complete,分钟目标: 完成
+ui.hud.elite_progress,Elite charge: {0}/{1},精英进度: {0}/{1}
+ui.hud.elite_ready,Elite charge full — elite incoming!,精英进度已满 — 精英来袭！
 ui.hud.ad_unlock,Ad unlock slot (+1),广告解锁槽位 (+1)
 ui.hud.ad_progress,Ad unlock slot ({0}/{1}),广告解锁槽位 ({0}/{1})
 ui.hud.ad_full,Ad slots full,广告槽已满
