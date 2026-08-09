@@ -13,6 +13,11 @@ public partial class Hud : CanvasLayer
 	public Button LangButton;
 	public HBoxContainer SlotBox;
 
+	private ColorRect _progressFill;
+	private ColorRect _xpFill;
+	private const float BarW = 200f;
+	private const float BarH = 6f;
+
 	[Signal] public delegate void AdPressedEventHandler();
 
 	public override void _Ready()
@@ -22,25 +27,40 @@ public partial class Hud : CanvasLayer
 		root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		AddChild(root);
 
-		TimeLabel = new Label { Position = new Vector2(16, 12), Text = "5:00" };
+		// 进度条（上）+ 右侧生存时间；经验条（下）— 细条样式贴近头顶血条
+		var progressTrack = MakeBarTrack(new Vector2(16, 14));
+		_progressFill = MakeBarFill(new Color(0.95f, 0.75f, 0.25f));
+		progressTrack.AddChild(_progressFill);
+		root.AddChild(progressTrack);
+
+		TimeLabel = new Label
+		{
+			Position = new Vector2(16 + BarW + 10, 8),
+			Text = "0:00",
+		};
 		TimeLabel.AddThemeColorOverride("font_color", Colors.White);
 		root.AddChild(TimeLabel);
 
-		HpLabel = new Label { Position = new Vector2(16, 36) };
-		root.AddChild(HpLabel);
+		var xpTrack = MakeBarTrack(new Vector2(16, 28));
+		_xpFill = MakeBarFill(new Color(0.35f, 0.65f, 1f));
+		xpTrack.AddChild(_xpFill);
+		root.AddChild(xpTrack);
 
-		XpLabel = new Label { Position = new Vector2(16, 60) };
+		// 兼容旧引用：生命已在角色头顶显示，HUD 不再叠文字
+		HpLabel = new Label { Visible = false };
+		root.AddChild(HpLabel);
+		XpLabel = new Label { Visible = false };
 		root.AddChild(XpLabel);
 
-		SlotsLabel = new Label { Position = new Vector2(16, 84) };
+		SlotsLabel = new Label { Position = new Vector2(16, 48) };
 		root.AddChild(SlotsLabel);
 
-		GoalLabel = new Label { Position = new Vector2(16, 108), Text = I18n.T("ui.hud.goal") };
+		GoalLabel = new Label { Position = new Vector2(16, 72), Text = I18n.T("ui.hud.goal") };
 		root.AddChild(GoalLabel);
 
 		MapLabel = new Label
 		{
-			Position = new Vector2(16, 132),
+			Position = new Vector2(16, 96),
 			Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island)),
 		};
 		root.AddChild(MapLabel);
@@ -73,6 +93,26 @@ public partial class Hud : CanvasLayer
 			I18n.Instance.LocaleChanged += OnLocaleChanged;
 	}
 
+	private static ColorRect MakeBarTrack(Vector2 pos)
+	{
+		return new ColorRect
+		{
+			Position = pos,
+			Size = new Vector2(BarW, BarH),
+			Color = new Color(0.15f, 0.12f, 0.12f, 0.85f),
+		};
+	}
+
+	private static ColorRect MakeBarFill(Color color)
+	{
+		return new ColorRect
+		{
+			Position = Vector2.Zero,
+			Size = new Vector2(0, BarH),
+			Color = color,
+		};
+	}
+
 	public override void _ExitTree()
 	{
 		if (I18n.Instance != null)
@@ -95,10 +135,26 @@ public partial class Hud : CanvasLayer
 		// 槽位名等由 Main.OnLocaleChanged 里 RefreshSlots 刷新
 	}
 
+	/// <summary>剩余时间 → 进度条填充 + 右侧生存时长。</summary>
 	public void SetTime(float remaining)
 	{
-		int sec = Mathf.Max(0, Mathf.CeilToInt(remaining));
-		TimeLabel.Text = I18n.T("ui.hud.countdown", sec / 60, sec % 60);
+		float duration = Game.RunDuration;
+		float elapsed = Mathf.Clamp(duration - remaining, 0f, duration);
+		float t = duration > 0.01f ? elapsed / duration : 0f;
+		if (_progressFill != null)
+			_progressFill.Size = new Vector2(BarW * t, BarH);
+
+		int sec = Mathf.Max(0, Mathf.FloorToInt(elapsed));
+		TimeLabel.Text = $"{sec / 60}:{sec % 60:00}";
+	}
+
+	public void SetXp(int level, float xp, float need)
+	{
+		float t = need > 0.01f ? Mathf.Clamp(xp / need, 0f, 1f) : 0f;
+		if (_xpFill != null)
+			_xpFill.Size = new Vector2(BarW * t, BarH);
+		if (XpLabel != null)
+			XpLabel.Text = I18n.T("ui.hud.xp", level, $"{xp:0}", $"{need:0}");
 	}
 
 	public void RefreshSlots(Loadout loadout)

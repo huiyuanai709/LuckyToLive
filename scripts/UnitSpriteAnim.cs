@@ -18,7 +18,7 @@ public sealed class UnitSpriteAnim
 	private float _time;
 	private string _current = "";
 	private bool _multiFrame;
-	/// <summary>贴图未翻转时是否朝右（猎人/战士朝右；法师/多数敌人朝左）。</summary>
+	/// <summary>贴图未翻转时是否朝右（猎人朝右；战士/法师/多数敌人朝左）。</summary>
 	private bool _artFacesRight;
 
 	public Vector2 Offset { get; private set; }

@@ -15,9 +15,9 @@ public static class CharacterArt
 
 	private static readonly Dictionary<string, SpriteFrames> Cache = new();
 
-	/// <summary>猎人/战士图集默认朝右；法师默认朝左。</summary>
+	/// <summary>猎人图集默认朝右；战士/法师默认朝左。</summary>
 	public static bool HeroArtFacesRight(HeroId id) =>
-		id is HeroId.Hunter or HeroId.Warrior;
+		id is HeroId.Hunter;
 
 	/// <summary>敌人图集默认朝左。</summary>
 	public static bool EnemyArtFacesRight(bool elite = false, MapId? map = null) => false;

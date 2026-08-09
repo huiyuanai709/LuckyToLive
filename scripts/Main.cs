@@ -104,13 +104,9 @@ public partial class Main : Node2D
 		_hero.GlobalPosition = IslandRect.GetCenter();
 		_hero.Setup(heroId);
 		_hero.Died += OnHeroDied;
-		_hero.HpChanged += (hp, max) =>
-		{
-			if (_hud != null) _hud.HpLabel.Text = I18n.T("ui.hud.hp", $"{hp:0}", $"{max:0}");
-		};
 		_hero.XpChanged += (lv, xp, need) =>
 		{
-			if (_hud != null) _hud.XpLabel.Text = I18n.T("ui.hud.xp", lv, $"{xp:0}", $"{need:0}");
+			if (_hud != null) _hud.SetXp(lv, xp, need);
 		};
 		_hero.FrenzyChanged += (streak, mul) =>
 		{
@@ -142,7 +138,8 @@ public partial class Main : Node2D
 		AddChild(_hud);
 		_hud.AdPressed += OnAdPressed;
 		_hud.RefreshSlots(_hero.Loadout);
-		_hud.HpLabel.Text = I18n.T("ui.hud.hp", $"{_hero.Hp:0}", $"{_hero.MaxHp:0}");
+		_hud.SetXp(_hero.Level, _hero.Xp, _hero.XpToNext());
+		_hud.SetTime(_timeLeft);
 		if (I18n.Instance != null)
 			I18n.Instance.LocaleChanged += OnLocaleChanged;
 
@@ -194,8 +191,7 @@ public partial class Main : Node2D
 	private void OnLocaleChanged(string _)
 	{
 		if (_ended || _hero == null || _hud == null) return;
-		_hud.HpLabel.Text = I18n.T("ui.hud.hp", $"{_hero.Hp:0}", $"{_hero.MaxHp:0}");
-		_hud.XpLabel.Text = I18n.T("ui.hud.xp", _hero.Level, $"{_hero.Xp:0}", $"{_hero.XpToNext():0}");
+		_hud.SetXp(_hero.Level, _hero.Xp, _hero.XpToNext());
 		_hud.RefreshSlots(_hero.Loadout);
 		_hud.SetTime(_timeLeft);
 	}
