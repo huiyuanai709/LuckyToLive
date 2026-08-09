@@ -141,12 +141,12 @@ public partial class Hero : CharacterBody2D
 		_anim?.PlayHit();
 		EmitSignal(SignalName.HpChanged, Hp, MaxHp);
 		QueueRedraw();
-		CombatFx.Shake(11f, 0.2f);
+		CombatFx.Shake(5.5f, 0.12f);
 		ProceduralSfx.Play("hero_hurt", GlobalPosition, 0.08f);
 		if (Hp <= 0f)
 		{
 			Hp = 0;
-			CombatFx.Shake(24f, 0.4f);
+			CombatFx.Shake(9f, 0.2f);
 			EmitSignal(SignalName.Died);
 		}
 	}

@@ -130,8 +130,8 @@ public partial class Projectile : Node2D
 					if (SlowFactor < 1f) other.ApplySlow(SlowFactor, SlowDuration);
 				}
 			}
-			// 爆炸弹命中：额外一次范围震屏，直观区分「点伤」与「爆炸」
-			CombatFx.Shake(13f, 0.2f);
+			// 爆炸弹命中：额外一次轻量范围震屏，区分「点伤」与「爆炸」（避免叠太猛）
+			CombatFx.Shake(5f, 0.12f);
 			PierceLeft = 0;
 			return;
 		}

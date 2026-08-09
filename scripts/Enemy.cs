@@ -431,19 +431,19 @@ public partial class Enemy : CharacterBody2D
 		CombatFx.ImpactBurst(GetParent(), GlobalPosition, spark, fxScale);
 		ProceduralSfx.Play(amount >= 18f ? "hit_heavy" : "hit_light", GlobalPosition, 0.1f);
 
-		// 只在较重的命中/精英身上震屏：高频小震屏会让 Main.Shake() 调用过密，在爆炸类
-		// 溅射（一帧内命中多个目标）下曾观察到会连带影响第三方飘字插件的内部计时，
-		// 阈值门控既更稳妥，也避免屏幕在快速连打时抖个不停。
-		if (amount >= 18f || IsElite)
+		// 只在较重的命中/精英身上震屏：高频小震屏会让 Main.Shake() 调用过密，也容易晕；
+		// 阈值门控避免屏幕在快速连打时抖个不停。狂热只轻微放大震屏，避免血怒叠到刺眼。
+		if (amount >= 22f || IsElite)
 		{
-			float dmgShakeMul = Mathf.Clamp(amount / 18f, 0.7f, 1.8f);
-			CombatFx.Shake((IsElite ? 10f : 6f) * dmgShakeMul * frenzyFxMul, IsElite ? 0.18f : 0.13f);
+			float dmgShakeMul = Mathf.Clamp(amount / 22f, 0.6f, 1.25f);
+			float shakeFrenzy = frenzied ? Mathf.Lerp(1f, frenzyFxMul, 0.35f) : 1f;
+			CombatFx.Shake((IsElite ? 5f : 3f) * dmgShakeMul * shakeFrenzy, IsElite ? 0.12f : 0.09f);
 		}
 
 		if (Hp <= 0f)
 		{
 			ProceduralSfx.Play("enemy_death", GlobalPosition);
-			if (IsElite) CombatFx.Shake(20f, 0.28f);
+			if (IsElite) CombatFx.Shake(8f, 0.18f);
 			if (Affix == "splitter") SpawnSplit();
 			EmitSignal(SignalName.Died, this);
 			QueueFree();

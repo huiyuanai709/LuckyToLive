@@ -44,12 +44,15 @@ public partial class Main : Node2D
 	}
 
 	/// <summary>
-	/// 震屏：沿随机轴做快速衰减的正弦摆动（而非逐帧纯随机抖动），比白噪声更容易被肉眼
-	/// 和视频压缩保留下来，读起来更像「一次晃动」。密集受击时保留更强的一次，避免被小震屏打断。
+	/// 震屏：沿随机轴做短促衰减的正弦摆动（而非逐帧纯随机抖动），读起来更像「一次晃动」。
+	/// 密集受击时保留更强的一次，避免被小震屏打断。强度有全局上限，避免连击/爆炸时晃到头晕。
 	/// </summary>
 	public void Shake(float strength, float duration)
 	{
 		if (strength <= 0f || duration <= 0f) return;
+		// 全局钳制：调用方数值可保留相对差异，实际位移控制在舒适范围内
+		strength = Mathf.Min(strength, 10f);
+		duration = Mathf.Min(duration, 0.22f);
 		if (strength >= _shakeStrength || _shakeTime <= 0f)
 		{
 			_shakeStrength = strength;
@@ -371,8 +374,9 @@ public partial class Main : Node2D
 		float dt = (float)delta;
 		_shakeTime -= dt;
 		float t = Mathf.Max(0f, _shakeTime / _shakeMaxTime);
-		float mag = _shakeStrength * t * t; // 平方衰减：起始更猛，收得更脆
-		float wobble = Mathf.Sin(_shakeTime * 55f);
+		// 1.5 次衰减：仍有「起手一下」的打击感，但峰值比平方衰减柔和；低频摆动不易晕
+		float mag = _shakeStrength * t * Mathf.Sqrt(t);
+		float wobble = Mathf.Sin(_shakeTime * 28f);
 		_cam.Offset = _shakeTime > 0f ? _shakeAxis * wobble * mag : Vector2.Zero;
 	}
 
