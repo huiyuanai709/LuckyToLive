@@ -80,14 +80,20 @@ public partial class Building : Node2D
 				ApplyAuraSlow();
 				break;
 			case "heal_totem":
-				if (_tick <= 0)
+			{
+				var hero = GetTree().GetFirstNodeInGroup("hero") as Hero;
+				if (hero != null && GlobalPosition.DistanceTo(hero.GlobalPosition) <= Item.Range)
 				{
-					_tick = 0.5f;
-					var hero = GetTree().GetFirstNodeInGroup("hero") as Hero;
-					if (hero != null && GlobalPosition.DistanceTo(hero.GlobalPosition) <= Item.Range)
+					if (Item.DamageAuraBonus > 0f)
+						hero.AuraDamageMul = Mathf.Max(hero.AuraDamageMul, 1f + Item.DamageAuraBonus);
+					if (_tick <= 0)
+					{
+						_tick = 0.5f;
 						hero.Heal(Item.Damage * 0.5f);
+					}
 				}
 				break;
+			}
 			case "shield_wall":
 				DamageNearby(dt, true);
 				break;
@@ -148,8 +154,19 @@ public partial class Building : Node2D
 			if (GlobalPosition.DistanceTo(e.GlobalPosition) > Item.Range + e.BodyRadius * 0.4f) continue;
 			e.TakeDamage(Item.Damage);
 			e.ApplySlow(Item.SlowFactor, 1.5f);
+			if (Item.PackHunt)
+				NotifyPackHunt(e);
 			QueueFree();
 			return;
+		}
+	}
+
+	private void NotifyPackHunt(Enemy target)
+	{
+		foreach (var n in GetTree().GetNodesInGroup("pets"))
+		{
+			if (n is Pet pet && IsInstanceValid(pet) && pet.Item != null && pet.Item.PackHunt)
+				pet.TryPackLeap(target);
 		}
 	}
 

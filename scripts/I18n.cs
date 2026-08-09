@@ -104,9 +104,24 @@ public partial class I18n : Node
 		CardKind.Weapon => T("card.kind.weapon"),
 		CardKind.Building => T("card.kind.building"),
 		CardKind.Upgrade => T("card.kind.upgrade"),
+		CardKind.Evolve => T("card.kind.evolve"),
 		CardKind.Passive => T("card.kind.passive"),
 		CardKind.Pet => T("card.kind.pet"),
 		_ => "",
+	};
+
+	public static string BossName(string bossId) => bossId switch
+	{
+		"island_lord" => T($"boss.lord.{MapBossKey()}"),
+		_ => T($"boss.tide.{MapBossKey()}"),
+	};
+
+	private static string MapBossKey() => (Game.Instance?.SelectedMap ?? MapId.Island) switch
+	{
+		MapId.Apocalypse => "apocalypse",
+		MapId.Wilderness => "wilderness",
+		MapId.Desert => "desert",
+		_ => "island",
 	};
 
 	public static string AffixLabel(string affixId) => affixId switch

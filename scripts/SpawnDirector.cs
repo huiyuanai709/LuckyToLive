@@ -21,12 +21,17 @@ public partial class SpawnDirector : Node
 	private float _bonusEliteCd = 40f;
 	private int _pendingEliteWave;
 	private float _pendingEliteCd;
+	private float _basicSuppressLeft;
+	private bool _tideSpawned;
+	private bool _lordSpawned;
+	private Enemy _activeBoss;
 	private readonly RandomNumberGeneratorRng _rng = new();
 	// melee=快攻+冲锋；orbit=旋转球；fire_ground=脚下火（可躲）；shield/summon 保留
 	private static readonly string[] Affixes = { "melee", "orbit", "fire_ground", "shield", "summon" };
 
 	[Signal] public delegate void EliteSpawnedEventHandler(Enemy elite);
 	[Signal] public delegate void MinuteEventFiredEventHandler(int minute);
+	[Signal] public delegate void BossSpawnedEventHandler(string bossId);
 
 	public override void _EnterTree() => Active = this;
 
@@ -40,16 +45,21 @@ public partial class SpawnDirector : Node
 		if (World == null || !Game.Instance.RunActive) return;
 		float dt = (float)delta;
 		Elapsed += dt;
+		if (_basicSuppressLeft > 0f) _basicSuppressLeft -= dt;
+
 		// 后期加密度，但不再在最后一分钟陡增到刷怪爆炸
 		_density = 1f + Elapsed / 60f * 0.75f;
 		if (Elapsed > 240f) _density += 0.55f;
+
+		bool suppressBasic = _basicSuppressLeft > 0f
+			|| (_activeBoss != null && IsInstanceValid(_activeBoss) && _activeBoss.BossId == "island_lord");
 
 		_spawnCd -= dt;
 		if (_spawnCd <= 0)
 		{
 			// 地板 0.5s，避免软件渲染下敌人数把帧率打崩
 			_spawnCd = Mathf.Max(0.5f, 1.35f / _density);
-			if (AliveEnemyCount() < MaxAliveEnemies)
+			if (!suppressBasic && AliveEnemyCount() < MaxAliveEnemies)
 				SpawnBasic();
 		}
 
@@ -65,12 +75,24 @@ public partial class SpawnDirector : Node
 		if (minute >= 1 && minute <= 4 && minute != _lastMinuteEvent && Elapsed >= minute * 60f)
 		{
 			_lastMinuteEvent = minute;
-			QueueEliteWave(1 + minute / 2);
+			// minute 1–2 → 1；3–4 → 2（压力让给 Boss）
+			int wave = minute <= 2 ? 1 : 2;
+			QueueEliteWave(wave);
 			EmitSignal(SignalName.MinuteEventFired, minute);
 		}
 
-		if (Elapsed >= 270f && Elapsed < 271f)
-			QueueEliteWave(4);
+		// 2:30 潮汐守卫；4:30 岛主（取代旧 270s 四精英波）
+		if (!_tideSpawned && Elapsed >= 150f)
+		{
+			_tideSpawned = true;
+			_basicSuppressLeft = Mathf.Max(_basicSuppressLeft, 8f);
+			SpawnBoss("tide_guard");
+		}
+		if (!_lordSpawned && Elapsed >= 270f)
+		{
+			_lordSpawned = true;
+			SpawnBoss("island_lord");
+		}
 
 		// 精英波错峰生成，避免同一帧塞进多个大体积精英
 		if (_pendingEliteWave > 0)
@@ -83,6 +105,9 @@ public partial class SpawnDirector : Node
 				SpawnElite();
 			}
 		}
+
+		if (_activeBoss != null && !IsInstanceValid(_activeBoss))
+			_activeBoss = null;
 	}
 
 	private int AliveEnemyCount()
@@ -110,6 +135,23 @@ public partial class SpawnDirector : Node
 		e.ConfigureElite(1f + Elapsed / 100f, affix);
 		Wire(e);
 		EmitSignal(SignalName.EliteSpawned, e);
+		return e;
+	}
+
+	public Enemy SpawnBoss(string bossId)
+	{
+		if (_activeBoss != null && IsInstanceValid(_activeBoss))
+			return _activeBoss;
+
+		var e = new Enemy();
+		World.AddChild(e);
+		e.GlobalPosition = EdgePoint();
+		float hpMul = 1f + Elapsed / 120f;
+		e.ConfigureBoss(bossId, hpMul);
+		_activeBoss = e;
+		Wire(e);
+		EmitSignal(SignalName.EliteSpawned, e);
+		EmitSignal(SignalName.BossSpawned, bossId);
 		return e;
 	}
 

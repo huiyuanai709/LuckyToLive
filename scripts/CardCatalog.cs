@@ -8,6 +8,7 @@ public enum CardKind
 	Pet,
 	Passive,
 	Upgrade,
+	Evolve,
 }
 
 public class CardDef
@@ -22,7 +23,8 @@ public class CardDef
 	public string WeaponStyle;    // slash/pierce/ice_arrow/fireball/beam/charge
 	public string BuildingStyle;  // turret_phys/turret_fire/slow_field/heal_totem/shield_wall/trap
 	public string PetStyle;       // wolf
-	public string UpgradeStat;    // damage/rate/range/special/hp/speed/regen
+	public string UpgradeStat;    // damage/rate/range/special/hp/speed/regen / evolve:*
+	public string SynergyId;           // 进化卡对应协同 Id
 	public string ProjectileTexture;   // 覆盖弹道贴图：res://assets/projectiles/{name}.png 的 name
 	public float[] BeamAnglesDeg;      // 覆盖射线角度（相对朝向，度）；null = 用默认规则
 	public int BeamRaysAdd;            // 升级时额外增加的射线数（走默认角度规则）
@@ -50,6 +52,14 @@ public class SlotItem
 	public Building BuildingRef;
 	public Pet PetRef;
 	public string UpgradeStatHolder;
+	/// <summary>已进化时指向进化卡 Id（用于 HUD / 文案）。</summary>
+	public string EvolveCardId;
+	/// <summary>穿透箭进化：额外分裂减速副箭。</summary>
+	public bool SplitArrow;
+	/// <summary>围猎：陷阱触发时狼扑咬。</summary>
+	public bool PackHunt;
+	/// <summary>战旗伤害光环（堡垒之誓）。</summary>
+	public float DamageAuraBonus;
 
 	// —— 弹道 / 射线表现与机制 ——
 	/// <summary>覆盖贴图名；空则按 WeaponStyle / BuildingStyle 取默认。</summary>
@@ -63,8 +73,10 @@ public class SlotItem
 	/// <summary>覆盖角度列表（相对朝向，度）；非空时忽略默认规则。</summary>
 	public float[] BeamAnglesDeg;
 
-	/// <summary>单件武器射线条数上限；满后不再抽出增加射线的升级卡。</summary>
+	/// <summary>默认射线条数上限；棱镜进化可提高到 4。</summary>
 	public const int MaxBeamRays = 3;
+	/// <summary>本件射线条数上限。</summary>
+	public int BeamRaysCap = MaxBeamRays;
 
 	/// <summary>实际生效的射线条数（有覆盖角度时以角度表为准）。</summary>
 	public int EffectiveBeamRays =>
@@ -126,7 +138,14 @@ public static class CardCatalog
 		new CardDef { Id = "up_p_magnet", Name = "磁吸·扩域", Desc = "拾取范围再扩大", Kind = CardKind.Upgrade, Hero = null, GrantsItemId = "p_magnet", IsNewItem = false, UpgradeStat = "magnet" },
 	};
 
-	public static CardDef Get(string id) => All.FirstOrDefault(c => c.Id == id);
+	public static CardDef Get(string id)
+	{
+		if (string.IsNullOrEmpty(id)) return null;
+		var card = All.FirstOrDefault(c => c.Id == id);
+		if (card != null) return card;
+		var syn = SynergyCatalog.GetByEvolveCard(id);
+		return syn != null ? SynergyCatalog.ToEvolveCard(syn) : null;
+	}
 
 	public static string StarterCardId(HeroId hero) => hero switch
 	{
@@ -161,7 +180,23 @@ public static class CardCatalog
 		}
 
 		rng.Shuffle(pool);
-		return pool.Take(System.Math.Min(count, pool.Count)).ToList();
+		var result = pool.Take(System.Math.Min(count, pool.Count)).ToList();
+
+		// 协同进化：满足材料时至少占一格（槽满也可出）
+		var evo = SynergyCatalog.ReadyEvolveCards(hero, loadout);
+		if (evo.Count > 0)
+		{
+			rng.Shuffle(evo);
+			var pick = evo[0];
+			if (result.Count < count)
+				result.Add(pick);
+			else if (result.Count > 0)
+				result[rng.RandiRange(0, result.Count - 1)] = pick;
+			else
+				result.Add(pick);
+		}
+
+		return result;
 	}
 
 	/// <summary>
@@ -175,7 +210,7 @@ public static class CardCatalog
 
 		var item = loadout.GetItem(card.GrantsItemId);
 		if (item == null) return true;
-		return item.EffectiveBeamRays < SlotItem.MaxBeamRays;
+		return item.EffectiveBeamRays < item.BeamRaysCap;
 	}
 }
 

@@ -23,6 +23,12 @@ public partial class Hero : CharacterBody2D
 	public float Lifesteal;
 	/// <summary>连杀狂热伤害倍率（英雄武器）。</summary>
 	public float DamageMul = 1f;
+	/// <summary>建筑光环伤害倍率（如堡垒之誓战旗），每帧由建筑刷新。</summary>
+	public float AuraDamageMul = 1f;
+	/// <summary>血疾：击杀额外回血。</summary>
+	public float KillHealOnKill;
+	/// <summary>血疾：连杀阈值各档 -N。</summary>
+	public int FrenzyThresholdBonus;
 	public int KillStreak { get; private set; }
 
 	private readonly Dictionary<string, float> _cooldowns = new();
@@ -154,29 +160,34 @@ public partial class Hero : CharacterBody2D
 		else
 			KillStreak = 1;
 		_streakWindow = StreakGap;
-		float mul = FrenzyMulForStreak(KillStreak);
+		if (KillHealOnKill > 0f)
+			Heal(KillHealOnKill, showFloat: true);
+		float mul = FrenzyMulForStreak(KillStreak, FrenzyThresholdBonus);
+		int tipAt = Mathf.Max(1, 3 - FrenzyThresholdBonus);
 		if (!Mathf.IsEqualApprox(mul, DamageMul))
 		{
 			DamageMul = mul;
 			EmitSignal(SignalName.FrenzyChanged, KillStreak, DamageMul);
 		}
-		else if (KillStreak >= 3)
+		else if (KillStreak >= tipAt)
 		{
 			EmitSignal(SignalName.FrenzyChanged, KillStreak, DamageMul);
 		}
 		return DamageMul;
 	}
 
-	public static float FrenzyMulForStreak(int streak)
+	public static float FrenzyMulForStreak(int streak, int thresholdBonus = 0)
 	{
-		if (streak >= 12) return 1.55f;
-		if (streak >= 8) return 1.35f;
-		if (streak >= 5) return 1.2f;
-		if (streak >= 3) return 1.1f;
+		int b = Mathf.Max(0, thresholdBonus);
+		if (streak >= 12 - b) return 1.55f;
+		if (streak >= 8 - b) return 1.35f;
+		if (streak >= 5 - b) return 1.2f;
+		if (streak >= 3 - b) return 1.1f;
 		return 1f;
 	}
 
-	public float ScaleDamage(float baseDamage) => baseDamage * Mathf.Max(0.1f, DamageMul);
+	public float ScaleDamage(float baseDamage) =>
+		baseDamage * Mathf.Max(0.1f, DamageMul) * Mathf.Max(0.1f, AuraDamageMul);
 
 	public void OnDealtDamage(float amount)
 	{
@@ -187,6 +198,7 @@ public partial class Hero : CharacterBody2D
 	public override void _PhysicsProcess(double delta)
 	{
 		float dt = (float)delta;
+		AuraDamageMul = 1f; // 建筑光环每帧重算
 		if (_invulnLeft > 0f) _invulnLeft -= dt;
 		if (_dashCd > 0f) _dashCd -= dt;
 
@@ -352,6 +364,26 @@ public partial class Hero : CharacterBody2D
 		GetParent().AddChild(p);
 		p.GlobalPosition = GlobalPosition;
 		p.Setup(_target, item, this);
+
+		// 霜暴连矢：额外一支减速副箭（略偏角度）
+		if (item.SplitArrow && _target != null && IsInstanceValid(_target))
+		{
+			var split = new SlotItem
+			{
+				ItemId = item.ItemId + "_split",
+				WeaponStyle = "ice_arrow",
+				Damage = item.Damage * 0.55f,
+				Pierce = 1,
+				SlowFactor = 0.5f,
+				Level = item.Level,
+				ProjectileTexture = item.ProjectileTexture,
+			};
+			var side = new Projectile();
+			GetParent().AddChild(side);
+			side.GlobalPosition = GlobalPosition;
+			Vector2 to = (_target.GlobalPosition - GlobalPosition).Normalized();
+			side.SetupDirected(to.Rotated(0.28f), split, this);
+		}
 	}
 
 	public override void _Draw()
