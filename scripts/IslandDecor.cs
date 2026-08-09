@@ -83,6 +83,63 @@ public partial class IslandDecor : Node2D
 				kinds: theme.ScatterExtra, scaleMin: 0.85f, scaleMax: 1.2f, edgeBias: 0.35f,
 				occupied: occupied, blocking: false, zBehind: true);
 		}
+
+		// 4) 可踩踏减速草丛区（地形互动；与装饰草分离，保证体感）
+		PlaceTerrainBrushes(world, island, rng, clearCenter, clearRadius, theme);
+	}
+
+	private void PlaceTerrainBrushes(
+		Node2D world,
+		Rect2 island,
+		RandomNumberGenerator rng,
+		Vector2 clearCenter,
+		float clearRadius,
+		MapTheme theme)
+	{
+		int count = theme.Id switch
+		{
+			MapId.Wilderness => 10,
+			MapId.Desert => 6,
+			MapId.Apocalypse => 7,
+			_ => 8,
+		};
+		var tint = theme.Id switch
+		{
+			MapId.Desert => new Color(0.85f, 0.7f, 0.35f, 0.2f),
+			MapId.Apocalypse => new Color(0.45f, 0.35f, 0.3f, 0.22f),
+			MapId.Wilderness => new Color(0.25f, 0.55f, 0.3f, 0.26f),
+			_ => new Color(0.35f, 0.7f, 0.35f, 0.22f),
+		};
+		var inner = island.Grow(-70f);
+		for (int attempt = 0, made = 0; attempt < count * 12 && made < count; attempt++)
+		{
+			var p = new Vector2(
+				rng.RandfRange(inner.Position.X, inner.End.X),
+				rng.RandfRange(inner.Position.Y, inner.End.Y));
+			if (p.DistanceTo(clearCenter) < clearRadius * 0.7f) continue;
+
+			bool nearOther = false;
+			foreach (var n in world.GetTree().GetNodesInGroup("terrain_brush"))
+			{
+				if (n is Node2D other && other.GlobalPosition.DistanceTo(p) < 120f)
+				{
+					nearOther = true;
+					break;
+				}
+			}
+			if (nearOther) continue;
+
+			var brush = new TerrainBrush
+			{
+				Radius = rng.RandfRange(48f, 78f),
+				Tint = tint,
+				EnemySlow = theme.Id == MapId.Desert ? 0.7f : 0.6f,
+				HeroSlow = 0.88f,
+			};
+			world.AddChild(brush);
+			brush.GlobalPosition = p;
+			made++;
+		}
 	}
 
 	private void PlaceBarrier(
@@ -281,6 +338,14 @@ public partial class IslandDecor : Node2D
 		return bas * Mathf.Clamp(scale, 0.7f, 2.2f);
 	}
 
+	private static bool IsDestructibleKind(string kind)
+	{
+		if (string.IsNullOrEmpty(kind)) return false;
+		return kind.StartsWith("rock")
+			|| kind is "stump" or "bone_pile"
+			|| kind.StartsWith("cactus");
+	}
+
 	private static bool AddProp(
 		Node2D world,
 		string kind,
@@ -295,9 +360,13 @@ public partial class IslandDecor : Node2D
 
 		float radius = blocking ? CollisionRadius(kind, scale) : 0f;
 		Node2D root;
-		Sprite2D sprite;
 
-		if (radius > 0.5f)
+		if (radius > 0.5f && IsDestructibleKind(kind))
+		{
+			// 岩石 / 树桩等：可破坏掩体
+			root = DestructibleCover.Create(kind, pos, scale, tex, feetAnchor);
+		}
+		else if (radius > 0.5f)
 		{
 			var body = new StaticBody2D
 			{
@@ -308,7 +377,7 @@ public partial class IslandDecor : Node2D
 			body.AddToGroup("island_decor");
 			body.AddToGroup("island_obstacles");
 
-			sprite = new Sprite2D
+			var sprite = new Sprite2D
 			{
 				Texture = tex,
 				TextureFilter = TextureFilterEnum.Nearest,
@@ -322,7 +391,6 @@ public partial class IslandDecor : Node2D
 			var col = new CollisionShape2D
 			{
 				Shape = new CircleShape2D { Radius = radius },
-				// 脚底略前，贴合阴影位置
 				Position = new Vector2(0, -2f),
 			};
 			body.AddChild(col);
@@ -330,7 +398,7 @@ public partial class IslandDecor : Node2D
 		}
 		else
 		{
-			sprite = new Sprite2D
+			var sprite = new Sprite2D
 			{
 				Texture = tex,
 				TextureFilter = TextureFilterEnum.Nearest,

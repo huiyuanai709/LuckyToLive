@@ -7,8 +7,8 @@ public partial class Building : Node2D
 	private float _cd;
 	private float _tick;
 	private Texture2D _tex;
-	/// <summary>建筑贴图在世界中的目标显示直径（像素）。</summary>
-	private float _visualSize = 64f;
+	/// <summary>建筑贴图在世界中的目标显示直径（像素）。原先 64 相对英雄过小。</summary>
+	private float _visualSize = 168f;
 
 	public static Building SpawnNear(Node2D world, Hero hero, SlotItem item)
 	{
@@ -48,6 +48,7 @@ public partial class Building : Node2D
 		Item = item;
 		Hp = 60 + item.Level * 20;
 		_tex = LoadArt(item);
+		_visualSize = VisualSizeFor(item);
 		QueueRedraw();
 	}
 
@@ -201,9 +202,23 @@ public partial class Building : Node2D
 			"trap" => new Color(0.8f, 0.6f, 0.2f),
 			_ => new Color(0.55f, 0.55f, 0.6f),
 		};
-		// 光环范围已在上方画过；此处只画实体占位
+		// 光环范围已在上方画过；此处只画实体占位（放大，与有贴图时观感接近）
 		if (Item.BuildingStyle is not ("slow_field" or "heal_totem"))
-			DrawRect(new Rect2(-14, -14, 28, 28), c);
-		DrawCircle(Vector2.Zero, 6, c.Lightened(0.3f));
+			DrawRect(new Rect2(-28, -28, 56, 56), c);
+		DrawCircle(Vector2.Zero, 12, c.Lightened(0.3f));
+	}
+
+	private float VisualSizeFor(SlotItem item)
+	{
+		if (item == null) return _visualSize;
+		return item.BuildingStyle switch
+		{
+			"trap" => 120f,
+			"shield_wall" => 180f,
+			"turret_phys" or "turret_fire" => 176f,
+			"heal_totem" => 160f,
+			"slow_field" => 140f,
+			_ => _visualSize,
+		};
 	}
 }

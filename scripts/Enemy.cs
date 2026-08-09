@@ -248,7 +248,8 @@ public partial class Enemy : CharacterBody2D
 		}
 		else if (dist > stopRange)
 		{
-			Velocity = toHero.Normalized() * Speed * SlowFactor;
+			float terrainMul = TerrainBrush.SampleMul(GetTree(), GlobalPosition, forHero: false);
+			Velocity = toHero.Normalized() * Speed * SlowFactor * terrainMul;
 			MoveAndSlide();
 			moving = true;
 		}
