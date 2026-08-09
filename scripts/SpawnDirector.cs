@@ -25,8 +25,9 @@ public partial class SpawnDirector : Node
 	private bool _lordSpawned;
 	private Enemy _activeBoss;
 	private readonly RandomNumberGeneratorRng _rng = new();
-	// melee=快攻+冲锋；orbit=旋转球；fire_ground=脚下火（可躲）；shield/summon 保留
-	private static readonly string[] Affixes = { "melee", "orbit", "fire_ground", "shield", "summon" };
+	// melee=快攻+冲锋；orbit=旋转球；fire_ground=脚下火（可躲）；shield/summon 保留；
+	// berserk=残血越战越勇；splitter=死亡裂成两只弱化分身
+	private static readonly string[] Affixes = { "melee", "orbit", "fire_ground", "shield", "summon", "berserk", "splitter" };
 
 	/// <summary>普通怪击杀叠加的精英刷新进度（精英/Boss 不计）。</summary>
 	public int KillProgress { get; private set; }

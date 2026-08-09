@@ -97,6 +97,8 @@ affix.summon,Summon,召唤
 affix.ranged,Ranged,远程
 affix.orbit,Orbit Orbs,旋转球
 affix.fire_ground,Ground Fire,脚下火
+affix.berserk,Bloodrage,狂怒
+affix.splitter,Splitter,裂生
 card.w_slash.name,Cleave,裂斩
 card.w_slash.desc,Melee swing that hits nearby enemies,近战挥击，伤害附近敌人
 card.w_charge.name,Charge Blade,冲锋刃
@@ -177,3 +179,7 @@ card.up_p_vamp.name,Bloodlust · Deepen,嗜血·深化
 card.up_p_vamp.desc,Increases lifesteal further,吸血比例再提升
 card.up_p_magnet.name,Magnet · Expand,磁吸·扩域
 card.up_p_magnet.desc,Further increases pickup range,拾取范围再扩大
+card.p_heavy.name,Heavy Strike,重击
+card.p_heavy.desc,"Increases knockback; hits have a chance to stagger",提升击退力度；命中有几率造成短暂硬直
+card.p_frenzy.name,Bloodrush Fury,血怒
+card.p_frenzy.desc,"Frenzy triggers more easily; hit effects grow fiercer while frenzied",连杀更容易触发狂热；狂热时命中特效更强烈

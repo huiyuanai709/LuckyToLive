@@ -5,6 +5,14 @@ public partial class Main : Node2D
 {
 	public Rect2 IslandRect = new(40, 40, 2320, 1520);
 
+	/// <summary>当前对局的 Main 单例；供 CombatFx 等无场景引用的静态类回调震屏。</summary>
+	public static Main Instance { get; private set; }
+
+	private float _shakeTime;
+	private float _shakeMaxTime;
+	private float _shakeStrength;
+	private Vector2 _shakeAxis = Vector2.Right;
+
 	private Hero _hero;
 	private Camera2D _cam;
 	private SpawnDirector _spawner;
@@ -24,9 +32,32 @@ public partial class Main : Node2D
 
 	public override void _Ready()
 	{
+		Instance = this;
 		// 树木等装饰与角色按 Y 排序遮挡；UI 为 CanvasLayer，不受影响
 		YSortEnabled = true;
 		ShowHeroSelect();
+	}
+
+	public override void _ExitTree()
+	{
+		if (Instance == this) Instance = null;
+	}
+
+	/// <summary>
+	/// 震屏：沿随机轴做快速衰减的正弦摆动（而非逐帧纯随机抖动），比白噪声更容易被肉眼
+	/// 和视频压缩保留下来，读起来更像「一次晃动」。密集受击时保留更强的一次，避免被小震屏打断。
+	/// </summary>
+	public void Shake(float strength, float duration)
+	{
+		if (strength <= 0f || duration <= 0f) return;
+		if (strength >= _shakeStrength || _shakeTime <= 0f)
+		{
+			_shakeStrength = strength;
+			_shakeMaxTime = duration;
+			_shakeTime = duration;
+			float angle = (float)GD.RandRange(0.0, Mathf.Tau);
+			_shakeAxis = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+		}
 	}
 
 	private void ShowHeroSelect()
@@ -79,6 +110,8 @@ public partial class Main : Node2D
 		_popup = null;
 		_ended = false;
 		_choosing = false;
+		_shakeTime = 0f;
+		_shakeStrength = 0f;
 		_mapTheme = MapCatalog.Get(Game.Instance?.SelectedMap ?? MapId.Island);
 	}
 
@@ -324,6 +357,23 @@ public partial class Main : Node2D
 				DrawTextureRectRegion(tex, dst, src);
 			}
 		}
+	}
+
+	/// <summary>
+	/// 震屏偏移量固定挂在物理帧（60Hz）而不是 _Process：无显示器/无 vsync 的无头模式下
+	/// _Process 可能以远高于 60Hz 的速率跑，逐帧改写 Camera2D.Offset 会让飘字插件
+	/// （GodotxLabelUp，内部用 get_canvas_transform() 换算屏幕坐标）在极高更新频率下
+	/// 偶发内部报错；钳制在固定物理帧率上更稳妥，视觉效果不受影响。
+	/// </summary>
+	public override void _PhysicsProcess(double delta)
+	{
+		if (_shakeTime <= 0f || _cam == null || !IsInstanceValid(_cam)) return;
+		float dt = (float)delta;
+		_shakeTime -= dt;
+		float t = Mathf.Max(0f, _shakeTime / _shakeMaxTime);
+		float mag = _shakeStrength * t * t; // 平方衰减：起始更猛，收得更脆
+		float wobble = Mathf.Sin(_shakeTime * 55f);
+		_cam.Offset = _shakeTime > 0f ? _shakeAxis * wobble * mag : Vector2.Zero;
 	}
 
 	public override void _Process(double delta)

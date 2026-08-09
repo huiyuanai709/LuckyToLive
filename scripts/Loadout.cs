@@ -301,6 +301,14 @@ public class Loadout
 			case "p_magnet":
 				hero.PickupRange += item.Level == 1 ? 48f : 28f;
 				break;
+			case "p_heavy":
+				hero.KnockbackMul += item.Level == 1 ? 0.6f : 0.4f;
+				hero.StaggerChance = Mathf.Min(0.6f, hero.StaggerChance + (item.Level == 1 ? 0.12f : 0.08f));
+				break;
+			case "p_frenzy":
+				hero.FrenzyThresholdBonus += 1;
+				hero.FrenzyFxMul = Mathf.Max(hero.FrenzyFxMul, 1.6f);
+				break;
 		}
 	}
 
