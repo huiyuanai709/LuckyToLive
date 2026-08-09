@@ -43,6 +43,7 @@ ui.hud.ad_progress,Ad unlock slot ({0}/{1}),广告解锁槽位 ({0}/{1})
 ui.hud.ad_full,Ad slots full,广告槽已满
 ui.hud.ad_gained,Run slots +1 (ad placeholder),本局槽位 +1（广告占位）
 ui.hud.elite_wave,Minute {0} elite rush!,第 {0} 分钟精英冲击！
+ui.hud.tide_shrink,Tide is closing in! Stay inland!,潮汐逼近！往岛心靠拢！
 ui.hud.frenzy,Frenzy x{0}  DMG x{1},连杀 x{0}  伤害 x{1}
 ui.hud.boss_spawn,Boss: {0}!,Boss 来袭：{0}！
 ui.hud.synergy_ready,Synergy ready: {0},协同可进化：{0}

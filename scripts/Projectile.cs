@@ -96,6 +96,17 @@ public partial class Projectile : Node2D
 			Hit(e);
 			if (PierceLeft <= 0) { QueueFree(); return; }
 		}
+
+		// 可破坏掩体：溅射弹直接砸碎，穿透弹消耗一层穿透
+		foreach (var n in GetTree().GetNodesInGroup("destructibles"))
+		{
+			if (n is not DestructibleCover cover || !IsInstanceValid(cover)) continue;
+			if (GlobalPosition.DistanceTo(cover.GlobalPosition) > cover.BodyRadius + 8f) continue;
+			cover.TakeDamage(Damage * (Splash > 0 ? 1f : 0.75f));
+			if (Splash > 0) { PierceLeft = 0; QueueFree(); return; }
+			PierceLeft -= 1;
+			if (PierceLeft <= 0) { QueueFree(); return; }
+		}
 	}
 
 	private void Hit(Enemy e)

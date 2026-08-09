@@ -20,6 +20,7 @@ public partial class Main : Node2D
 	private bool _goalDone;
 	private int _elitesThisMinute;
 	private float _minuteMark;
+	private bool _tideWarned;
 
 	public override void _Ready()
 	{
@@ -92,6 +93,7 @@ public partial class Main : Node2D
 		_goalDone = false;
 		_elitesThisMinute = 0;
 		_minuteMark = 60f;
+		_tideWarned = false;
 
 		// 岛背景 + 环境装饰（树木 / 草丛 / 岩石等）
 		QueueRedraw();
@@ -234,6 +236,28 @@ public partial class Main : Node2D
 		// 岛屿描边
 		DrawRect(IslandRect, theme.Border, false, 3);
 		DrawRect(IslandRect.Grow(2), theme.BorderGlow, false, 1.5f);
+
+		// 潮汐缩圈：危险区半透明覆盖
+		float edge = SafeEdgeMargin();
+		if (edge > 22f)
+		{
+			var safe = IslandRect.Grow(-edge);
+			var danger = new Color(0.15f, 0.35f, 0.7f, 0.22f);
+			DrawRect(new Rect2(IslandRect.Position, new Vector2(IslandRect.Size.X, edge)), danger);
+			DrawRect(new Rect2(IslandRect.Position.X, IslandRect.End.Y - edge, IslandRect.Size.X, edge), danger);
+			DrawRect(new Rect2(IslandRect.Position.X, IslandRect.Position.Y + edge, edge, IslandRect.Size.Y - edge * 2f), danger);
+			DrawRect(new Rect2(IslandRect.End.X - edge, IslandRect.Position.Y + edge, edge, IslandRect.Size.Y - edge * 2f), danger);
+			DrawRect(safe, new Color(0.4f, 0.75f, 1f, 0.55f), false, 2f);
+		}
+	}
+
+	/// <summary>最后 60 秒岸线内收，逼近中央交战。</summary>
+	private float SafeEdgeMargin()
+	{
+		float elapsed = _spawner?.Elapsed ?? 0f;
+		if (elapsed < 240f) return 20f;
+		float t = Mathf.Clamp((elapsed - 240f) / 60f, 0f, 1f);
+		return 20f + t * 160f;
 	}
 
 	private void DrawTiled(Texture2D tex, Rect2 area)
@@ -265,11 +289,19 @@ public partial class Main : Node2D
 		if (_hero == null || _ended || _choosing) return;
 		float dt = (float)delta;
 
-		// 钳制英雄在岛内
+		// 钳制英雄在岛内；最后一分钟潮汐缩圈
+		float edge = SafeEdgeMargin();
 		var p = _hero.GlobalPosition;
-		p.X = Mathf.Clamp(p.X, IslandRect.Position.X + 20, IslandRect.End.X - 20);
-		p.Y = Mathf.Clamp(p.Y, IslandRect.Position.Y + 20, IslandRect.End.Y - 20);
+		p.X = Mathf.Clamp(p.X, IslandRect.Position.X + edge, IslandRect.End.X - edge);
+		p.Y = Mathf.Clamp(p.Y, IslandRect.Position.Y + edge, IslandRect.End.Y - edge);
 		_hero.GlobalPosition = p;
+		if (!_tideWarned && edge > 24f && _hud != null)
+		{
+			_tideWarned = true;
+			_hud.MsgLabel.Text = I18n.T("ui.hud.tide_shrink");
+		}
+		if (edge > 22f)
+			QueueRedraw();
 
 		_timeLeft -= dt;
 		_hud.SetTime(_timeLeft);

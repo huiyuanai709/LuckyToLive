@@ -222,15 +222,16 @@ public partial class Hero : CharacterBody2D
 
 		TryStartDash(input);
 
+		float terrainMul = TerrainBrush.SampleMul(GetTree(), GlobalPosition, forHero: true);
 		if (_dashLeft > 0f)
 		{
 			_dashLeft -= dt;
-			Velocity = _dashVel;
+			Velocity = _dashVel * Mathf.Lerp(1f, terrainMul, 0.35f);
 			MoveAndSlide();
 		}
 		else
 		{
-			Velocity = input * MoveSpeed;
+			Velocity = input * MoveSpeed * terrainMul;
 			MoveAndSlide();
 		}
 
@@ -355,6 +356,13 @@ public partial class Hero : CharacterBody2D
 				e.TakeDamage(dmg);
 				OnDealtDamage(dmg);
 			}
+		}
+		// 近战也可清可破坏掩体
+		foreach (var n in GetTree().GetNodesInGroup("destructibles"))
+		{
+			if (n is not DestructibleCover cover || !IsInstanceValid(cover)) continue;
+			if (GlobalPosition.DistanceTo(cover.GlobalPosition) <= range + cover.BodyRadius * 0.5f)
+				cover.TakeDamage(dmg * 0.85f);
 		}
 	}
 
