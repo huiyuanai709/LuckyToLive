@@ -38,6 +38,14 @@ public partial class Enemy : CharacterBody2D
 	private float _chargeCd;
 	private Vector2 _chargeDir = Vector2.Right;
 
+	// 击退：独立于追击/冲锋的短促位移，命中方向的力随时间衰减
+	private Vector2 _knockbackVel = Vector2.Zero;
+	private const float KnockbackDecay = 750f;
+
+	// 狂怒(berserk)：残血越战越勇，基于配置时记录的基础值实时插值
+	private float _berserkBaseSpeed;
+	private float _berserkBaseContactCd;
+
 	public override void _Ready()
 	{
 		AddToGroup("enemies");
@@ -121,6 +129,22 @@ public partial class Enemy : CharacterBody2D
 				break;
 			case "summon":
 				_summonCd = 3f;
+				break;
+			case "berserk":
+				// 残血越战越勇：速度/攻速随生命降低而线性提升
+				Speed = 62f;
+				ContactDamage = 10f;
+				ContactCooldown = 0.6f;
+				_berserkBaseSpeed = Speed;
+				_berserkBaseContactCd = ContactCooldown;
+				break;
+			case "splitter":
+				// 死亡时裂成两只弱化分身，血量略降作为补偿
+				Speed = 50f;
+				ContactDamage = 9f;
+				ContactCooldown = 0.75f;
+				MaxHp *= 0.82f;
+				Hp = MaxHp;
 				break;
 		}
 
@@ -235,6 +259,13 @@ public partial class Enemy : CharacterBody2D
 		if (Affix == "fire_ground" || _bossAlsoFireGround)
 			TickFireGround(dt, _hero);
 
+		if (Affix == "berserk" && _berserkBaseSpeed > 0f)
+		{
+			float missingPct = 1f - Mathf.Clamp(Hp / MaxHp, 0f, 1f);
+			Speed = _berserkBaseSpeed * (1f + missingPct * 1.1f);
+			ContactCooldown = Mathf.Max(0.14f, _berserkBaseContactCd * (1f - missingPct * 0.5f));
+		}
+
 		Vector2 toHero = _hero.GlobalPosition - GlobalPosition;
 		float dist = toHero.Length();
 		// 英雄圆半径 14 + 怪体半径；停步与接触距离必须大于该分离距离，否则贴身也打不到
@@ -256,6 +287,15 @@ public partial class Enemy : CharacterBody2D
 		else
 		{
 			Velocity = Vector2.Zero;
+		}
+
+		// 击退：与追击/冲锋位移分开结算的一次额外 MoveAndSlide，命中方向短促推开
+		if (_knockbackVel.LengthSquared() > 1f)
+		{
+			Velocity = _knockbackVel;
+			MoveAndSlide();
+			moving = true;
+			_knockbackVel = _knockbackVel.MoveToward(Vector2.Zero, KnockbackDecay * dt);
 		}
 
 		_contactCd -= dt;
@@ -367,17 +407,70 @@ public partial class Enemy : CharacterBody2D
 		SpawnDirector.Active?.Register(e);
 	}
 
-	public void TakeDamage(float amount)
+	/// <summary>
+	/// 统一伤害入口：所有伤害来源（近战/弹道/建筑/宠物/射线）都走这里，命中震屏/粒子/
+	/// 音效只需在此处理一次。knockbackForce 大于 0 时才会推开，默认无击退（建筑/射线等
+	/// 持续伤害源不必额外指定）。
+	/// </summary>
+	public void TakeDamage(float amount, Vector2 knockbackDir = default, float knockbackForce = 0f, Color? fxColor = null)
 	{
 		if (amount <= 0f) return;
 		Hp -= amount;
 		FloatingText.ShowDamage(GlobalPosition, amount);
 		_anim?.PlayHit();
 		QueueRedraw();
+
+		if (knockbackForce > 0f && knockbackDir.LengthSquared() > 0.0001f)
+			ApplyKnockback(knockbackDir.Normalized(), knockbackForce);
+
+		bool frenzied = _hero != null && IsInstanceValid(_hero) && _hero.DamageMul > 1f;
+		float frenzyFxMul = frenzied ? Mathf.Max(1f, _hero.FrenzyFxMul) : 1f;
+		Color spark = fxColor ?? new Color(1f, 0.5f, 0.35f);
+		if (frenzied) spark = spark.Lerp(new Color(1f, 0.9f, 0.25f), 0.6f); // 狂热连杀：命中特效偏金色
+		float fxScale = (0.7f + Mathf.Min(amount / 30f, 1f) * 0.7f) * frenzyFxMul;
+		CombatFx.ImpactBurst(GetParent(), GlobalPosition, spark, fxScale);
+		ProceduralSfx.Play(amount >= 18f ? "hit_heavy" : "hit_light", GlobalPosition, 0.1f);
+
+		// 只在较重的命中/精英身上震屏：高频小震屏会让 Main.Shake() 调用过密，在爆炸类
+		// 溅射（一帧内命中多个目标）下曾观察到会连带影响第三方飘字插件的内部计时，
+		// 阈值门控既更稳妥，也避免屏幕在快速连打时抖个不停。
+		if (amount >= 18f || IsElite)
+		{
+			float dmgShakeMul = Mathf.Clamp(amount / 18f, 0.7f, 1.8f);
+			CombatFx.Shake((IsElite ? 10f : 6f) * dmgShakeMul * frenzyFxMul, IsElite ? 0.18f : 0.13f);
+		}
+
 		if (Hp <= 0f)
 		{
+			ProceduralSfx.Play("enemy_death", GlobalPosition);
+			if (IsElite) CombatFx.Shake(20f, 0.28f);
+			if (Affix == "splitter") SpawnSplit();
 			EmitSignal(SignalName.Died, this);
 			QueueFree();
+		}
+	}
+
+	/// <summary>命中方向的短促推力；体型越大越抗击退，精英/Boss 手感更"扎实"。</summary>
+	public void ApplyKnockback(Vector2 dir, float force)
+	{
+		float sizeMul = Mathf.Clamp(16f / BodyRadius, 0.12f, 1f);
+		_knockbackVel += dir * force * sizeMul;
+		const float maxSpeed = 480f;
+		if (_knockbackVel.Length() > maxSpeed)
+			_knockbackVel = _knockbackVel.Normalized() * maxSpeed;
+	}
+
+	/// <summary>裂生(splitter) 词条：死亡时补两只弱化分身，复用 SpawnMinion 同款配置。</summary>
+	private void SpawnSplit()
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			var e = new Enemy();
+			GetParent().AddChild(e);
+			e.GlobalPosition = GlobalPosition + new Vector2(i == 0 ? -22 : 22, 6);
+			e.ConfigureBasic(0.55f, 1.15f);
+			e.XpValue = 3f;
+			SpawnDirector.Active?.Register(e);
 		}
 	}
 
@@ -418,6 +511,8 @@ public partial class Enemy : CharacterBody2D
 				"fire_ground" => new Color(1f, 0.55f, 0.1f),
 				"shield" => new Color(0.45f, 0.75f, 1f),
 				"summon" => new Color(0.4f, 1f, 0.45f),
+				"berserk" => new Color(1f, 0.15f, 0.15f),
+				"splitter" => new Color(0.5f, 1f, 0.65f),
 				_ => new Color(1f, 0.9f, 0.2f),
 			};
 			// 词条色环贴身描边：远距离也能和贴图一起认出精英类型

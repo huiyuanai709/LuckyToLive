@@ -112,24 +112,31 @@ public partial class Projectile : Node2D
 	private void Hit(Enemy e)
 	{
 		_hit.Add(e);
+		float knockbackMul = _owner?.KnockbackMul ?? 1f;
 		if (Splash > 0)
 		{
+			float splashForce = 300f * knockbackMul;
 			foreach (var n in GetTree().GetNodesInGroup("enemies"))
 			{
 				if (n is Enemy other && IsInstanceValid(other) &&
 					other.GlobalPosition.DistanceTo(e.GlobalPosition) <= Splash)
 				{
 					float dmg = Damage * (other == e ? 1f : 0.65f);
-					other.TakeDamage(dmg);
+					Vector2 kbDir = other.GlobalPosition.DistanceTo(GlobalPosition) > 0.01f
+						? (other.GlobalPosition - GlobalPosition).Normalized()
+						: _dir;
+					other.TakeDamage(dmg, kbDir, other == e ? splashForce : splashForce * 0.6f, Tint);
 					_owner?.OnDealtDamage(dmg);
 					if (SlowFactor < 1f) other.ApplySlow(SlowFactor, SlowDuration);
 				}
 			}
+			// 爆炸弹命中：额外一次范围震屏，直观区分「点伤」与「爆炸」
+			CombatFx.Shake(13f, 0.2f);
 			PierceLeft = 0;
 			return;
 		}
 
-		e.TakeDamage(Damage);
+		e.TakeDamage(Damage, _dir, 140f * knockbackMul, Tint);
 		_owner?.OnDealtDamage(Damage);
 		if (SlowFactor < 1f) e.ApplySlow(SlowFactor, SlowDuration);
 		PierceLeft -= 1;

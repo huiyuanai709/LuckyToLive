@@ -133,6 +133,8 @@ public partial class I18n : Node
 		"ranged" => T("affix.ranged"),
 		"orbit" => T("affix.orbit"),
 		"fire_ground" => T("affix.fire_ground"),
+		"berserk" => T("affix.berserk"),
+		"splitter" => T("affix.splitter"),
 		_ => affixId,
 	};
 

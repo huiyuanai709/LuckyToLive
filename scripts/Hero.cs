@@ -30,6 +30,12 @@ public partial class Hero : CharacterBody2D
 	/// <summary>血疾：连杀阈值各档 -N。</summary>
 	public int FrenzyThresholdBonus;
 	public int KillStreak { get; private set; }
+	/// <summary>重击被动：全局击退力度倍率。</summary>
+	public float KnockbackMul = 1f;
+	/// <summary>重击被动：命中造成短暂硬直（近乎定身）的概率。</summary>
+	public float StaggerChance;
+	/// <summary>血怒被动：狂热连杀时命中特效（震屏/粒子）的放大倍率。</summary>
+	public float FrenzyFxMul = 1f;
 
 	private readonly Dictionary<string, float> _cooldowns = new();
 	private readonly Dictionary<string, BeamEmitter> _beams = new();
@@ -112,6 +118,7 @@ public partial class Hero : CharacterBody2D
 		RestoreFullHp();
 		_invulnLeft = Mathf.Max(_invulnLeft, 0.85f);
 		EmitSignal(SignalName.XpChanged, Level, Xp, XpToNext());
+		ProceduralSfx.Play("levelup", GlobalPosition);
 		return true;
 	}
 
@@ -134,9 +141,12 @@ public partial class Hero : CharacterBody2D
 		_anim?.PlayHit();
 		EmitSignal(SignalName.HpChanged, Hp, MaxHp);
 		QueueRedraw();
+		CombatFx.Shake(11f, 0.2f);
+		ProceduralSfx.Play("hero_hurt", GlobalPosition, 0.08f);
 		if (Hp <= 0f)
 		{
 			Hp = 0;
+			CombatFx.Shake(24f, 0.4f);
 			EmitSignal(SignalName.Died);
 		}
 	}
@@ -256,6 +266,7 @@ public partial class Hero : CharacterBody2D
 		_dashVel = dir * (DashDistance / DashDuration);
 		_invulnLeft = Mathf.Max(_invulnLeft, DashDuration + 0.08f);
 		_anim?.PlayAttack(0.16f);
+		ProceduralSfx.Play("dash", GlobalPosition, 0.1f);
 	}
 
 	private void TickAnim(float dt, bool moving)
@@ -331,10 +342,10 @@ public partial class Hero : CharacterBody2D
 		switch (item.WeaponStyle)
 		{
 			case "slash":
-				MeleeHit(item, item.Range);
+				MeleeHit(item, item.Range, toTarget);
 				break;
 			case "charge":
-				MeleeHit(item, item.Range);
+				MeleeHit(item, item.Range, toTarget);
 				break;
 			default:
 				FireProjectile(item);
@@ -344,18 +355,35 @@ public partial class Hero : CharacterBody2D
 		return true;
 	}
 
-	private void MeleeHit(SlotItem item, float range)
+	/// <summary>
+	/// 裂斩(slash)：沿朝向 ±50° 的窄扇形判定，攻速快、击退小，保持连打的灵活感；
+	/// 冲锋刃(charge)：保留全范围冲击波判定，击退大、命中触发轻微硬直，手感更「沉重」。
+	/// </summary>
+	private void MeleeHit(SlotItem item, float range, Vector2 aimDir)
 	{
 		float dmg = ScaleDamage(item.Damage);
+		bool heavy = item.WeaponStyle == "charge";
+		Vector2 swingDir = aimDir.LengthSquared() > 0.0001f ? aimDir.Normalized() : _facing;
+		float coneCos = Mathf.Cos(Mathf.DegToRad(50f));
+		float baseKnockback = heavy ? 400f : 250f;
+		float frenzyKb = DamageMul > 1f ? 1.15f : 1f;
+
 		foreach (var n in GetTree().GetNodesInGroup("enemies"))
 		{
 			if (n is not Enemy e || !IsInstanceValid(e)) continue;
+			Vector2 toEnemy = e.GlobalPosition - GlobalPosition;
 			// 命中按怪物体型外扩，避免精英放大后近战「够不着中心」
-			if (GlobalPosition.DistanceTo(e.GlobalPosition) <= range + e.BodyRadius * 0.45f)
-			{
-				e.TakeDamage(dmg);
-				OnDealtDamage(dmg);
-			}
+			if (toEnemy.Length() > range + e.BodyRadius * 0.45f) continue;
+			// 裂斩收窄为朝向扇形，真正让「斩击方向」影响命中；冲锋刃保持全范围
+			if (!heavy && toEnemy.LengthSquared() > 0.0001f && toEnemy.Normalized().Dot(swingDir) < coneCos)
+				continue;
+
+			Vector2 kbDir = toEnemy.LengthSquared() > 0.0001f ? toEnemy.Normalized() : swingDir;
+			e.TakeDamage(dmg, kbDir, baseKnockback * KnockbackMul * frenzyKb);
+			OnDealtDamage(dmg);
+			// 冲锋刃自带短促硬直，比全局慢放更安全（不会拖慢第三方飘字插件），手感依然「沉重」
+			if (heavy) e.ApplySlow(0.05f, 0.14f);
+			TryStagger(e);
 		}
 		// 近战也可清可破坏掩体
 		foreach (var n in GetTree().GetNodesInGroup("destructibles"))
@@ -364,6 +392,19 @@ public partial class Hero : CharacterBody2D
 			if (GlobalPosition.DistanceTo(cover.GlobalPosition) <= range + cover.BodyRadius * 0.5f)
 				cover.TakeDamage(dmg * 0.85f);
 		}
+
+		var swing = new MeleeSwing();
+		GetParent().AddChild(swing);
+		swing.GlobalPosition = GlobalPosition;
+		swing.Setup(item.WeaponStyle, swingDir, range, heavy);
+		ProceduralSfx.Play(heavy ? "swing_heavy" : "swing_light", GlobalPosition, 0.08f);
+	}
+
+	/// <summary>重击被动：一定概率让目标短暂近乎定身，复用现有减速系统实现"硬直"。</summary>
+	private void TryStagger(Enemy e)
+	{
+		if (StaggerChance <= 0f || GD.Randf() >= StaggerChance) return;
+		e.ApplySlow(0.05f, 0.3f);
 	}
 
 	private void FireProjectile(SlotItem item)
