@@ -11,9 +11,12 @@ public partial class Enemy : CharacterBody2D
 	public float ContactCooldown = 0.7f;
 	public float XpValue = 4f;
 	public bool IsElite;
+	public bool IsBoss;
+	public string BossId = "";
 	public string Affix = "";
 	public float SlowTimer;
 	public float SlowFactor = 1f;
+	private bool _bossAlsoFireGround;
 
 	/// <summary>碰撞 / 贴身判定半径；精英在 ConfigureElite 后会放大。</summary>
 	public float BodyRadius { get; private set; } = 12f;
@@ -128,6 +131,56 @@ public partial class Enemy : CharacterBody2D
 			SpawnOrbitBalls(3);
 	}
 
+	/// <summary>Boss：复用精英词条逻辑，体型与血量更高。</summary>
+	public void ConfigureBoss(string bossId, float hpMul)
+	{
+		IsElite = true;
+		IsBoss = true;
+		BossId = bossId ?? "";
+		_bossAlsoFireGround = false;
+
+		switch (BossId)
+		{
+			case "tide_guard":
+				Affix = "melee";
+				MaxHp = 420f * hpMul;
+				Hp = MaxHp;
+				Speed = 72f;
+				ContactDamage = 13f;
+				ContactCooldown = 0.32f;
+				XpValue = 40f;
+				BodyRadius = 52f;
+				_chargeCd = 1.0f;
+				break;
+			case "island_lord":
+				Affix = "orbit";
+				_bossAlsoFireGround = true;
+				MaxHp = 900f * hpMul;
+				Hp = MaxHp;
+				Speed = 48f;
+				ContactDamage = 18f;
+				ContactCooldown = 0.75f;
+				XpValue = 80f;
+				BodyRadius = 64f;
+				_skillCd = 2.0f;
+				break;
+			default:
+				Affix = "melee";
+				MaxHp = 500f * hpMul;
+				Hp = MaxHp;
+				Speed = 60f;
+				ContactDamage = 14f;
+				XpValue = 50f;
+				BodyRadius = 56f;
+				break;
+		}
+
+		ApplyBodyRadius();
+		ApplyVisual();
+		if (Affix == "orbit")
+			SpawnOrbitBalls(IsBoss ? 4 : 3);
+	}
+
 	private void ApplyBodyRadius()
 	{
 		if (_colShape?.Shape is CircleShape2D circle)
@@ -136,8 +189,8 @@ public partial class Enemy : CharacterBody2D
 
 	private void ApplyVisual()
 	{
-		// 基础 ~0.52；精英约 2.5× 基础显示尺度，显著更大
-		float s = IsElite ? 1.45f : 0.52f;
+		// 基础 ~0.52；精英约 2.5× 基础显示尺度；Boss 再大一圈
+		float s = IsBoss ? 1.85f : IsElite ? 1.45f : 0.52f;
 		_spriteBaseScale = new Vector2(s, s);
 		if (_sprite != null)
 		{
@@ -179,7 +232,7 @@ public partial class Enemy : CharacterBody2D
 			}
 		}
 
-		if (Affix == "fire_ground")
+		if (Affix == "fire_ground" || _bossAlsoFireGround)
 			TickFireGround(dt, _hero);
 
 		Vector2 toHero = _hero.GlobalPosition - GlobalPosition;
@@ -346,15 +399,18 @@ public partial class Enemy : CharacterBody2D
 			DrawCircle(Vector2.Zero, IsElite ? 34 : 10, c);
 		}
 
-		float w = IsElite ? 56f : 20f;
-		float barY = IsElite ? -58f : -24f;
+		float w = IsBoss ? 72f : IsElite ? 56f : 20f;
+		float barY = IsBoss ? -72f : IsElite ? -58f : -24f;
 		float pct = Mathf.Clamp(Hp / MaxHp, 0, 1);
-		DrawRect(new Rect2(-w / 2, barY, w, IsElite ? 6f : 4f), new Color(0.25f, 0, 0));
-		DrawRect(new Rect2(-w / 2, barY, w * pct, IsElite ? 6f : 4f), new Color(0.2f, 1f, 0.3f));
+		float barH = IsBoss ? 8f : IsElite ? 6f : 4f;
+		DrawRect(new Rect2(-w / 2, barY, w, barH), new Color(0.25f, 0, 0));
+		DrawRect(new Rect2(-w / 2, barY, w * pct, barH), IsBoss ? new Color(1f, 0.55f, 0.15f) : new Color(0.2f, 1f, 0.3f));
 
 		if (IsElite && !string.IsNullOrEmpty(Affix))
 		{
-			Color mark = Affix switch
+			Color mark = IsBoss
+				? new Color(1f, 0.75f, 0.2f)
+				: Affix switch
 			{
 				"melee" => new Color(1f, 0.35f, 0.2f),
 				"orbit" => new Color(0.7f, 0.35f, 1f),

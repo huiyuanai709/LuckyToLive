@@ -5,6 +5,7 @@ using System.Linq;
 public class Loadout
 {
 	public readonly List<SlotItem> Slots = new();
+	public readonly HashSet<string> CompletedSynergies = new();
 
 	public bool IsFull => Slots.Count >= Game.Instance.AvailableSlotsThisRun;
 	public int Count => Slots.Count;
@@ -15,6 +16,9 @@ public class Loadout
 
 	public SlotItem ApplyCard(CardDef card, Hero hero, Node2D world)
 	{
+		if (card.Kind == CardKind.Evolve || (card.UpgradeStat != null && card.UpgradeStat.StartsWith("evolve:")))
+			return ApplyEvolve(card, hero);
+
 		if (!card.IsNewItem)
 		{
 			var existing = GetItem(card.GrantsItemId);
@@ -60,6 +64,99 @@ public class Loadout
 		}
 
 		return item;
+	}
+
+	private SlotItem ApplyEvolve(CardDef card, Hero hero)
+	{
+		var syn = !string.IsNullOrEmpty(card.SynergyId)
+			? SynergyCatalog.Get(card.SynergyId)
+			: SynergyCatalog.GetByEvolveCard(card.Id);
+		if (syn == null || CompletedSynergies.Contains(syn.Id)) return null;
+		if (!SynergyCatalog.IsReady(syn, this)) return null;
+
+		var primary = GetItem(syn.PrimaryItemId);
+		if (primary == null) return null;
+
+		primary.Level += 1;
+		primary.EvolveCardId = syn.EvolveCardId;
+		primary.Name = syn.Name;
+		ApplyEvolveStats(syn.Id, primary, hero);
+		CompletedSynergies.Add(syn.Id);
+		SyncEntityStats(primary);
+
+		// 堡垒：给战旗挂伤害光环标记
+		if (syn.Id == "syn_w_bastion")
+		{
+			var banner = GetItem("w_heal_totem");
+			if (banner != null)
+			{
+				banner.DamageAuraBonus = 0.10f;
+				SyncEntityStats(banner);
+			}
+		}
+
+		// 围猎：陷阱也记标记，方便触发
+		if (syn.Id == "syn_h_pack")
+		{
+			var trap = GetItem("h_trap");
+			if (trap != null) trap.PackHunt = true;
+			primary.PackHunt = true;
+			SyncEntityStats(primary);
+		}
+
+		return primary;
+	}
+
+	private static void ApplyEvolveStats(string synId, SlotItem primary, Hero hero)
+	{
+		switch (synId)
+		{
+			case "syn_w_cleave":
+				primary.Damage *= 1.35f;
+				primary.Range += 40f;
+				break;
+			case "syn_w_bastion":
+				primary.Damage *= 1.5f;
+				break;
+			case "syn_m_frostfire":
+			{
+				float fireDmg = 16f;
+				var fire = hero?.Loadout?.GetItem("m_fire");
+				if (fire != null) fireDmg = fire.Damage;
+				primary.Damage = Mathf.Max(primary.Damage, fireDmg) * 1.2f;
+				primary.Splash = Mathf.Max(primary.Splash, 70f);
+				primary.SlowFactor = Mathf.Min(primary.SlowFactor, 0.5f);
+				primary.WeaponStyle = "frostfire";
+				break;
+			}
+			case "syn_m_prism":
+				primary.BeamRaysCap = 4;
+				if (primary.EffectiveBeamRays < 4)
+				{
+					primary.BeamRays = Mathf.Min(4, primary.BeamRays + 1);
+					primary.BeamAnglesDeg = null;
+				}
+				primary.SlowFactor = Mathf.Min(primary.SlowFactor, 0.55f);
+				primary.Damage *= 1.25f;
+				break;
+			case "syn_h_pack":
+				primary.Damage *= 1.4f;
+				primary.PackHunt = true;
+				break;
+			case "syn_h_storm":
+				primary.Pierce += 1;
+				primary.SplitArrow = true;
+				primary.Damage *= 1.25f;
+				break;
+			case "syn_p_bloodrush":
+				if (hero != null)
+				{
+					hero.MoveSpeed += 15f;
+					hero.KillHealOnKill += 2f;
+					hero.FrenzyThresholdBonus += 1;
+				}
+				break;
+		}
 	}
 
 	private static SlotItem CreateFromCard(CardDef card)
@@ -129,12 +226,12 @@ public class Loadout
 			case "beam_rays":
 			{
 				int before = item.EffectiveBeamRays;
-				if (before >= SlotItem.MaxBeamRays) break; // 已满则不再加条数（抽取侧也应已过滤）
+				int cap = item.BeamRaysCap;
+				if (before >= cap) break;
 
 				if (card?.BeamAnglesDeg != null && card.BeamAnglesDeg.Length > 0)
 				{
-					// 覆盖式：采用卡牌角度，但不超过上限
-					int n = Mathf.Min(card.BeamAnglesDeg.Length, SlotItem.MaxBeamRays);
+					int n = Mathf.Min(card.BeamAnglesDeg.Length, cap);
 					var angles = new float[n];
 					System.Array.Copy(card.BeamAnglesDeg, angles, n);
 					item.BeamAnglesDeg = angles;
@@ -142,9 +239,8 @@ public class Loadout
 				}
 				else
 				{
-					// 默认规则：只加条数，角度由 Beam.DefaultAngles 均分/对称推出
 					int add = Mathf.Max(1, card?.BeamRaysAdd ?? 1);
-					item.BeamRays = Mathf.Min(SlotItem.MaxBeamRays, before + add);
+					item.BeamRays = Mathf.Min(cap, before + add);
 					item.BeamAnglesDeg = null;
 				}
 				item.Range += card?.BeamLengthAdd ?? 0f;
@@ -152,7 +248,6 @@ public class Loadout
 				break;
 			}
 			case "damage":
-				// 纯伤害：高成长，后续升级仍有感
 				item.Damage += 6f + item.Level * 2f;
 				break;
 			case "rate":
@@ -162,7 +257,6 @@ public class Loadout
 				item.Range += 26f;
 				break;
 			case "special":
-				// 多数武器唯一升级路径：伤害为主，附带攻速/射程/特效
 				item.Damage += 5f + item.Level;
 				item.FireRate += 0.12f;
 				item.Range += 14f;
@@ -202,7 +296,6 @@ public class Loadout
 				hero.RegenPerSec += 1.2f;
 				break;
 			case "p_vamp":
-				// 首张约 5%，每次升级 +3%
 				hero.Lifesteal += item.Level == 1 ? 0.05f : 0.03f;
 				break;
 			case "p_magnet":

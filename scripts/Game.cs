@@ -31,6 +31,11 @@ public partial class Game : Node
 	public int MinuteGoalsCompleted;
 	public float HighestItemLevelSum;
 	public bool RunActive;
+	/// <summary>每局免费重随次数。</summary>
+	public int RerollsLeft;
+	public bool TideGuardKilled;
+	public bool IslandLordKilled;
+	public int SynergiesCompleted;
 
 	private const string SavePath = "user://save.cfg";
 
@@ -83,7 +88,18 @@ public partial class Game : Node
 		EliteKills = 0;
 		MinuteGoalsCompleted = 0;
 		HighestItemLevelSum = 0;
+		RerollsLeft = 1;
+		TideGuardKilled = false;
+		IslandLordKilled = false;
+		SynergiesCompleted = 0;
 		RunActive = true;
+	}
+
+	public bool TryConsumeReroll()
+	{
+		if (RerollsLeft <= 0) return false;
+		RerollsLeft -= 1;
+		return true;
 	}
 
 	public bool TryUnlockAdSlot()

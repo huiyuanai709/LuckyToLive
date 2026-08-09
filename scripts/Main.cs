@@ -112,8 +112,9 @@ public partial class Main : Node2D
 		};
 		_hero.FrenzyChanged += (streak, mul) =>
 		{
-			if (_hud == null) return;
-			_hud.MsgLabel.Text = streak >= 3
+			if (_hud == null || _hero == null) return;
+			int tipAt = Mathf.Max(1, 3 - _hero.FrenzyThresholdBonus);
+			_hud.MsgLabel.Text = streak >= tipAt
 				? I18n.T("ui.hud.frenzy", streak, $"{mul:0.00}")
 				: "";
 		};
@@ -128,6 +129,11 @@ public partial class Main : Node2D
 		_spawner.MinuteEventFired += m =>
 		{
 			_hud.MsgLabel.Text = I18n.T("ui.hud.elite_wave", m);
+		};
+		_spawner.BossSpawned += bossId =>
+		{
+			if (_hud == null) return;
+			_hud.MsgLabel.Text = I18n.T("ui.hud.boss_spawn", I18n.BossName(bossId));
 		};
 
 		_hud = new Hud();
@@ -322,6 +328,8 @@ public partial class Main : Node2D
 	}
 
 	private readonly Queue<List<CardDef>> _pendingPicks = new();
+	private string _popupTitle;
+	private bool _popupAfterStarter;
 
 	private void OpenCardPick(string title, List<CardDef> options, bool forcedSingle = false, bool afterStarter = false)
 	{
@@ -332,17 +340,25 @@ public partial class Main : Node2D
 			return;
 		}
 		_choosing = true;
+		_popupTitle = title;
+		_popupAfterStarter = afterStarter;
 		GetTree().Paused = true;
 		_popup = new CardPopup();
 		AddChild(_popup);
-		_popup.Setup(title, options);
+		bool allowReroll = !forcedSingle && !afterStarter && options.Count > 1;
+		_popup.Setup(title, options, allowReroll);
+		_popup.RerollPressed += OnCardReroll;
 		_popup.Chosen += id =>
 		{
 			var card = CardCatalog.Get(id);
 			if (card != null)
 			{
 				_hero.Loadout.ApplyCard(card, _hero, this);
+				Game.Instance.SynergiesCompleted = _hero.Loadout.CompletedSynergies.Count;
 				_hud.RefreshSlots(_hero.Loadout);
+				TryShowSynergyReadyTip();
+				if (card.Kind == CardKind.Evolve)
+					_hud.MsgLabel.Text = I18n.T("ui.hud.evolved", card.LocalizedName);
 			}
 			_popup.QueueFree();
 			_popup = null;
@@ -373,6 +389,22 @@ public partial class Main : Node2D
 		};
 	}
 
+	private void OnCardReroll()
+	{
+		if (_popup == null || !Game.Instance.TryConsumeReroll()) return;
+		var opts = CardCatalog.RollOptions(Game.Instance.SelectedHero, _hero.Loadout, 3, _rng);
+		if (opts.Count == 0) return;
+		_popup.Rebuild(opts);
+	}
+
+	private void TryShowSynergyReadyTip()
+	{
+		if (_hero == null || _hud == null) return;
+		var ready = SynergyCatalog.ReadySynergies(Game.Instance.SelectedHero, _hero.Loadout);
+		if (ready.Count == 0) return;
+		_hud.MsgLabel.Text = I18n.T("ui.hud.synergy_ready", ready[0].Name);
+	}
+
 	private void OnEnemyDied(Enemy enemy)
 	{
 		if (_ended || _hero == null) return;
@@ -382,6 +414,11 @@ public partial class Main : Node2D
 		// 连杀略加经验，强化「清群→升级回满」的节奏
 		if (mul > 1f) xp *= 1f + (mul - 1f) * 0.5f;
 		_hero.AddXp(xp);
+		if (enemy.IsBoss)
+		{
+			if (enemy.BossId == "tide_guard") Game.Instance.TideGuardKilled = true;
+			if (enemy.BossId == "island_lord") Game.Instance.IslandLordKilled = true;
+		}
 		if (enemy.IsElite)
 		{
 			Game.Instance.EliteKills += 1;
@@ -412,10 +449,14 @@ public partial class Main : Node2D
 		Game.Instance.RunActive = false;
 		GetTree().Paused = false;
 
+		Game.Instance.SynergiesCompleted = _hero?.Loadout?.CompletedSynergies.Count ?? 0;
 		int score = Game.Instance.KillCount * 2
 			+ Game.Instance.EliteKills * 25
 			+ Game.Instance.MinuteGoalsCompleted * 40
 			+ (int)(Game.Instance.HighestItemLevelSum * 8)
+			+ Game.Instance.SynergiesCompleted * 50
+			+ (Game.Instance.TideGuardKilled ? 30 : 0)
+			+ (Game.Instance.IslandLordKilled ? 80 : 0)
 			+ (victory ? (int)(_hero.Hp / _hero.MaxHp * 50) : 0);
 
 		string rank = score >= 600 ? "S" : score >= 400 ? "A" : score >= 220 ? "B" : "C";
@@ -425,7 +466,11 @@ public partial class Main : Node2D
 
 		var result = new ResultScreen();
 		AddChild(result);
-		result.Setup(victory, score, rank, gain, Game.Instance.KillCount, Game.Instance.EliteKills, Game.Instance.MinuteGoalsCompleted);
+		result.Setup(
+			victory, score, rank, gain,
+			Game.Instance.KillCount, Game.Instance.EliteKills, Game.Instance.MinuteGoalsCompleted,
+			Game.Instance.SynergiesCompleted,
+			(Game.Instance.TideGuardKilled ? 1 : 0) + (Game.Instance.IslandLordKilled ? 1 : 0));
 		result.ContinuePressed += () =>
 		{
 			result.QueueFree();

@@ -5,6 +5,7 @@ public partial class Pet : CharacterBody2D
 	public SlotItem Item;
 	public Hero OwnerHero;
 	private float _cd;
+	private float _packLeapCd;
 
 	public static Pet Spawn(Node2D world, Hero hero, SlotItem item)
 	{
@@ -18,6 +19,16 @@ public partial class Pet : CharacterBody2D
 
 	public void ApplyItem(SlotItem item) => Item = item;
 
+	/// <summary>围猎号令：陷阱触发时瞬移扑咬（CD 1.2s）。</summary>
+	public void TryPackLeap(Enemy target)
+	{
+		if (target == null || !IsInstanceValid(target) || Item == null) return;
+		if (_packLeapCd > 0f) return;
+		_packLeapCd = 1.2f;
+		GlobalPosition = target.GlobalPosition;
+		target.TakeDamage(Item.Damage);
+	}
+
 	public override void _Ready()
 	{
 		AddToGroup("pets");
@@ -30,6 +41,7 @@ public partial class Pet : CharacterBody2D
 	public override void _PhysicsProcess(double delta)
 	{
 		float dt = (float)delta;
+		if (_packLeapCd > 0f) _packLeapCd -= dt;
 		if (OwnerHero == null || !IsInstanceValid(OwnerHero)) { QueueFree(); return; }
 
 		Enemy target = null;

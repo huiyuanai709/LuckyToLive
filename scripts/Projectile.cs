@@ -22,7 +22,24 @@ public partial class Projectile : Node2D
 
 	public void Setup(Enemy target, SlotItem item, Hero owner = null)
 	{
+		ApplyItemStats(item, owner);
 		Target = target;
+		if (target != null && IsInstanceValid(target))
+			_dir = (target.GlobalPosition - GlobalPosition).Normalized();
+		QueueRedraw();
+	}
+
+	/// <summary>无锁定目标、沿固定方向飞行（分裂箭等）。</summary>
+	public void SetupDirected(Vector2 dir, SlotItem item, Hero owner = null)
+	{
+		ApplyItemStats(item, owner);
+		Target = null;
+		_dir = dir.LengthSquared() > 0.0001f ? dir.Normalized() : Vector2.Right;
+		QueueRedraw();
+	}
+
+	private void ApplyItemStats(SlotItem item, Hero owner)
+	{
 		_owner = owner;
 		Damage = owner != null ? owner.ScaleDamage(item.Damage) : item.Damage;
 		PierceLeft = Mathf.Max(1, item.Pierce);
@@ -36,15 +53,13 @@ public partial class Projectile : Node2D
 		{
 			"ice_arrow" => new Color(0.4f, 0.8f, 1f),
 			"fireball" => new Color(1f, 0.45f, 0.15f),
+			"frostfire" => new Color(0.75f, 0.55f, 1f),
 			"pierce" => new Color(0.6f, 1f, 0.5f),
 			_ => Tint,
 		};
 		_tex = ProjectileArt.ForProjectile(item);
 		_rotates = ProjectileArt.RotatesWithVelocity(item);
 		_visualSize = Splash > 0 ? 34f : 26f;
-		if (target != null && IsInstanceValid(target))
-			_dir = (target.GlobalPosition - GlobalPosition).Normalized();
-		QueueRedraw();
 	}
 
 	public override void _Draw()

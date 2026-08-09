@@ -44,21 +44,49 @@ ui.hud.ad_full,Ad slots full,广告槽已满
 ui.hud.ad_gained,Run slots +1 (ad placeholder),本局槽位 +1（广告占位）
 ui.hud.elite_wave,Minute {0} elite rush!,第 {0} 分钟精英冲击！
 ui.hud.frenzy,Frenzy x{0}  DMG x{1},连杀 x{0}  伤害 x{1}
+ui.hud.boss_spawn,Boss: {0}!,Boss 来袭：{0}！
+ui.hud.synergy_ready,Synergy ready: {0},协同可进化：{0}
+ui.hud.evolved,Evolved: {0},已进化：{0}
 ui.card.starter,Starter gear,开局装备
 ui.card.bonus,Bonus starter pick,额外起步卡
 ui.card.upgrade,Level-up pick,升级选择
 ui.card.elite_drop,Elite drop,精英掉落
+ui.card.reroll,Reroll ({0}),重随 ({0})
 card.kind.weapon,Weapon,武器
 card.kind.building,Building,建筑
 card.kind.upgrade,Upgrade,升级
+card.kind.evolve,Evolve,进化
 card.kind.passive,Passive,被动
 card.kind.pet,Pet,宠物
 ui.result.victory,You survived!,生存成功！
 ui.result.defeat,Your hero fell,英雄倒下了
 ui.result.rank,Rank {0}  Score {1},评级 {0}  分数 {1}
 ui.result.stats,Kills {0}  Elites {1}  Minute goals {2},击杀 {0}  精英 {1}  分钟目标 {2}
+ui.result.extra,Synergies {0}  Boss kills {1},协同 {0}  Boss击杀 {1}
 ui.result.currency,Currency +{0}  (total {1}),获得货币 +{0}  (总 {1})
 ui.result.continue,Back to hero select,返回选英雄与地图
+boss.tide.island,Tide Guard,潮汐守卫
+boss.tide.apocalypse,Ember Guard,烬核守卫
+boss.tide.wilderness,Thorn Guard,棘藤守卫
+boss.tide.desert,Sandstorm Guard,沙暴守卫
+boss.lord.island,Island Lord,岛主
+boss.lord.apocalypse,Wasteland Lord,废土领主
+boss.lord.wilderness,Wildwood Lord,密林霸主
+boss.lord.desert,Sun Lord,烈日领主
+card.evo_w_cleave.name,Rift Cleave,裂阵斩
+card.evo_w_cleave.desc,"Requires: Cleave + Charge Blade. Wide AOE cleave with more damage and range",需要：裂斩 + 冲锋刃。裂斩大弧 AOE，伤害与范围提升
+card.evo_w_bastion.name,Bastion Oath,堡垒之誓
+card.evo_w_bastion.desc,"Requires: Shield Wall + War Banner. Stronger reflect; banner grants damage aura",需要：盾墙 + 战旗。盾墙反伤提升；战旗赋予伤害光环
+card.evo_m_frostfire.name,Frostfire Meteor,霜火陨星
+card.evo_m_frostfire.desc,"Requires: Ice Bolt + Fireball. Slowing explosive frostfire shot",需要：冰矢 + 火球。冰火球：减速并大范围爆炸
+card.evo_m_prism.name,Prism Beam,棱镜射线
+card.evo_m_prism.desc,"Requires: Element Beam + Frost Field. Extra beam cap and slow on hit",需要：元素射线 + 寒冰阵。射线上限+1，命中附带减速
+card.evo_h_pack.name,Pack Hunt,围猎号令
+card.evo_h_pack.desc,"Requires: Wolf + Bear Trap. Stronger pet; traps trigger a leap bite",需要：狼宠 + 捕兽夹。狼宠伤害提升；陷阱触发时狼扑咬
+card.evo_h_storm.name,Froststorm Volley,霜暴连矢
+card.evo_h_storm.desc,"Requires: Pierce Arrow + Frost Arrow. +1 pierce and a slowing split shot",需要：穿透箭 + 冰箭。穿透+1，并分裂减速副箭
+card.evo_p_bloodrush.name,Blood Rush,血疾
+card.evo_p_bloodrush.desc,"Requires: Bloodlust + Swift Step. More speed, heal on kill, easier Frenzy",需要：嗜血 + 疾步。移速提升，击杀回血，连杀更容易触发
 affix.dash,Dash,冲刺
 affix.melee,Berserker,狂攻
 affix.shield,Shield,护盾

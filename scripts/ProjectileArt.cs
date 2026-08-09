@@ -18,6 +18,9 @@ public static class ProjectileArt
 		string name = !string.IsNullOrEmpty(item.ProjectileTexture)
 			? item.ProjectileTexture
 			: !string.IsNullOrEmpty(item.WeaponStyle) ? item.WeaponStyle : item.BuildingStyle;
+		// 霜火进化无独立贴图时回退火球
+		if (name == "frostfire")
+			return Load("frostfire") ?? Load("fireball") ?? Load("ice_arrow");
 		return Load(name);
 	}
 

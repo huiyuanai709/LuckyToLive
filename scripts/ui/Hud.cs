@@ -114,7 +114,8 @@ public partial class Hud : CanvasLayer
 			if (i < loadout.Slots.Count)
 			{
 				var item = loadout.Slots[i];
-				label.Text = $"{I18n.CardName(item.ItemId)} Lv{item.Level}";
+				string nameId = !string.IsNullOrEmpty(item.EvolveCardId) ? item.EvolveCardId : item.ItemId;
+				label.Text = $"{I18n.CardName(nameId)} Lv{item.Level}";
 			}
 			else
 			{
