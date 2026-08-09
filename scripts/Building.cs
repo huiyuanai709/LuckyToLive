@@ -8,7 +8,7 @@ public partial class Building : Node2D
 	private float _tick;
 	private Texture2D _tex;
 	/// <summary>建筑贴图在世界中的目标显示直径（像素）。原先 64 相对英雄过小。</summary>
-	private float _visualSize = 118f;
+	private float _visualSize = 168f;
 
 	public static Building SpawnNear(Node2D world, Hero hero, SlotItem item)
 	{
@@ -213,11 +213,11 @@ public partial class Building : Node2D
 		if (item == null) return _visualSize;
 		return item.BuildingStyle switch
 		{
-			"trap" => 88f,
-			"shield_wall" => 130f,
-			"turret_phys" or "turret_fire" => 124f,
-			"heal_totem" => 112f,
-			"slow_field" => 100f,
+			"trap" => 120f,
+			"shield_wall" => 180f,
+			"turret_phys" or "turret_fire" => 176f,
+			"heal_totem" => 160f,
+			"slow_field" => 140f,
 			_ => _visualSize,
 		};
 	}
