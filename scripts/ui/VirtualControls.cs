@@ -49,7 +49,9 @@ public partial class VirtualControls : CanvasLayer
 
 	public override void _Process(double delta)
 	{
-		bool want = ShouldShow() && !(GetTree()?.Paused ?? false);
+		bool want = ShouldShow()
+			&& !(GetTree()?.Paused ?? false)
+			&& (Game.Instance?.RunActive ?? false);
 		if (want && !_uiBuilt)
 			BuildUi();
 		if (_root != null)
