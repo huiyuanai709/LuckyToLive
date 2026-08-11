@@ -44,6 +44,19 @@ dotnet tool install -g dotnet-serve  # 一次性
 dotnet serve --directory TDProject.web/AppBundle -z -b
 ```
 
+### GitHub Pages
+
+推送到 `main`（或手动跑 Actions）会发布 Web 包：`.github/workflows/pages.yml`。
+
+一次性设置：仓库 **Settings → Pages → Build and deployment → Source: GitHub Actions**。  
+站点地址一般为 `https://<user>.github.io/LuckyToLive/`。
+
+本地 / CDN 部署建议关掉预压缩旁路（Pages workflow 已这样配置）：
+
+```bash
+dotnet publish TDProject.web -p:TwoDogWebPrecompress=false
+```
+
 详见 [2dog Web 文档](https://2dog.dev/web.html)。
 
 ## 核心玩法
