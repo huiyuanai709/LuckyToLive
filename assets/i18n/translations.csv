@@ -2,7 +2,7 @@ keys,en,zh_CN
 ui.hero_select.title_starter,Choose your starter hero (free forever),选择你的初始英雄（永久免费）
 ui.hero_select.title_play,Choose your hero,选择出战英雄
 ui.hero_select.currency,Meta currency: {0},元进度货币: {0}
-ui.hero_select.hint,WASD move · Space dash · Auto-attack · Survive 5 minutes,WASD 移动 · 空格冲刺 · 自动攻击 · 撑满 5 分钟通关
+ui.hero_select.hint,"WASD / gamepad move · Space / A dash · Touch joystick on mobile · Auto-attack · Survive 5 minutes","WASD / 手柄移动 · 空格 / A 冲刺 · 手机虚拟摇杆 · 自动攻击 · 撑满 5 分钟通关"
 ui.hero_select.pick,Select {0},选择 {0}
 ui.hero_select.play,Play as {0},出战 {0}
 ui.hero_select.unlock,Unlock ({0} currency),解锁 ({0} 货币)
@@ -48,6 +48,7 @@ ui.hud.slots,Slots {0}/{1},槽位 {0}/{1}
 ui.hud.map,Map: {0},地图: {0}
 ui.hud.character,{0} ({1}),{0}（{1}）
 ui.hud.empty,Empty,空
+ui.hud.dash,Dash,冲刺
 ui.hud.goal,Minute goal: kill 1 elite,分钟目标: 击杀 1 精英
 ui.hud.goal_progress,Minute goal: kill 1 elite ({0}/1),分钟目标: 击杀 1 精英 ({0}/1)
 ui.hud.goal_done,Minute goal: kill 1 elite Done,分钟目标: 击杀 1 精英 完成

@@ -13,6 +13,8 @@ public partial class CardPopup : CanvasLayer
 	public override void _Ready()
 	{
 		ProcessMode = ProcessModeEnum.Always;
+		// 高于局内虚拟摇杆，避免挡选卡
+		Layer = 100;
 	}
 
 	public void Setup(string title, List<CardDef> options, bool allowReroll = false)

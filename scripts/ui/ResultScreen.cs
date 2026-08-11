@@ -10,6 +10,7 @@ public partial class ResultScreen : CanvasLayer
 		int synergies = 0, int bossKills = 0)
 	{
 		ProcessMode = ProcessModeEnum.Always;
+		Layer = 100;
 		var dim = new ColorRect { Color = new Color(0, 0, 0, 0.7f) };
 		dim.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		AddChild(dim);
