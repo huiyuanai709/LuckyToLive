@@ -78,13 +78,15 @@ public partial class HeroSelect : CanvasLayer
 
 		BuildMapSection(root);
 
-		var heroRow = new HBoxContainer
+		var heroCenter = new CenterContainer
 		{
-			Alignment = BoxContainer.AlignmentMode.Center,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
+		root.AddChild(heroCenter);
+
+		var heroRow = new HBoxContainer();
 		heroRow.AddThemeConstantOverride("separation", 16);
-		root.AddChild(heroRow);
+		heroCenter.AddChild(heroRow);
 
 		foreach (HeroId id in System.Enum.GetValues(typeof(HeroId)))
 			heroRow.AddChild(MakeCard(id));
@@ -101,13 +103,15 @@ public partial class HeroSelect : CanvasLayer
 		mapTitle.AddThemeColorOverride("font_color", new Color(0.85f, 0.9f, 1f));
 		root.AddChild(mapTitle);
 
-		var mapRow = new HBoxContainer
+		var mapCenter = new CenterContainer
 		{
-			Alignment = BoxContainer.AlignmentMode.Center,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
+		root.AddChild(mapCenter);
+
+		var mapRow = new HBoxContainer();
 		mapRow.AddThemeConstantOverride("separation", 12);
-		root.AddChild(mapRow);
+		mapCenter.AddChild(mapRow);
 
 		foreach (MapId mapId in MapCatalog.All)
 			mapRow.AddChild(MakeMapCard(mapId));
