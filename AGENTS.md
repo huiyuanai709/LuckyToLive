@@ -31,6 +31,9 @@ created in code. There are no automated test projects in this repo.
 - **2dog desktop host**: `DISPLAY=:1 dotnet run --project TDProject.2dog`
 - **Web**: `dotnet publish TDProject.web` then serve `TDProject.web/AppBundle/`
   (e.g. `dotnet tool run dotnet-serve -- --directory TDProject.web/AppBundle -z -b`).
+  For GitHub Pages / CDN uploads prefer
+  `dotnet publish TDProject.web -p:TwoDogWebPrecompress=false`. CI deploys via
+  `.github/workflows/pages.yml` (requires Pages source = GitHub Actions).
 - Headless (`godot --headless`) is only useful for smoke checks; shutdown log spam
   (`Unreferenced static string`, `Pages in use exist at exit`, RID leaks) when killed
   via `timeout` is **not** a real error.
