@@ -30,64 +30,84 @@ public partial class HeroSelect : CanvasLayer
 		dim.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		AddChild(dim);
 
-		var title = new Label
-		{
-			Text = Game.Instance.StarterHero == null
-				? I18n.T("ui.hero_select.title_starter")
-				: I18n.T("ui.hero_select.title_play"),
-			Position = new Vector2(280, 36),
-		};
-		title.AddThemeColorOverride("font_color", Colors.White);
-		AddChild(title);
-
-		var currency = new Label
-		{
-			Text = I18n.T("ui.hero_select.currency", Game.Instance.MetaCurrency),
-			Position = new Vector2(280, 62),
-		};
-		AddChild(currency);
-
-		var hint = new Label
-		{
-			Text = I18n.T("ui.hero_select.hint"),
-			Position = new Vector2(280, 84),
-		};
-		AddChild(hint);
-
 		var langBtn = new Button
 		{
 			Text = I18n.T("ui.hero_select.lang", I18n.Instance?.LocaleDisplayName() ?? "中文"),
-			Position = new Vector2(980, 36),
+			Position = new Vector2(1040, 24),
 			Size = new Vector2(200, 36),
 		};
 		langBtn.Pressed += () => I18n.Instance?.ToggleLocale();
 		AddChild(langBtn);
 
-		BuildMapRow();
+		var root = new VBoxContainer();
+		root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		root.Alignment = BoxContainer.AlignmentMode.Center;
+		root.AddThemeConstantOverride("separation", 16);
+		root.OffsetLeft = 40;
+		root.OffsetRight = -40;
+		root.OffsetTop = 24;
+		root.OffsetBottom = -24;
+		AddChild(root);
 
-		var row = new HBoxContainer { Position = new Vector2(120, 280) };
-		AddChild(row);
+		var title = new Label
+		{
+			Text = Game.Instance.StarterHero == null
+				? I18n.T("ui.hero_select.title_starter")
+				: I18n.T("ui.hero_select.title_play"),
+			HorizontalAlignment = HorizontalAlignment.Center,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
+		title.AddThemeColorOverride("font_color", Colors.White);
+		root.AddChild(title);
+
+		var currency = new Label
+		{
+			Text = I18n.T("ui.hero_select.currency", Game.Instance.MetaCurrency),
+			HorizontalAlignment = HorizontalAlignment.Center,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
+		root.AddChild(currency);
+
+		var hint = new Label
+		{
+			Text = I18n.T("ui.hero_select.hint"),
+			HorizontalAlignment = HorizontalAlignment.Center,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
+		root.AddChild(hint);
+
+		BuildMapSection(root);
+
+		var heroRow = new HBoxContainer
+		{
+			Alignment = BoxContainer.AlignmentMode.Center,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
+		heroRow.AddThemeConstantOverride("separation", 16);
+		root.AddChild(heroRow);
 
 		foreach (HeroId id in System.Enum.GetValues(typeof(HeroId)))
-			row.AddChild(MakeCard(id));
+			heroRow.AddChild(MakeCard(id));
 	}
 
-	private void BuildMapRow()
+	private void BuildMapSection(VBoxContainer root)
 	{
 		var mapTitle = new Label
 		{
 			Text = I18n.T("ui.map_select.title"),
-			Position = new Vector2(120, 118),
+			HorizontalAlignment = HorizontalAlignment.Center,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
 		mapTitle.AddThemeColorOverride("font_color", new Color(0.85f, 0.9f, 1f));
-		AddChild(mapTitle);
+		root.AddChild(mapTitle);
 
 		var mapRow = new HBoxContainer
 		{
-			Position = new Vector2(120, 148),
+			Alignment = BoxContainer.AlignmentMode.Center,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
 		mapRow.AddThemeConstantOverride("separation", 12);
-		AddChild(mapRow);
+		root.AddChild(mapRow);
 
 		foreach (MapId mapId in MapCatalog.All)
 			mapRow.AddChild(MakeMapCard(mapId));
@@ -123,9 +143,15 @@ public partial class HeroSelect : CanvasLayer
 
 		var box = new VBoxContainer();
 		box.AddThemeConstantOverride("separation", 4);
+		box.Alignment = BoxContainer.AlignmentMode.Center;
 		panel.AddChild(box);
 
-		var name = new Label { Text = I18n.MapName(id) };
+		var name = new Label
+		{
+			Text = I18n.MapName(id),
+			HorizontalAlignment = HorizontalAlignment.Center,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
 		name.AddThemeColorOverride("font_color", Colors.White);
 		box.AddChild(name);
 
@@ -133,8 +159,10 @@ public partial class HeroSelect : CanvasLayer
 		{
 			Text = I18n.MapDesc(id),
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
+			HorizontalAlignment = HorizontalAlignment.Center,
+			CustomMinimumSize = new Vector2(180, 40),
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
-		desc.CustomMinimumSize = new Vector2(180, 40);
 		desc.AddThemeColorOverride("font_color", new Color(0.8f, 0.82f, 0.88f));
 		box.AddChild(desc);
 
@@ -142,6 +170,7 @@ public partial class HeroSelect : CanvasLayer
 		{
 			Text = selected ? I18n.T("ui.map_select.selected") : I18n.T("ui.map_select.pick"),
 			Disabled = selected,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
 		btn.Pressed += () =>
 		{
@@ -161,6 +190,8 @@ public partial class HeroSelect : CanvasLayer
 
 		var box = new VBoxContainer();
 		box.CustomMinimumSize = new Vector2(220, 280);
+		box.Alignment = BoxContainer.AlignmentMode.Center;
+		box.AddThemeConstantOverride("separation", 8);
 
 		string name = I18n.HeroName(id);
 		string desc = I18n.HeroDesc(id);
@@ -179,16 +210,23 @@ public partial class HeroSelect : CanvasLayer
 				ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
 				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
 				CustomMinimumSize = new Vector2(96, 96),
+				SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
 			};
 			box.AddChild(tex);
 		}
 
-		var lbl = new Label { Text = $"{name}\n\n{desc}" };
-		lbl.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-		lbl.CustomMinimumSize = new Vector2(200, 100);
+		var lbl = new Label
+		{
+			Text = $"{name}\n\n{desc}",
+			HorizontalAlignment = HorizontalAlignment.Center,
+			AutowrapMode = TextServer.AutowrapMode.WordSmart,
+			CustomMinimumSize = new Vector2(200, 100),
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
 		box.AddChild(lbl);
 
 		var btn = new Button();
+		btn.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		if (firstPick || unlocked)
 		{
 			btn.Text = firstPick
