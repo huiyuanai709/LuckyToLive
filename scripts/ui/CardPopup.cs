@@ -26,20 +26,29 @@ public partial class CardPopup : CanvasLayer
 		dim.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		AddChild(dim);
 
+		var center = new CenterContainer();
+		center.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		AddChild(center);
+
 		var panel = new PanelContainer();
-		panel.Position = new Vector2(180, 90);
 		panel.CustomMinimumSize = new Vector2(600, 420);
-		AddChild(panel);
+		center.AddChild(panel);
 
 		var vbox = new VBoxContainer();
+		vbox.Alignment = BoxContainer.AlignmentMode.Center;
+		vbox.AddThemeConstantOverride("separation", 16);
 		panel.AddChild(vbox);
 
 		var titleLbl = new Label { Text = title };
 		titleLbl.HorizontalAlignment = HorizontalAlignment.Center;
+		titleLbl.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		vbox.AddChild(titleLbl);
 
 		_row = new HBoxContainer();
 		_row.Alignment = BoxContainer.AlignmentMode.Center;
+		_row.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		_row.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+		_row.AddThemeConstantOverride("separation", 12);
 		vbox.AddChild(_row);
 
 		FillOptions(options);
@@ -48,6 +57,7 @@ public partial class CardPopup : CanvasLayer
 		{
 			Text = RerollLabel(),
 			Disabled = !_allowReroll || (Game.Instance?.RerollsLeft ?? 0) <= 0,
+			SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
 		};
 		_rerollBtn.Pressed += () => EmitSignal(SignalName.RerollPressed);
 		vbox.AddChild(_rerollBtn);
@@ -89,6 +99,7 @@ public partial class CardPopup : CanvasLayer
 		var stack = new VBoxContainer
 		{
 			MouseFilter = Control.MouseFilterEnum.Ignore,
+			Alignment = BoxContainer.AlignmentMode.Center,
 		};
 		stack.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		stack.AddThemeConstantOverride("separation", 4);
@@ -106,6 +117,7 @@ public partial class CardPopup : CanvasLayer
 				ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
 				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
 				CustomMinimumSize = new Vector2(96, 96),
+				SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
 				MouseFilter = Control.MouseFilterEnum.Ignore,
 			};
 			stack.AddChild(tex);
@@ -117,6 +129,7 @@ public partial class CardPopup : CanvasLayer
 			HorizontalAlignment = HorizontalAlignment.Center,
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
 			CustomMinimumSize = new Vector2(160, 110),
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			MouseFilter = Control.MouseFilterEnum.Ignore,
 		};
 		stack.AddChild(text);
