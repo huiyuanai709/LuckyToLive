@@ -21,8 +21,32 @@ public partial class I18n : Node
 	public override void _Ready()
 	{
 		Instance = this;
+		ApplyUiFont();
 		LoadCsvTranslations(CsvPath);
 		SetLocale(LoadSavedLocale(), persist: false);
+	}
+
+	/// <summary>
+	/// Desktop can fall back to OS CJK fonts; web cannot. Force our bundled font
+	/// as ThemeDB fallback so Labels/Buttons created in code render Chinese.
+	/// </summary>
+	private static void ApplyUiFont()
+	{
+		const string fontPath = "res://assets/fonts/NotoSansSC-Game.ttf";
+		if (!ResourceLoader.Exists(fontPath))
+		{
+			GD.PushWarning($"I18n: missing UI font at {fontPath} (Chinese may garbled on web)");
+			return;
+		}
+
+		var font = ResourceLoader.Load<Font>(fontPath);
+		if (font == null)
+		{
+			GD.PushWarning($"I18n: failed to load UI font at {fontPath}");
+			return;
+		}
+
+		ThemeDB.FallbackFont = font;
 	}
 
 	public static string T(string key)
@@ -179,6 +203,11 @@ public partial class I18n : Node
 
 	private static string DetectDefaultLocale()
 	{
+		// Web has no reliable CJK system fonts; default to Chinese (primary audience).
+		// Users can still switch to English via the in-game language button.
+		if (OS.HasFeature("web"))
+			return LocaleZh;
+
 		string lang = OS.GetLocaleLanguage();
 		if (lang.StartsWith("zh")) return LocaleZh;
 		if (lang.StartsWith("en")) return LocaleEn;
