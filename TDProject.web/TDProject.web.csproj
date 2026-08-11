@@ -22,6 +22,9 @@
         <!-- Keep host namespaces uniform with the desktop host (whose
              '.2dog' assembly name is not a valid namespace). -->
         <RootNamespace>TDProject.Web</RootNamespace>
+        <!-- Symbol maps are ~20 MB uncompressed and get fetched on every boot;
+             skip them so phones spend less time on the splash screen. -->
+        <WasmEmitSymbolMap>false</WasmEmitSymbolMap>
     </PropertyGroup>
     <!-- Godot project location: the parent directory (hosts are nested inside
          the Godot project, hidden from the Godot editor by their .gdignore) -->

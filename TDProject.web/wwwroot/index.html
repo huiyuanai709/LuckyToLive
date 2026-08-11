@@ -83,6 +83,28 @@
             display: none;
         }
 
+        #status-message {
+            color: #c8c8c8;
+            font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+            font-size: clamp(0.85rem, 2.8vw, 1rem);
+            line-height: 1.45;
+            margin: 0 1.5rem;
+            max-width: 22rem;
+            text-align: center;
+            display: none;
+        }
+
+        #status-hint {
+            color: #8a8a8a;
+            font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+            font-size: clamp(0.75rem, 2.4vw, 0.9rem);
+            line-height: 1.4;
+            margin: 0 1.5rem;
+            max-width: 22rem;
+            text-align: center;
+            display: none;
+        }
+
         #status-notice {
             background-color: #5b3943;
             border-radius: 0.5rem;
@@ -125,6 +147,8 @@
             </g>
         </svg>
         <progress id="status-progress"></progress>
+        <div id="status-message" aria-live="polite"></div>
+        <div id="status-hint"></div>
         <div id="status-notice" role="alert"></div>
     </div>
 
@@ -150,10 +174,23 @@
 
             const statusOverlay = document.getElementById('status');
             const statusProgress = document.getElementById('status-progress');
+            const statusMessage = document.getElementById('status-message');
+            const statusHint = document.getElementById('status-hint');
             const statusNotice = document.getElementById('status-notice');
+            const preferZh = /^zh\b/i.test(navigator.language || '');
+            const copy = preferZh ? {
+                downloading: (pct) => '正在下载游戏资源… ' + pct + '%',
+                starting: '下载完成，正在启动引擎…',
+                hint: '手机首次加载可能要几分钟，建议使用 Wi‑Fi；电脑浏览器通常更快。',
+            } : {
+                downloading: (pct) => 'Downloading game data… ' + pct + '%',
+                starting: 'Download done — starting the engine…',
+                hint: 'First load on a phone can take a few minutes. Prefer Wi‑Fi; desktop browsers are usually faster.',
+            };
 
             let initializing = true;
             let statusMode = '';
+            let lastShownPct = -1;
 
             function setStatusMode(mode) {
                 if (statusMode === mode || !initializing) {
@@ -164,13 +201,18 @@
                     initializing = false;
                     return;
                 }
-                statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+                const showProgress = mode === 'progress';
+                statusProgress.style.display = showProgress ? 'block' : 'none';
+                statusMessage.style.display = showProgress ? 'block' : 'none';
+                statusHint.style.display = showProgress ? 'block' : 'none';
                 statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
                 statusMode = mode;
             }
 
             function displayFailureNotice(err) {
                 console.error(err);
+                statusMessage.style.display = 'none';
+                statusHint.style.display = 'none';
                 statusNotice.textContent = err instanceof Error ? err.message : String(err);
                 setStatusMode('notice');
                 initializing = false;
@@ -178,10 +220,16 @@
 
             let downloadsDone = false;
 
+            function setStartingMessage() {
+                statusMessage.textContent = copy.starting;
+                statusHint.textContent = copy.hint;
+            }
+
             function reportProgress(current, total) {
                 if (!downloadsDone && total > 0 && current >= total) {
                     downloadsDone = true;
                     performance.mark('2dog:downloads-done');
+                    setStartingMessage();
                 }
                 // Determinate while the size-tracked downloads run, then back
                 // to indeterminate for the tail (.NET runtime files and engine
@@ -189,9 +237,18 @@
                 if (current > 0 && total > 0 && current < total) {
                     statusProgress.value = current;
                     statusProgress.max = total;
+                    const pct = Math.min(99, Math.floor((current / total) * 100));
+                    if (pct !== lastShownPct) {
+                        lastShownPct = pct;
+                        statusMessage.textContent = copy.downloading(pct);
+                        statusHint.textContent = copy.hint;
+                    }
                 } else {
                     statusProgress.removeAttribute('value');
                     statusProgress.removeAttribute('max');
+                    if (downloadsDone || !(total > 0)) {
+                        setStartingMessage();
+                    }
                 }
             }
 
@@ -290,6 +347,8 @@
                         return new Engine(GODOT_CONFIG);
                     };
                     setStatusMode('progress');
+                    statusMessage.textContent = copy.downloading(0);
+                    statusHint.textContent = copy.hint;
                     const started = TWODOG_PCK_GZ && typeof DecompressionStream !== 'undefined'
                         ? startWithGzPack(fileSizes, makeEngine)
                         : makeEngine('').startGame({});
