@@ -159,7 +159,8 @@
             'canvasResizePolicy': 2,
             'ensureCrossOriginIsolationHeaders': false,
             'executable': 'godot',
-            'experimentalVK': false,
+            // Required for LineEdit/TextEdit to open the OS keyboard on phones.
+            'experimentalVK': true,
             'focusCanvas': true,
             'gdextensionLibs': []
         };

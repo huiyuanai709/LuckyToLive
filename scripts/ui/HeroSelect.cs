@@ -142,6 +142,10 @@ public partial class HeroSelect : CanvasLayer
 			Alignment = HorizontalAlignment.Center,
 			CustomMinimumSize = new Vector2(420, 40),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			// Web/mobile: need the OS keyboard; experimentalVK in index.html must also be on.
+			VirtualKeyboardEnabled = true,
+			VirtualKeyboardShowOnFocus = true,
+			VirtualKeyboardType = LineEdit.VirtualKeyboardTypeEnum.Default,
 		};
 		_nameEdit.TextChanged += text =>
 		{
@@ -201,7 +205,20 @@ public partial class HeroSelect : CanvasLayer
 		nextBtn.Pressed += TryAdvanceToMapSelect;
 		root.AddChild(nextBtn);
 
-		CallDeferred(MethodName.FocusNameEdit);
+		// Desktop: auto-focus is fine. Touch/web: browsers only open the keyboard
+		// inside a user gesture — auto GrabFocus leaves the field focused with no
+		// keyboard, so a later tap often fails to re-trigger it.
+		if (!IsTouchOriented())
+			CallDeferred(MethodName.FocusNameEdit);
+	}
+
+	private static bool IsTouchOriented()
+	{
+		if (OS.HasFeature("mobile") || OS.HasFeature("web_android") || OS.HasFeature("web_ios"))
+			return true;
+		if (!string.IsNullOrEmpty(OS.GetEnvironment("LUCKY_TOUCH_CONTROLS")))
+			return true;
+		return DisplayServer.IsTouchscreenAvailable();
 	}
 
 	private void FocusNameEdit()
