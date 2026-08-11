@@ -188,6 +188,7 @@ public partial class Main : Node2D
 
 		_hud = new Hud();
 		AddChild(_hud);
+		AddChild(new VirtualControls());
 		_hud.AdPressed += OnAdPressed;
 		_hud.RefreshSlots(_hero.Loadout);
 		_hud.SetXp(_hero.Level, _hero.Xp, _hero.XpToNext());

@@ -226,7 +226,7 @@ public partial class Hero : CharacterBody2D
 			}
 		}
 
-		Vector2 input = Input.GetVector("move_left", "move_right", "move_up", "move_down");
+		Vector2 input = PlayerInput.GetMoveVector();
 		bool moving = input.LengthSquared() > 0.0001f;
 		if (moving) _facing = input.Normalized();
 
@@ -257,7 +257,7 @@ public partial class Hero : CharacterBody2D
 	private void TryStartDash(Vector2 input)
 	{
 		if (_dashLeft > 0f || _dashCd > 0f) return;
-		if (!Input.IsActionJustPressed("dash")) return;
+		if (!PlayerInput.IsDashJustPressed()) return;
 		Vector2 dir = input.LengthSquared() > 0.0001f ? input.Normalized() : _facing;
 		if (dir.LengthSquared() < 0.0001f) dir = Vector2.Right;
 		_facing = dir;
