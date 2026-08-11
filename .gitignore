@@ -2,7 +2,7 @@
 .godot/
 .import/
 export.cfg
-export_presets.cfg
+# export_presets.cfg is tracked: 2dog web/desktop hosts need the Web + Desktop presets
 
 # Imported translations
 *.translation
@@ -24,6 +24,11 @@ obj/
 *.nuget.*
 project.assets.json
 *.cache
+
+# 2dog / browser publish output
+**/AppBundle/
+*.pck
+!**/wwwroot/**
 
 # OS
 .DS_Store

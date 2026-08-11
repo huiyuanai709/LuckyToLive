@@ -1,6 +1,16 @@
 <Project Sdk="Godot.NET.Sdk/4.7.1">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
+    <!-- added by the 2dog tool: properties 2dog hosts need that were not already set -->
+    <PropertyGroup>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <DefineConstants>$(DefineConstants);LIBGODOT_ENABLED</DefineConstants>
+        <DefaultItemExcludes>$(DefaultItemExcludes);TDProject.2dog/**;TDProject.web/**</DefaultItemExcludes>
+    </PropertyGroup>
+    <!-- added by the 2dog tool: compiles the web bootstrap (in the web host folder) into this game assembly -->
+    <ItemGroup>
+        <Compile Include="TDProject.web/TwoDogWebBoot.cs" Condition="Exists('$(MSBuildThisFileDirectory)TDProject.web/TwoDogWebBoot.cs')" />
+    </ItemGroup>
 </Project>
