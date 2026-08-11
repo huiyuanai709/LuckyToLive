@@ -203,6 +203,11 @@ public partial class I18n : Node
 
 	private static string DetectDefaultLocale()
 	{
+		// Web has no reliable CJK system fonts; default to Chinese (primary audience).
+		// Users can still switch to English via the in-game language button.
+		if (OS.HasFeature("web"))
+			return LocaleZh;
+
 		string lang = OS.GetLocaleLanguage();
 		if (lang.StartsWith("zh")) return LocaleZh;
 		if (lang.StartsWith("en")) return LocaleEn;
