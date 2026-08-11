@@ -8,13 +8,43 @@
 
 ## 如何运行
 
-1. 安装 **.NET SDK 8.0**：https://dotnet.microsoft.com/download  
-2. 安装 **Godot 4.x 的 .NET 版**（不要选 Standard）：https://godotengine.org/download  
-3. 用 Godot（.NET 版）导入本目录下的 `project.godot`  
-4. 首次打开若提示编译 C#，确认通过；也可先在命令行执行 `dotnet build`  
-5. 运行（F5），主场景为 `scenes/Main.tscn`
+### 依赖
+
+1. 安装 **.NET SDK 10.0+**（根目录 `global.json` 会锁定）：https://dotnet.microsoft.com/download  
+2. 安装 **Godot 4.7.x 的 .NET 版**（不要选 Standard）：https://godotengine.org/download  
+3. （可选，仅浏览器导出）安装 wasm 工具：`dotnet workload install wasm-tools`
+
+### Godot 编辑器（日常改场景 / 资源）
+
+1. 用 Godot（.NET 版）导入本目录下的 `project.godot`  
+2. 首次打开若提示编译 C#，确认通过；也可先执行 `dotnet build`  
+3. 运行（F5），主场景为 `scenes/Main.tscn`
 
 若提示无 C# 支持，请确认下载的是 .NET 版 Godot，并检查「编辑器 → 编辑器设置」中的 dotnet 路径。
+
+### 2dog 主机（桌面 / Web）
+
+本仓库已用 [2dog](https://2dog.dev/getting-started.html) 接入 .NET 宿主，游戏内容仍在仓库根目录：
+
+```text
+TDProject.csproj          — 游戏程序集（Godot.NET.Sdk / net10.0）
+TDProject.2dog/           — 桌面 Generic Host
+TDProject.web/            — 浏览器 WebAssembly Host
+export_presets.cfg        — 2dog 导出预设（Web + Desktop）
+```
+
+```bash
+# 桌面运行（嵌入 libgodot）
+dotnet run --project TDProject.2dog
+
+# 浏览器发布（静态站输出到 TDProject.web/AppBundle/）
+dotnet workload install wasm-tools   # 一次性
+dotnet publish TDProject.web
+dotnet tool install -g dotnet-serve  # 一次性
+dotnet serve --directory TDProject.web/AppBundle -z -b
+```
+
+详见 [2dog Web 文档](https://2dog.dev/web.html)。
 
 ## 核心玩法
 
@@ -39,7 +69,10 @@
 
 ```
 project.godot              — 项目名 Open Island Roguelike；Game 为 Autoload
-TDProject.csproj           — Godot.NET.Sdk / net8.0
+TDProject.csproj           — Godot.NET.Sdk / net10.0（2dog 游戏程序集）
+TDProject.2dog/            — 2dog 桌面宿主
+TDProject.web/             — 2dog 浏览器宿主（dotnet publish → AppBundle）
+TDProject.slnx             — 解决方案（web 默认不参与普通 build）
 scenes/Main.tscn           — 主场景，挂载 Main.cs
 assets/characters|enemies  — 英雄与敌人贴图
 assets/environment         — 岛屿地面 / 树木 / 草丛 / 岩石等环境贴图
