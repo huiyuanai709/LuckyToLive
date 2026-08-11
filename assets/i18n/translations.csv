@@ -8,9 +8,23 @@ ui.hero_select.play,Play as {0},出战 {0}
 ui.hero_select.unlock,Unlock ({0} currency),解锁 ({0} 货币)
 ui.hero_select.not_enough,Not enough currency,货币不足
 ui.hero_select.lang,Language: {0},语言: {0}
-ui.map_select.title,Choose a map,选择地图
+ui.char_create.title,Create Character,创建角色
+ui.char_create.hint,Name your hero · pick a class · then choose a map,先输入角色名并选择英雄 · 再进入关卡选择
+ui.char_create.name_label,Character Name,角色名
+ui.char_create.name_placeholder,Enter a name,请输入角色名
+ui.char_create.name_required,Please enter a character name,请先输入角色名
+ui.char_create.hero_required,Please select a hero,请先选择英雄
+ui.char_create.pick_hero,Choose your hero,选择出战英雄
+ui.char_create.pick,Select {0},选择 {0}
+ui.char_create.selected,Selected {0},已选 {0}
+ui.char_create.next,Next,下一步
+ui.map_select.title,Choose a level,选择关卡
+ui.map_select.hint,Select a level · then enter the run,选择关卡后进入本局
+ui.map_select.character,{0} · {1},{0} · {1}
 ui.map_select.pick,Select,选择
 ui.map_select.selected,Selected,已选
+ui.map_select.back,Back,返回
+ui.map_select.start,Enter,进入
 map.island.name,Green Island,绿岛
 map.island.desc,Classic shores · goblins & elites,经典海岛 · 哥布林与精英
 map.apocalypse.name,Apocalypse,末日废土
@@ -32,6 +46,7 @@ ui.hud.hp,HP {0}/{1},生命 {0}/{1}
 ui.hud.xp,Hero Lv{0}  XP {1}/{2},英雄 Lv{0}  XP {1}/{2}
 ui.hud.slots,Slots {0}/{1},槽位 {0}/{1}
 ui.hud.map,Map: {0},地图: {0}
+ui.hud.character,{0} ({1}),{0}（{1}）
 ui.hud.empty,Empty,空
 ui.hud.goal,Minute goal: kill 1 elite,分钟目标: 击杀 1 精英
 ui.hud.goal_progress,Minute goal: kill 1 elite ({0}/1),分钟目标: 击杀 1 精英 ({0}/1)
@@ -63,11 +78,12 @@ card.kind.passive,Passive,被动
 card.kind.pet,Pet,宠物
 ui.result.victory,You survived!,生存成功！
 ui.result.defeat,Your hero fell,英雄倒下了
+ui.result.character,{0} · {1},{0} · {1}
 ui.result.rank,Rank {0}  Score {1},评级 {0}  分数 {1}
 ui.result.stats,Kills {0}  Elites {1}  Minute goals {2},击杀 {0}  精英 {1}  分钟目标 {2}
 ui.result.extra,Synergies {0}  Boss kills {1},协同 {0}  Boss击杀 {1}
 ui.result.currency,Currency +{0}  (total {1}),获得货币 +{0}  (总 {1})
-ui.result.continue,Back to hero select,返回选英雄与地图
+ui.result.continue,Create character again,返回创建角色
 boss.tide.island,Tide Guard,潮汐守卫
 boss.tide.apocalypse,Ember Guard,烬核守卫
 boss.tide.wilderness,Thorn Guard,棘藤守卫

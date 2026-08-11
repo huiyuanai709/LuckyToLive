@@ -22,6 +22,8 @@ public partial class Game : Node
 	public int MetaCurrency;
 	public HeroId SelectedHero = HeroId.Hunter;
 	public MapId SelectedMap = MapId.Island;
+	/// <summary>本局角色名（创建角色时输入，暗黑式开局）。</summary>
+	public string CharacterName = "";
 
 	// 本局
 	public int AdSlotsUnlocked;
@@ -81,6 +83,14 @@ public partial class Game : Node
 		Save();
 	}
 
+	public void SetCharacterName(string name)
+	{
+		CharacterName = (name ?? "").Trim();
+		if (CharacterName.Length > 16)
+			CharacterName = CharacterName.Substring(0, 16);
+		Save();
+	}
+
 	public void ResetRunStats()
 	{
 		AdSlotsUnlocked = 0;
@@ -121,6 +131,8 @@ public partial class Game : Node
 		cfg.Load(SavePath); // 保留 settings 等其它分区（如语言）
 		if (StarterHero != null) cfg.SetValue("meta", "starter", (int)StarterHero.Value);
 		cfg.SetValue("meta", "currency", MetaCurrency);
+		if (!string.IsNullOrEmpty(CharacterName))
+			cfg.SetValue("meta", "character_name", CharacterName);
 		var arr = new Godot.Collections.Array();
 		foreach (var h in UnlockedHeroes) arr.Add((int)h);
 		cfg.SetValue("meta", "unlocked", arr);
@@ -134,6 +146,7 @@ public partial class Game : Node
 		if (cfg.HasSectionKey("meta", "starter"))
 			StarterHero = (HeroId)(int)cfg.GetValue("meta", "starter");
 		MetaCurrency = (int)cfg.GetValue("meta", "currency", 0);
+		CharacterName = (string)cfg.GetValue("meta", "character_name", "");
 		UnlockedHeroes.Clear();
 		if (cfg.HasSectionKey("meta", "unlocked"))
 		{
