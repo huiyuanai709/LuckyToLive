@@ -187,6 +187,10 @@ public partial class I18n : Node
 
 	private static void LoadCsvTranslations(string path)
 	{
+		// Exported .pck keeps Godot-imported *.translation, not the CSV source.
+		if (TryLoadImportedTranslations())
+			return;
+
 		if (!FileAccess.FileExists(path))
 		{
 			GD.PushWarning($"I18n: missing translation CSV at {path}");
@@ -235,6 +239,27 @@ public partial class I18n : Node
 
 		foreach (var tr in byLocale.Values)
 			TranslationServer.AddTranslation(tr);
+	}
+
+	/// <summary>
+	/// Load CSV importer outputs (present in editor and in exported packs).
+	/// </summary>
+	private static bool TryLoadImportedTranslations()
+	{
+		string[] locales = { LocaleEn, LocaleZh };
+		bool loadedAny = false;
+		foreach (string locale in locales)
+		{
+			string resPath = $"res://assets/i18n/translations.{locale}.translation";
+			if (!ResourceLoader.Exists(resPath))
+				continue;
+			var tr = ResourceLoader.Load<Translation>(resPath);
+			if (tr == null)
+				continue;
+			TranslationServer.AddTranslation(tr);
+			loadedAny = true;
+		}
+		return loadedAny;
 	}
 
 	/// <summary>Minimal CSV parser supporting quoted fields with commas.</summary>
