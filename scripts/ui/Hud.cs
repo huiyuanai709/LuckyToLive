@@ -9,6 +9,7 @@ public partial class Hud : CanvasLayer
 	public Label GoalLabel;
 	public Label EliteProgressLabel;
 	public Label MapLabel;
+	public Label CharacterLabel;
 	public Label MsgLabel;
 	public Button AdButton;
 	public Button LangButton;
@@ -69,6 +70,13 @@ public partial class Hud : CanvasLayer
 			Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island)),
 		};
 		root.AddChild(MapLabel);
+
+		CharacterLabel = new Label
+		{
+			Position = new Vector2(16, 120),
+			Text = FormatCharacterLabel(),
+		};
+		root.AddChild(CharacterLabel);
 
 		MsgLabel = new Label { Position = new Vector2(16, 540) };
 		root.AddChild(MsgLabel);
@@ -132,6 +140,8 @@ public partial class Hud : CanvasLayer
 		SetEliteProgress(_eliteProg, _eliteNeed);
 		if (MapLabel != null)
 			MapLabel.Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island));
+		if (CharacterLabel != null)
+			CharacterLabel.Text = FormatCharacterLabel();
 		if (Game.Instance != null)
 		{
 			AdButton.Text = Game.Instance.AdSlotsUnlocked >= Game.MaxAdSlots
@@ -139,6 +149,14 @@ public partial class Hud : CanvasLayer
 				: I18n.T("ui.hud.ad_progress", Game.Instance.AdSlotsUnlocked, Game.MaxAdSlots);
 		}
 		// 槽位名等由 Main.OnLocaleChanged 里 RefreshSlots 刷新
+	}
+
+	private static string FormatCharacterLabel()
+	{
+		string name = Game.Instance?.CharacterName;
+		if (string.IsNullOrWhiteSpace(name))
+			name = I18n.HeroName(Game.Instance?.SelectedHero ?? HeroId.Hunter);
+		return I18n.T("ui.hud.character", name, I18n.HeroName(Game.Instance?.SelectedHero ?? HeroId.Hunter));
 	}
 
 	/// <summary>局内倒计时，显示在精英进度条右侧。</summary>

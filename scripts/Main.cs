@@ -79,6 +79,8 @@ public partial class Main : Node2D
 			Game.Instance.SelectedHero = heroId;
 			if (Game.Instance.StarterHero == null)
 				Game.Instance.ChooseStarter(heroId);
+			if (string.IsNullOrWhiteSpace(Game.Instance.CharacterName))
+				Game.Instance.SetCharacterName(I18n.HeroName(heroId));
 			CallDeferred(MethodName.StartRun, (int)heroId);
 			return;
 		}

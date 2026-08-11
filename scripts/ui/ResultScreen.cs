@@ -21,6 +21,13 @@ public partial class ResultScreen : CanvasLayer
 		var v = new VBoxContainer();
 		panel.AddChild(v);
 		v.AddChild(new Label { Text = victory ? I18n.T("ui.result.victory") : I18n.T("ui.result.defeat") });
+		string charName = string.IsNullOrWhiteSpace(Game.Instance.CharacterName)
+			? I18n.HeroName(Game.Instance.SelectedHero)
+			: Game.Instance.CharacterName;
+		v.AddChild(new Label
+		{
+			Text = I18n.T("ui.result.character", charName, I18n.HeroName(Game.Instance.SelectedHero)),
+		});
 		v.AddChild(new Label { Text = I18n.T("ui.result.rank", rank, score) });
 		v.AddChild(new Label { Text = I18n.T("ui.result.stats", kills, elites, goals) });
 		v.AddChild(new Label { Text = I18n.T("ui.result.extra", synergies, bossKills) });
