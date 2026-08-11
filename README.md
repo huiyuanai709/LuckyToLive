@@ -59,6 +59,8 @@ dotnet serve --directory TDProject.web/AppBundle -z -b
 dotnet publish TDProject.web -p:TwoDogWebPrecompress=false
 ```
 
+Web 包约二十多 MB（压缩后），手机首次打开可能要几分钟（下载 + WASM 编译），进度条下会提示当前阶段；建议用 Wi‑Fi，电脑浏览器通常更快。进游戏后仍以键盘操作为主。
+
 详见 [2dog Web 文档](https://2dog.dev/web.html)。
 
 ## 核心玩法
