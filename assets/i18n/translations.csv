@@ -18,8 +18,8 @@ ui.char_create.pick_hero,Choose your hero,选择出战英雄
 ui.char_create.pick,Select {0},选择 {0}
 ui.char_create.selected,Selected {0},已选 {0}
 ui.char_create.next,Next,下一步
-ui.map_select.title,Choose a map,选择关卡
-ui.map_select.hint,Select a map · then enter the run,选择关卡后进入本局
+ui.map_select.title,Choose a level,选择关卡
+ui.map_select.hint,Select a level · then enter the run,选择关卡后进入本局
 ui.map_select.character,{0} · {1},{0} · {1}
 ui.map_select.pick,Select,选择
 ui.map_select.selected,Selected,已选

@@ -63,7 +63,8 @@ dotnet publish TDProject.web -p:TwoDogWebPrecompress=false
 
 ## 核心玩法
 
-- **选英雄**：战士 / 法师 / 猎人；首次进入选定「起始英雄」并解锁，其余英雄用元货币解锁  
+- **创建角色**：输入角色名并选择英雄（战士 / 法师 / 猎人），再选择关卡进入；首次选定「起始英雄」并解锁，其余英雄用元货币解锁  
+
 - **操作**：WASD / 方向键在岛屿内移动；武器与宠物自动攻击  
 - **时限**：单局 5 分钟（`Game.RunDuration`）；到时存活即胜利，英雄阵亡则失败  
 - **槽位构筑**：默认 5 槽（本局最多再 +2，HUD 上「广告」按钮为占位解锁）；可装配武器、建筑、宠物、被动  
@@ -105,7 +106,7 @@ scripts/
   Enemy.cs / Projectile.cs — 敌人与投射物
   Building.cs / Pet.cs     — 建筑与宠物实体
   BigItemDrop.cs           — 精英大件掉落
-  ui/HeroSelect.cs         — 选英雄界面（含语言切换）
+  ui/HeroSelect.cs         — 创建角色（命名+选英雄）→ 选关卡（含语言切换）
   ui/Hud.cs                — HUD（时间、生命、经验、槽位、广告槽、语言切换）
   ui/CardPopup.cs          — 暂停时的选卡弹窗
   ui/ResultScreen.cs       — 结算界面

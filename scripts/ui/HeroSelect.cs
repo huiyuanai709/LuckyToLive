@@ -46,10 +46,25 @@ public partial class HeroSelect : CanvasLayer
 		_nameEdit = null;
 		_nameError = null;
 
-		var dim = new ColorRect { Color = new Color(0.08f, 0.1f, 0.14f, 0.95f) };
+		var dim = new ColorRect
+		{
+			Color = new Color(0.08f, 0.1f, 0.14f, 0.95f),
+			MouseFilter = Control.MouseFilterEnum.Ignore,
+		};
 		dim.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		AddChild(dim);
 
+		var root = new Control();
+		root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		root.MouseFilter = Control.MouseFilterEnum.Ignore;
+		AddChild(root);
+
+		if (_step == Step.CreateCharacter)
+			BuildCreateCharacter(root);
+		else
+			BuildSelectMap(root);
+
+		// 最后添加，保证盖在内容之上可点
 		var langBtn = new Button
 		{
 			Text = I18n.T("ui.hero_select.lang", I18n.Instance?.LocaleDisplayName() ?? "中文"),
@@ -58,25 +73,21 @@ public partial class HeroSelect : CanvasLayer
 		};
 		langBtn.Pressed += () => I18n.Instance?.ToggleLocale();
 		AddChild(langBtn);
-
-		var root = new VBoxContainer();
-		root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-		root.Alignment = BoxContainer.AlignmentMode.Center;
-		root.AddThemeConstantOverride("separation", 16);
-		root.OffsetLeft = 40;
-		root.OffsetRight = -40;
-		root.OffsetTop = 24;
-		root.OffsetBottom = -24;
-		AddChild(root);
-
-		if (_step == Step.CreateCharacter)
-			BuildCreateCharacter(root);
-		else
-			BuildSelectMap(root);
 	}
 
-	private void BuildCreateCharacter(VBoxContainer root)
+	private void BuildCreateCharacter(Control root)
 	{
+		var content = new VBoxContainer();
+		content.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		content.OffsetLeft = 40;
+		content.OffsetRight = -40;
+		content.OffsetTop = 20;
+		content.OffsetBottom = -72; // 留给底部「下一步」
+		content.Alignment = BoxContainer.AlignmentMode.Center;
+		content.AddThemeConstantOverride("separation", 12);
+		content.MouseFilter = Control.MouseFilterEnum.Ignore;
+		root.AddChild(content);
+
 		var title = new Label
 		{
 			Text = I18n.T("ui.char_create.title"),
@@ -85,7 +96,7 @@ public partial class HeroSelect : CanvasLayer
 		};
 		title.AddThemeColorOverride("font_color", Colors.White);
 		title.AddThemeFontSizeOverride("font_size", 28);
-		root.AddChild(title);
+		content.AddChild(title);
 
 		var currency = new Label
 		{
@@ -93,7 +104,7 @@ public partial class HeroSelect : CanvasLayer
 			HorizontalAlignment = HorizontalAlignment.Center,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
-		root.AddChild(currency);
+		content.AddChild(currency);
 
 		var hint = new Label
 		{
@@ -101,13 +112,13 @@ public partial class HeroSelect : CanvasLayer
 			HorizontalAlignment = HorizontalAlignment.Center,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
-		root.AddChild(hint);
+		content.AddChild(hint);
 
 		var nameCenter = new CenterContainer
 		{
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
-		root.AddChild(nameCenter);
+		content.AddChild(nameCenter);
 
 		var nameBox = new VBoxContainer();
 		nameBox.CustomMinimumSize = new Vector2(420, 0);
@@ -160,13 +171,13 @@ public partial class HeroSelect : CanvasLayer
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
 		heroTitle.AddThemeColorOverride("font_color", new Color(0.85f, 0.9f, 1f));
-		root.AddChild(heroTitle);
+		content.AddChild(heroTitle);
 
 		var heroCenter = new CenterContainer
 		{
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
-		root.AddChild(heroCenter);
+		content.AddChild(heroCenter);
 
 		var heroRow = new HBoxContainer();
 		heroRow.AddThemeConstantOverride("separation", 16);
@@ -175,19 +186,20 @@ public partial class HeroSelect : CanvasLayer
 		foreach (HeroId id in System.Enum.GetValues(typeof(HeroId)))
 			heroRow.AddChild(MakeCard(id));
 
-		var nextCenter = new CenterContainer
-		{
-			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-		};
-		root.AddChild(nextCenter);
-
 		var nextBtn = new Button
 		{
 			Text = I18n.T("ui.char_create.next"),
-			CustomMinimumSize = new Vector2(220, 44),
+			AnchorLeft = 0.5f,
+			AnchorRight = 0.5f,
+			AnchorTop = 1f,
+			AnchorBottom = 1f,
+			OffsetLeft = -110,
+			OffsetRight = 110,
+			OffsetTop = -56,
+			OffsetBottom = -12,
 		};
 		nextBtn.Pressed += TryAdvanceToMapSelect;
-		nextCenter.AddChild(nextBtn);
+		root.AddChild(nextBtn);
 
 		CallDeferred(MethodName.FocusNameEdit);
 	}
@@ -225,10 +237,7 @@ public partial class HeroSelect : CanvasLayer
 
 		var heroId = _draftHero.Value;
 		if (Game.Instance.StarterHero == null)
-		{
-			// 首局：选定即记为起始英雄
 			Game.Instance.ChooseStarter(heroId);
-		}
 		else if (!Game.Instance.IsHeroUnlocked(heroId))
 		{
 			if (_nameError != null)
@@ -245,8 +254,19 @@ public partial class HeroSelect : CanvasLayer
 		Rebuild();
 	}
 
-	private void BuildSelectMap(VBoxContainer root)
+	private void BuildSelectMap(Control root)
 	{
+		var content = new VBoxContainer();
+		content.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		content.OffsetLeft = 40;
+		content.OffsetRight = -40;
+		content.OffsetTop = 24;
+		content.OffsetBottom = -72;
+		content.Alignment = BoxContainer.AlignmentMode.Center;
+		content.AddThemeConstantOverride("separation", 14);
+		content.MouseFilter = Control.MouseFilterEnum.Ignore;
+		root.AddChild(content);
+
 		var title = new Label
 		{
 			Text = I18n.T("ui.map_select.title"),
@@ -255,7 +275,7 @@ public partial class HeroSelect : CanvasLayer
 		};
 		title.AddThemeColorOverride("font_color", Colors.White);
 		title.AddThemeFontSizeOverride("font_size", 28);
-		root.AddChild(title);
+		content.AddChild(title);
 
 		string heroName = I18n.HeroName(Game.Instance.SelectedHero);
 		var summary = new Label
@@ -265,7 +285,7 @@ public partial class HeroSelect : CanvasLayer
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
 		summary.AddThemeColorOverride("font_color", new Color(0.9f, 0.85f, 0.55f));
-		root.AddChild(summary);
+		content.AddChild(summary);
 
 		var hint = new Label
 		{
@@ -273,48 +293,13 @@ public partial class HeroSelect : CanvasLayer
 			HorizontalAlignment = HorizontalAlignment.Center,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
-		root.AddChild(hint);
+		content.AddChild(hint);
 
-		BuildMapSection(root);
-
-		var actions = new CenterContainer
-		{
-			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-		};
-		root.AddChild(actions);
-
-		var row = new HBoxContainer();
-		row.AddThemeConstantOverride("separation", 16);
-		actions.AddChild(row);
-
-		var backBtn = new Button
-		{
-			Text = I18n.T("ui.map_select.back"),
-			CustomMinimumSize = new Vector2(160, 44),
-		};
-		backBtn.Pressed += () =>
-		{
-			_step = Step.CreateCharacter;
-			Rebuild();
-		};
-		row.AddChild(backBtn);
-
-		var startBtn = new Button
-		{
-			Text = I18n.T("ui.map_select.start"),
-			CustomMinimumSize = new Vector2(220, 44),
-		};
-		startBtn.Pressed += () => EmitSignal(SignalName.HeroPicked, (int)Game.Instance.SelectedHero);
-		row.AddChild(startBtn);
-	}
-
-	private void BuildMapSection(VBoxContainer root)
-	{
 		var mapCenter = new CenterContainer
 		{
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
-		root.AddChild(mapCenter);
+		content.AddChild(mapCenter);
 
 		var mapRow = new HBoxContainer();
 		mapRow.AddThemeConstantOverride("separation", 12);
@@ -322,6 +307,40 @@ public partial class HeroSelect : CanvasLayer
 
 		foreach (MapId mapId in MapCatalog.All)
 			mapRow.AddChild(MakeMapCard(mapId));
+
+		var backBtn = new Button
+		{
+			Text = I18n.T("ui.map_select.back"),
+			AnchorLeft = 0.5f,
+			AnchorRight = 0.5f,
+			AnchorTop = 1f,
+			AnchorBottom = 1f,
+			OffsetLeft = -200,
+			OffsetRight = -20,
+			OffsetTop = -56,
+			OffsetBottom = -12,
+		};
+		backBtn.Pressed += () =>
+		{
+			_step = Step.CreateCharacter;
+			Rebuild();
+		};
+		root.AddChild(backBtn);
+
+		var startBtn = new Button
+		{
+			Text = I18n.T("ui.map_select.start"),
+			AnchorLeft = 0.5f,
+			AnchorRight = 0.5f,
+			AnchorTop = 1f,
+			AnchorBottom = 1f,
+			OffsetLeft = 20,
+			OffsetRight = 200,
+			OffsetTop = -56,
+			OffsetBottom = -12,
+		};
+		startBtn.Pressed += () => EmitSignal(SignalName.HeroPicked, (int)Game.Instance.SelectedHero);
+		root.AddChild(startBtn);
 	}
 
 	private Control MakeMapCard(MapId id)
@@ -401,7 +420,7 @@ public partial class HeroSelect : CanvasLayer
 		int cost = Game.Instance.UnlockCost(id);
 
 		var panel = new PanelContainer();
-		panel.CustomMinimumSize = new Vector2(220, 300);
+		panel.CustomMinimumSize = new Vector2(210, 250);
 		var style = new StyleBoxFlat
 		{
 			BgColor = selected
@@ -414,8 +433,8 @@ public partial class HeroSelect : CanvasLayer
 			BorderWidthBottom = selected ? 3 : 1,
 			ContentMarginLeft = 10,
 			ContentMarginRight = 10,
-			ContentMarginTop = 10,
-			ContentMarginBottom = 10,
+			ContentMarginTop = 8,
+			ContentMarginBottom = 8,
 			CornerRadiusTopLeft = 6,
 			CornerRadiusTopRight = 6,
 			CornerRadiusBottomLeft = 6,
@@ -425,7 +444,7 @@ public partial class HeroSelect : CanvasLayer
 
 		var box = new VBoxContainer();
 		box.Alignment = BoxContainer.AlignmentMode.Center;
-		box.AddThemeConstantOverride("separation", 8);
+		box.AddThemeConstantOverride("separation", 6);
 		panel.AddChild(box);
 
 		string name = I18n.HeroName(id);
@@ -444,7 +463,7 @@ public partial class HeroSelect : CanvasLayer
 				Texture = GD.Load<Texture2D>(path),
 				ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
 				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-				CustomMinimumSize = new Vector2(96, 96),
+				CustomMinimumSize = new Vector2(80, 80),
 				SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
 			};
 			box.AddChild(tex);
@@ -455,7 +474,7 @@ public partial class HeroSelect : CanvasLayer
 			Text = $"{name}\n\n{desc}",
 			HorizontalAlignment = HorizontalAlignment.Center,
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
-			CustomMinimumSize = new Vector2(200, 100),
+			CustomMinimumSize = new Vector2(190, 80),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
 		box.AddChild(lbl);

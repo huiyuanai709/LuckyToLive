@@ -64,19 +64,19 @@ public partial class Hud : CanvasLayer
 		GoalLabel = new Label { Position = new Vector2(16, 72), Text = I18n.T("ui.hud.goal") };
 		root.AddChild(GoalLabel);
 
-		MapLabel = new Label
-		{
-			Position = new Vector2(16, 96),
-			Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island)),
-		};
-		root.AddChild(MapLabel);
-
 		CharacterLabel = new Label
 		{
-			Position = new Vector2(16, 120),
+			Position = new Vector2(16, 96),
 			Text = FormatCharacterLabel(),
 		};
 		root.AddChild(CharacterLabel);
+
+		MapLabel = new Label
+		{
+			Position = new Vector2(16, 120),
+			Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island)),
+		};
+		root.AddChild(MapLabel);
 
 		MsgLabel = new Label { Position = new Vector2(16, 540) };
 		root.AddChild(MsgLabel);
