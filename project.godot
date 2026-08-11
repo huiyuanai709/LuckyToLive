@@ -29,6 +29,11 @@ GodotxLabelUp="*uid://c5ckokjmesj66"
 window/size/viewport_width=1280
 window/size/viewport_height=720
 
+[gui]
+
+; Web has no system-font fallback; bundle a CJK-capable default so zh_CN is readable.
+theme/custom_font="res://assets/fonts/NotoSansSC-Game.ttf"
+
 [dotnet]
 
 project/assembly_name="TDProject"

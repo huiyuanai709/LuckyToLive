@@ -6,6 +6,8 @@
 
 选英雄界面与局内 HUD 右上角可切换 **中文 / English**；偏好写入本地存档 `user://save.cfg` 的 `settings.locale`。文案表见 `assets/i18n/translations.csv`（Godot TranslationServer）。
 
+Web 导出没有系统字体回退，因此项目默认 UI 字体为 `assets/fonts/NotoSansSC-Game.ttf`（Noto Sans SC 子集，含中英）。若新增大量中文文案后出现缺字，用同目录 `regen_subset.py` 从完整 OTF 重新生成子集。
+
 ## 如何运行
 
 ### 依赖
