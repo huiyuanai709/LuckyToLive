@@ -23,8 +23,13 @@ public partial class Hero : CharacterBody2D
 	public float Lifesteal;
 	/// <summary>连杀狂热伤害倍率（英雄武器）。</summary>
 	public float DamageMul = 1f;
+	/// <summary>局外升级带来的初始攻击倍率。</summary>
+	public float MetaDamageMul = 1f;
 	/// <summary>建筑光环伤害倍率（如堡垒之誓战旗），每帧由建筑刷新。</summary>
 	public float AuraDamageMul = 1f;
+	/// <summary>已解锁的局外技能冷却剩余（按技能 Id）。</summary>
+	private readonly Dictionary<string, float> _skillCds = new();
+	private readonly List<MetaSkillDef> _metaSkills = new();
 	/// <summary>血疾：击杀额外回血。</summary>
 	public float KillHealOnKill;
 	/// <summary>血疾：连杀阈值各档 -N。</summary>
@@ -89,8 +94,33 @@ public partial class Hero : CharacterBody2D
 			case HeroId.Hunter: MaxHp = 100; MoveSpeed = 195; break;
 		}
 		Hp = MaxHp;
+		int metaLv = Game.Instance?.GetHeroMetaLevel(id) ?? 1;
+		MetaDamageMul = Game.Instance?.GetMetaAttackMul(id)
+			?? MetaSkillCatalog.AttackMulForLevel(metaLv);
+		_metaSkills.Clear();
+		_skillCds.Clear();
+		foreach (var sk in MetaSkillCatalog.UnlockedFor(id, metaLv))
+		{
+			_metaSkills.Add(sk);
+			_skillCds[sk.Id] = 0f;
+		}
 		RefreshNamePlate();
 		ApplySprite();
+	}
+
+	public IReadOnlyList<MetaSkillDef> UnlockedMetaSkills => _metaSkills;
+
+	/// <summary>返回技能冷却剩余；未解锁返回 -1。</summary>
+	public float GetSkillCooldownLeft(string skillId)
+	{
+		if (!_skillCds.TryGetValue(skillId, out float cd)) return -1f;
+		return cd;
+	}
+
+	public float GetSkillCooldownLeft(int slot)
+	{
+		var sk = _metaSkills.Find(s => s.Slot == slot);
+		return sk == null ? -1f : GetSkillCooldownLeft(sk.Id);
 	}
 
 	/// <summary>头顶角色名：血条上方居中显示本局 CharacterName（_Draw + 捆绑 CJK 字体）。</summary>
@@ -218,7 +248,10 @@ public partial class Hero : CharacterBody2D
 	}
 
 	public float ScaleDamage(float baseDamage) =>
-		baseDamage * Mathf.Max(0.1f, DamageMul) * Mathf.Max(0.1f, AuraDamageMul);
+		baseDamage
+		* Mathf.Max(0.1f, DamageMul)
+		* Mathf.Max(0.1f, AuraDamageMul)
+		* Mathf.Max(0.1f, MetaDamageMul);
 
 	public void OnDealtDamage(float amount)
 	{
@@ -271,8 +304,141 @@ public partial class Hero : CharacterBody2D
 		AcquireTarget();
 		TickWeapons(dt);
 		TickBeams(dt);
+		TickMetaSkills(dt);
 		TickAnim(dt, moving || _dashLeft > 0f);
 		if (_sprite?.SpriteFrames == null) QueueRedraw();
+	}
+
+	private void TickMetaSkills(float dt)
+	{
+		if (_metaSkills.Count == 0) return;
+		foreach (var sk in _metaSkills)
+		{
+			if (_skillCds.TryGetValue(sk.Id, out float cd) && cd > 0f)
+				_skillCds[sk.Id] = cd - dt;
+		}
+
+		if (PlayerInput.IsSkillJustPressed(0))
+			TryCastMetaSkill(0);
+		if (PlayerInput.IsSkillJustPressed(1))
+			TryCastMetaSkill(1);
+	}
+
+	public bool TryCastMetaSkill(int slot)
+	{
+		var sk = _metaSkills.Find(s => s.Slot == slot);
+		if (sk == null) return false;
+		if (_skillCds.TryGetValue(sk.Id, out float cd) && cd > 0f) return false;
+		if (!CastMetaSkill(sk)) return false;
+		_skillCds[sk.Id] = sk.Cooldown;
+		_anim?.PlayAttack(0.32f);
+		ProceduralSfx.Play("levelup", GlobalPosition, 0.12f);
+		return true;
+	}
+
+	private bool CastMetaSkill(MetaSkillDef sk)
+	{
+		return sk.Id switch
+		{
+			"sk_war_cry" => CastWarCry(),
+			"sk_iron_guard" => CastIronGuard(),
+			"sk_frost_nova" => CastFrostNova(),
+			"sk_arc_blink" => CastArcBlink(),
+			"sk_volley" => CastVolley(),
+			"sk_snare" => CastSnare(),
+			_ => false,
+		};
+	}
+
+	private void SpawnSkillFx(float radius, Color color)
+	{
+		var fx = new SkillBurstFx { Radius = radius, RingColor = color };
+		GetParent()?.AddChild(fx);
+		fx.GlobalPosition = GlobalPosition;
+	}
+
+	private bool CastWarCry()
+	{
+		const float radius = 95f;
+		float dmg = ScaleDamage(32f);
+		SpawnSkillFx(radius, new Color(1f, 0.55f, 0.25f));
+		CombatFx.Shake(6f, 0.14f);
+		DamageEnemiesInRadius(radius, dmg, knockback: 420f, slowFactor: 1f, slowDur: 0f);
+		return true;
+	}
+
+	private bool CastIronGuard()
+	{
+		_invulnLeft = Mathf.Max(_invulnLeft, 1.6f);
+		Heal(MaxHp * 0.18f, showFloat: true);
+		SpawnSkillFx(48f, new Color(0.75f, 0.85f, 1f));
+		CombatFx.Shake(4f, 0.1f);
+		return true;
+	}
+
+	private bool CastFrostNova()
+	{
+		const float radius = 105f;
+		float dmg = ScaleDamage(26f);
+		SpawnSkillFx(radius, new Color(0.45f, 0.75f, 1f));
+		CombatFx.Shake(5f, 0.12f);
+		DamageEnemiesInRadius(radius, dmg, knockback: 180f, slowFactor: 0.35f, slowDur: 2.2f);
+		return true;
+	}
+
+	private bool CastArcBlink()
+	{
+		Vector2 dir = _facing.LengthSquared() > 0.0001f ? _facing.Normalized() : Vector2.Right;
+		float dmg = ScaleDamage(22f);
+		GlobalPosition += dir * 130f;
+		_invulnLeft = Mathf.Max(_invulnLeft, 0.25f);
+		SpawnSkillFx(70f, new Color(0.7f, 0.45f, 1f));
+		DamageEnemiesInRadius(70f, dmg, knockback: 260f, slowFactor: 1f, slowDur: 0f);
+		CombatFx.Shake(5.5f, 0.12f);
+		return true;
+	}
+
+	private bool CastVolley()
+	{
+		Vector2 dir = _facing.LengthSquared() > 0.0001f ? _facing.Normalized() : Vector2.Right;
+		Vector2 center = GlobalPosition + dir * 70f;
+		const float radius = 85f;
+		float dmg = ScaleDamage(28f);
+		var fx = new SkillBurstFx { Radius = radius, RingColor = new Color(0.45f, 0.9f, 0.5f) };
+		GetParent()?.AddChild(fx);
+		fx.GlobalPosition = center;
+		CombatFx.Shake(5f, 0.12f);
+		DamageEnemiesInRadiusAt(center, radius, dmg, knockback: 200f, slowFactor: 1f, slowDur: 0f);
+		return true;
+	}
+
+	private bool CastSnare()
+	{
+		const float radius = 55f;
+		float dmg = ScaleDamage(24f);
+		SpawnSkillFx(radius, new Color(0.55f, 0.85f, 0.4f));
+		CombatFx.Shake(4.5f, 0.1f);
+		DamageEnemiesInRadius(radius, dmg, knockback: 80f, slowFactor: 0.25f, slowDur: 2.8f);
+		return true;
+	}
+
+	private void DamageEnemiesInRadius(float radius, float dmg, float knockback, float slowFactor, float slowDur) =>
+		DamageEnemiesInRadiusAt(GlobalPosition, radius, dmg, knockback, slowFactor, slowDur);
+
+	private void DamageEnemiesInRadiusAt(Vector2 center, float radius, float dmg, float knockback, float slowFactor, float slowDur)
+	{
+		foreach (var n in GetTree().GetNodesInGroup("enemies"))
+		{
+			if (n is not Enemy e || !IsInstanceValid(e)) continue;
+			Vector2 to = e.GlobalPosition - center;
+			if (to.Length() > radius + e.BodyRadius * 0.35f) continue;
+			Vector2 kb = to.LengthSquared() > 0.0001f ? to.Normalized() : _facing;
+			e.TakeDamage(dmg, kb, knockback * KnockbackMul);
+			OnDealtDamage(dmg);
+			if (slowDur > 0f && slowFactor < 1f)
+				e.ApplySlow(slowFactor, slowDur);
+			TryStagger(e);
+		}
 	}
 
 	private void TryStartDash(Vector2 input)

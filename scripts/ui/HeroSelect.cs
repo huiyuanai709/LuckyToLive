@@ -82,9 +82,9 @@ public partial class HeroSelect : CanvasLayer
 		content.OffsetLeft = 40;
 		content.OffsetRight = -40;
 		content.OffsetTop = 20;
-		content.OffsetBottom = -72; // 留给底部「下一步」
+		content.OffsetBottom = -64; // 留给底部「下一步」
 		content.Alignment = BoxContainer.AlignmentMode.Center;
-		content.AddThemeConstantOverride("separation", 12);
+		content.AddThemeConstantOverride("separation", 8);
 		content.MouseFilter = Control.MouseFilterEnum.Ignore;
 		root.AddChild(content);
 
@@ -325,6 +325,28 @@ public partial class HeroSelect : CanvasLayer
 		foreach (MapId mapId in MapCatalog.All)
 			mapRow.AddChild(MakeMapCard(mapId));
 
+		var diffTitle = new Label
+		{
+			Text = I18n.T("ui.diff.title"),
+			HorizontalAlignment = HorizontalAlignment.Center,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
+		diffTitle.AddThemeColorOverride("font_color", new Color(0.85f, 0.9f, 1f));
+		content.AddChild(diffTitle);
+
+		var diffCenter = new CenterContainer
+		{
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
+		content.AddChild(diffCenter);
+
+		var diffRow = new HBoxContainer();
+		diffRow.AddThemeConstantOverride("separation", 12);
+		diffCenter.AddChild(diffRow);
+
+		foreach (DifficultyId diff in System.Enum.GetValues(typeof(DifficultyId)))
+			diffRow.AddChild(MakeDiffCard(diff));
+
 		var backBtn = new Button
 		{
 			Text = I18n.T("ui.map_select.back"),
@@ -358,6 +380,79 @@ public partial class HeroSelect : CanvasLayer
 		};
 		startBtn.Pressed += () => EmitSignal(SignalName.HeroPicked, (int)Game.Instance.SelectedHero);
 		root.AddChild(startBtn);
+	}
+
+	private Control MakeDiffCard(DifficultyId id)
+	{
+		bool selected = Game.Instance.SelectedDifficulty == id;
+		var panel = new PanelContainer();
+		panel.CustomMinimumSize = new Vector2(200, 108);
+		Color accent = id switch
+		{
+			DifficultyId.Hard => new Color(0.95f, 0.65f, 0.25f),
+			DifficultyId.Nightmare => new Color(0.9f, 0.35f, 0.4f),
+			_ => new Color(0.45f, 0.8f, 0.55f),
+		};
+		var style = new StyleBoxFlat
+		{
+			BgColor = selected
+				? new Color(0.16f, 0.18f, 0.22f, 0.95f)
+				: new Color(0.12f, 0.14f, 0.18f, 0.95f),
+			BorderColor = selected ? accent : new Color(0.35f, 0.38f, 0.45f),
+			BorderWidthLeft = selected ? 3 : 1,
+			BorderWidthTop = selected ? 3 : 1,
+			BorderWidthRight = selected ? 3 : 1,
+			BorderWidthBottom = selected ? 3 : 1,
+			ContentMarginLeft = 10,
+			ContentMarginRight = 10,
+			ContentMarginTop = 8,
+			ContentMarginBottom = 8,
+			CornerRadiusTopLeft = 6,
+			CornerRadiusTopRight = 6,
+			CornerRadiusBottomLeft = 6,
+			CornerRadiusBottomRight = 6,
+		};
+		panel.AddThemeStyleboxOverride("panel", style);
+
+		var box = new VBoxContainer();
+		box.AddThemeConstantOverride("separation", 4);
+		box.Alignment = BoxContainer.AlignmentMode.Center;
+		panel.AddChild(box);
+
+		var name = new Label
+		{
+			Text = I18n.DifficultyName(id),
+			HorizontalAlignment = HorizontalAlignment.Center,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
+		name.AddThemeColorOverride("font_color", accent);
+		box.AddChild(name);
+
+		var desc = new Label
+		{
+			Text = I18n.DifficultyDesc(id),
+			AutowrapMode = TextServer.AutowrapMode.WordSmart,
+			HorizontalAlignment = HorizontalAlignment.Center,
+			CustomMinimumSize = new Vector2(180, 40),
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
+		desc.AddThemeColorOverride("font_color", new Color(0.8f, 0.82f, 0.88f));
+		box.AddChild(desc);
+
+		var btn = new Button
+		{
+			Text = selected ? I18n.T("ui.map_select.selected") : I18n.T("ui.map_select.pick"),
+			Disabled = selected,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
+		btn.Pressed += () =>
+		{
+			Game.Instance.SelectedDifficulty = id;
+			Game.Instance.Save();
+			Rebuild();
+		};
+		box.AddChild(btn);
+		return panel;
 	}
 
 	private Control MakeMapCard(MapId id)
@@ -435,9 +530,13 @@ public partial class HeroSelect : CanvasLayer
 		bool firstPick = Game.Instance.StarterHero == null;
 		bool selected = _draftHero == id;
 		int cost = Game.Instance.UnlockCost(id);
+		int metaLv = Game.Instance.GetHeroMetaLevel(id);
+		float atkMul = Game.Instance.GetMetaAttackMul(id);
+		int upCost = Game.Instance.MetaUpgradeCost(id);
+		bool maxed = metaLv >= MetaSkillCatalog.MaxMetaLevel;
 
 		var panel = new PanelContainer();
-		panel.CustomMinimumSize = new Vector2(210, 250);
+		panel.CustomMinimumSize = new Vector2(210, 300);
 		var style = new StyleBoxFlat
 		{
 			BgColor = selected
@@ -461,7 +560,7 @@ public partial class HeroSelect : CanvasLayer
 
 		var box = new VBoxContainer();
 		box.Alignment = BoxContainer.AlignmentMode.Center;
-		box.AddThemeConstantOverride("separation", 6);
+		box.AddThemeConstantOverride("separation", 5);
 		panel.AddChild(box);
 
 		string name = I18n.HeroName(id);
@@ -480,7 +579,7 @@ public partial class HeroSelect : CanvasLayer
 				Texture = GD.Load<Texture2D>(path),
 				ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
 				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-				CustomMinimumSize = new Vector2(80, 80),
+				CustomMinimumSize = new Vector2(72, 72),
 				SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
 			};
 			box.AddChild(tex);
@@ -488,13 +587,44 @@ public partial class HeroSelect : CanvasLayer
 
 		var lbl = new Label
 		{
-			Text = $"{name}\n\n{desc}",
+			Text = $"{name}\n{desc}",
 			HorizontalAlignment = HorizontalAlignment.Center,
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
-			CustomMinimumSize = new Vector2(190, 80),
+			CustomMinimumSize = new Vector2(200, 56),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
 		box.AddChild(lbl);
+
+		var metaLbl = new Label
+		{
+			Text = I18n.T("ui.meta.level_atk", metaLv, $"{atkMul:0.00}"),
+			HorizontalAlignment = HorizontalAlignment.Center,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
+		metaLbl.AddThemeColorOverride("font_color", new Color(0.95f, 0.82f, 0.45f));
+		box.AddChild(metaLbl);
+
+		var skillBits = new System.Text.StringBuilder();
+		foreach (var sk in MetaSkillCatalog.ForHero(id))
+		{
+			bool open = metaLv >= sk.UnlockLevel;
+			string skName = I18n.SkillName(sk.Id);
+			if (skillBits.Length > 0) skillBits.Append('\n');
+			skillBits.Append(open
+				? I18n.T("ui.meta.skill_unlocked", skName)
+				: I18n.T("ui.meta.skill_locked", sk.UnlockLevel, skName));
+		}
+		var skillLbl = new Label
+		{
+			Text = skillBits.ToString(),
+			HorizontalAlignment = HorizontalAlignment.Center,
+			AutowrapMode = TextServer.AutowrapMode.WordSmart,
+			CustomMinimumSize = new Vector2(200, 36),
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
+		skillLbl.AddThemeColorOverride("font_color", new Color(0.75f, 0.8f, 0.9f));
+		skillLbl.AddThemeFontSizeOverride("font_size", 12);
+		box.AddChild(skillLbl);
 
 		var btn = new Button();
 		btn.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
@@ -527,6 +657,32 @@ public partial class HeroSelect : CanvasLayer
 			};
 		}
 		box.AddChild(btn);
+
+		if (!firstPick && unlocked)
+		{
+			var upBtn = new Button
+			{
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+			if (maxed)
+			{
+				upBtn.Text = I18n.T("ui.meta.max_level");
+				upBtn.Disabled = true;
+			}
+			else
+			{
+				upBtn.Text = I18n.T("ui.meta.upgrade", upCost);
+				upBtn.Pressed += () =>
+				{
+					if (Game.Instance.TryUpgradeHero(id))
+						Rebuild();
+					else
+						upBtn.Text = I18n.T("ui.hero_select.not_enough");
+				};
+			}
+			box.AddChild(upBtn);
+		}
+
 		return panel;
 	}
 }

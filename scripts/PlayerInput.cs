@@ -1,7 +1,7 @@
 using Godot;
 
 /// <summary>
-/// 统一读取移动 / 冲刺：键盘 WASD、手柄、触屏虚拟摇杆。
+/// 统一读取移动 / 冲刺 / 技能：键盘 WASD、手柄、触屏虚拟摇杆。
 /// </summary>
 public static class PlayerInput
 {
@@ -18,4 +18,12 @@ public static class PlayerInput
 	public static bool IsDashJustPressed() =>
 		Input.IsActionJustPressed("dash")
 		|| (VirtualControls.Instance?.ConsumeDash() ?? false);
+
+	public static bool IsSkillJustPressed(int slot)
+	{
+		string action = slot == 0 ? "skill_1" : "skill_2";
+		if (Input.IsActionJustPressed(action))
+			return true;
+		return VirtualControls.Instance?.ConsumeSkill(slot) ?? false;
+	}
 }

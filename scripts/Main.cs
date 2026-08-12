@@ -190,10 +190,12 @@ public partial class Main : Node2D
 		AddChild(_hud);
 		AddChild(new VirtualControls());
 		_hud.AdPressed += OnAdPressed;
+		_hud.BindHero(_hero);
 		_hud.RefreshSlots(_hero.Loadout);
 		_hud.SetXp(_hero.Level, _hero.Xp, _hero.XpToNext());
 		_hud.SetTime(_timeLeft);
 		_hud.SetEliteProgress(_spawner.KillProgress, _spawner.KillThreshold);
+		_hud.RefreshSkills(_hero);
 		if (I18n.Instance != null)
 			I18n.Instance.LocaleChanged += OnLocaleChanged;
 
@@ -606,6 +608,7 @@ public partial class Main : Node2D
 		string rank = score >= 600 ? "S" : score >= 400 ? "A" : score >= 220 ? "B" : "C";
 		int gain = rank switch { "S" => 4, "A" => 3, "B" => 2, _ => 1 };
 		if (!victory) gain = Mathf.Max(1, gain - 1);
+		gain = Mathf.Max(1, Mathf.RoundToInt(gain * Game.Instance.DiffRewardMul));
 		Game.Instance.AddMetaFromScore(gain);
 
 		var result = new ResultScreen();

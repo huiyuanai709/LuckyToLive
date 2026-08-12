@@ -56,8 +56,9 @@ public partial class SpawnDirector : Node
 		if (_basicSuppressLeft > 0f) _basicSuppressLeft -= dt;
 
 		// 后期加密度，但不再在最后一分钟陡增到刷怪爆炸
-		_density = 1f + Elapsed / 60f * 0.75f;
-		if (Elapsed > 240f) _density += 0.55f;
+		float diffSpawn = Game.Instance?.DiffSpawnMul ?? 1f;
+		_density = (1f + Elapsed / 60f * 0.75f) * diffSpawn;
+		if (Elapsed > 240f) _density += 0.55f * diffSpawn;
 
 		bool suppressBasic = _basicSuppressLeft > 0f
 			|| (_activeBoss != null && IsInstanceValid(_activeBoss) && _activeBoss.BossId == "island_lord");
@@ -65,8 +66,9 @@ public partial class SpawnDirector : Node
 		_spawnCd -= dt;
 		if (_spawnCd <= 0)
 		{
-			// 地板 0.5s，避免软件渲染下敌人数把帧率打崩
-			_spawnCd = Mathf.Max(0.5f, 1.35f / _density);
+			// 地板随难度略降，噩梦最快约 0.32s
+			float floor = Mathf.Max(0.32f, 0.5f / Mathf.Sqrt(diffSpawn));
+			_spawnCd = Mathf.Max(floor, 1.35f / _density);
 			if (!suppressBasic && AliveEnemyCount() < MaxAliveEnemies)
 				SpawnBasic();
 		}

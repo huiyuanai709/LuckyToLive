@@ -10,6 +10,8 @@ public partial class Hud : CanvasLayer
 	public Label EliteProgressLabel;
 	public Label MapLabel;
 	public Label CharacterLabel;
+	public Label DiffLabel;
+	public Label SkillLabel;
 	public Label MsgLabel;
 	public Button AdButton;
 	public Button LangButton;
@@ -21,6 +23,7 @@ public partial class Hud : CanvasLayer
 	private const float BarH = 6f;
 	private int _eliteProg;
 	private int _eliteNeed = 14;
+	private Hero _heroRef;
 
 	[Signal] public delegate void AdPressedEventHandler();
 
@@ -77,6 +80,21 @@ public partial class Hud : CanvasLayer
 			Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island)),
 		};
 		root.AddChild(MapLabel);
+
+		DiffLabel = new Label
+		{
+			Position = new Vector2(16, 144),
+			Text = I18n.T("ui.hud.diff", I18n.DifficultyName(Game.Instance?.SelectedDifficulty ?? DifficultyId.Normal)),
+		};
+		root.AddChild(DiffLabel);
+
+		SkillLabel = new Label
+		{
+			Position = new Vector2(16, 168),
+			Text = "",
+		};
+		SkillLabel.AddThemeColorOverride("font_color", new Color(0.9f, 0.85f, 0.55f));
+		root.AddChild(SkillLabel);
 
 		MsgLabel = new Label { Position = new Vector2(16, 540) };
 		root.AddChild(MsgLabel);
@@ -140,8 +158,11 @@ public partial class Hud : CanvasLayer
 		SetEliteProgress(_eliteProg, _eliteNeed);
 		if (MapLabel != null)
 			MapLabel.Text = I18n.T("ui.hud.map", I18n.MapName(Game.Instance?.SelectedMap ?? MapId.Island));
+		if (DiffLabel != null)
+			DiffLabel.Text = I18n.T("ui.hud.diff", I18n.DifficultyName(Game.Instance?.SelectedDifficulty ?? DifficultyId.Normal));
 		if (CharacterLabel != null)
 			CharacterLabel.Text = FormatCharacterLabel();
+		RefreshSkills(_heroRef);
 		if (Game.Instance != null)
 		{
 			AdButton.Text = Game.Instance.AdSlotsUnlocked >= Game.MaxAdSlots
@@ -156,7 +177,35 @@ public partial class Hud : CanvasLayer
 		string name = Game.Instance?.CharacterName;
 		if (string.IsNullOrWhiteSpace(name))
 			name = I18n.HeroName(Game.Instance?.SelectedHero ?? HeroId.Hunter);
-		return I18n.T("ui.hud.character", name, I18n.HeroName(Game.Instance?.SelectedHero ?? HeroId.Hunter));
+		int lv = Game.Instance?.GetHeroMetaLevel(Game.Instance?.SelectedHero ?? HeroId.Hunter) ?? 1;
+		return I18n.T("ui.hud.character_meta", name, I18n.HeroName(Game.Instance?.SelectedHero ?? HeroId.Hunter), lv);
+	}
+
+	public void BindHero(Hero hero) => _heroRef = hero;
+
+	public void RefreshSkills(Hero hero)
+	{
+		_heroRef = hero;
+		if (SkillLabel == null) return;
+		if (hero == null || hero.UnlockedMetaSkills.Count == 0)
+		{
+			SkillLabel.Text = I18n.T("ui.hud.skill_none");
+			return;
+		}
+
+		var parts = new System.Text.StringBuilder();
+		foreach (var sk in hero.UnlockedMetaSkills)
+		{
+			float left = hero.GetSkillCooldownLeft(sk.Id);
+			string keyHint = sk.Slot == 0 ? "Q" : "E";
+			string name = I18n.SkillName(sk.Id);
+			if (parts.Length > 0) parts.Append("  ·  ");
+			if (left <= 0.05f)
+				parts.Append(I18n.T("ui.hud.skill_ready", keyHint, name));
+			else
+				parts.Append(I18n.T("ui.hud.skill_cd", keyHint, name, $"{left:0.0}"));
+		}
+		SkillLabel.Text = parts.ToString();
 	}
 
 	/// <summary>局内倒计时，显示在精英进度条右侧。</summary>
@@ -164,6 +213,7 @@ public partial class Hud : CanvasLayer
 	{
 		int sec = Mathf.Max(0, Mathf.CeilToInt(remaining));
 		TimeLabel.Text = $"{sec / 60}:{sec % 60:00}";
+		RefreshSkills(_heroRef);
 	}
 
 	public void SetXp(int level, float xp, float need)
