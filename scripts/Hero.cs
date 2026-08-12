@@ -477,12 +477,14 @@ public partial class Hero : CharacterBody2D
 		var font = ResolveUiFont();
 		if (font != null && !string.IsNullOrEmpty(_displayName))
 		{
+			// width=-1 时 HorizontalAlignment.Center 无效，pos 是基线左端；按字宽手动相对角色原点居中。
 			const int nameSize = 13;
-			var namePos = new Vector2(0, -48);
+			float nameW = font.GetStringSize(_displayName, HorizontalAlignment.Left, -1, nameSize).X;
+			var namePos = new Vector2(-nameW * 0.5f, -48);
 			var fill = new Color(1f, 0.95f, 0.75f, 0.95f);
 			var outline = new Color(0.08f, 0.08f, 0.1f, 0.9f);
-			DrawStringOutline(font, namePos, _displayName, HorizontalAlignment.Center, -1, nameSize, 3, outline);
-			DrawString(font, namePos, _displayName, HorizontalAlignment.Center, -1, nameSize, fill);
+			DrawStringOutline(font, namePos, _displayName, HorizontalAlignment.Left, -1, nameSize, 3, outline);
+			DrawString(font, namePos, _displayName, HorizontalAlignment.Left, -1, nameSize, fill);
 		}
 
 		float w = 28f;
