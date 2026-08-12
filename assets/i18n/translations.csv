@@ -2,14 +2,14 @@ keys,en,zh_CN
 ui.hero_select.title_starter,Choose your starter hero (free forever),选择你的初始英雄（永久免费）
 ui.hero_select.title_play,Choose your hero,选择出战英雄
 ui.hero_select.currency,Meta currency: {0},元进度货币: {0}
-ui.hero_select.hint,"WASD / gamepad move · Space / A dash · Touch joystick on mobile · Auto-attack · Survive 5 minutes","WASD / 手柄移动 · 空格 / A 冲刺 · 手机虚拟摇杆 · 自动攻击 · 撑满 5 分钟通关"
+ui.hero_select.hint,"WASD move · Space dash · Q/E skills · Auto-attack · Survive 5 minutes","WASD 移动 · 空格冲刺 · Q/E 技能 · 自动攻击 · 撑满 5 分钟通关"
 ui.hero_select.pick,Select {0},选择 {0}
 ui.hero_select.play,Play as {0},出战 {0}
 ui.hero_select.unlock,Unlock ({0} currency),解锁 ({0} 货币)
 ui.hero_select.not_enough,Not enough currency,货币不足
 ui.hero_select.lang,Language: {0},语言: {0}
 ui.char_create.title,Create Character,创建角色
-ui.char_create.hint,Name your hero · pick a class · then choose a map,先输入角色名并选择英雄 · 再进入关卡选择
+ui.char_create.hint,Name your hero · pick a class · upgrade · then choose map and difficulty,先命名并选英雄 · 可局外升级 · 再选关卡与难度
 ui.char_create.name_label,Character Name,角色名
 ui.char_create.name_placeholder,Enter a name,请输入角色名
 ui.char_create.name_required,Please enter a character name,请先输入角色名
@@ -19,12 +19,41 @@ ui.char_create.pick,Select {0},选择 {0}
 ui.char_create.selected,Selected {0},已选 {0}
 ui.char_create.next,Next,下一步
 ui.map_select.title,Choose a level,选择关卡
-ui.map_select.hint,Select a level · then enter the run,选择关卡后进入本局
+ui.map_select.hint,Select a level and difficulty · then enter the run,选择关卡与难度后进入本局
 ui.map_select.character,{0} · {1},{0} · {1}
 ui.map_select.pick,Select,选择
 ui.map_select.selected,Selected,已选
 ui.map_select.back,Back,返回
 ui.map_select.start,Enter,进入
+ui.diff.title,Choose difficulty,选择难度
+diff.normal.name,Normal,普通
+diff.normal.desc,Standard spawn · HP · damage,标准刷怪 · 生命 · 伤害
+diff.hard.name,Hard,困难
+diff.hard.desc,Faster spawns · +HP/ATK · +50% currency,刷怪加快 · 怪更强 · 货币+50%
+diff.nightmare.name,Nightmare,噩梦
+diff.nightmare.desc,Dense spawns · much stronger · +100% currency,刷怪更密 · 大幅加强 · 货币翻倍
+ui.meta.level_atk,Meta Lv{0}  ATK x{1},局外 Lv{0}  攻击 x{1}
+ui.meta.upgrade,Upgrade ({0}),升级 ({0})
+ui.meta.max_level,Max level,已满级
+ui.meta.skill_unlocked,Unlocked: {0},已解锁：{0}
+ui.meta.skill_locked,Lv{0}: {1},Lv{0}：{1}
+ui.hud.diff,Difficulty: {0},难度: {0}
+ui.hud.character_meta,{0} ({1}) Meta Lv{2},{0}（{1}）局外 Lv{2}
+ui.hud.skill_none,Skills: unlock at meta Lv3 / Lv6,技能：局外升到 Lv3 / Lv6 解锁
+ui.hud.skill_ready,{0} {1} ready,{0} {1} 就绪
+ui.hud.skill_cd,{0} {1} {2}s,{0} {1} {2}秒
+skill.sk_war_cry.name,War Cry,怒吼
+skill.sk_war_cry.desc,AoE damage and knockback around you,对周围敌人造成伤害并击退
+skill.sk_iron_guard.name,Iron Guard,铁壁
+skill.sk_iron_guard.desc,Brief invulnerability and heal,短暂无敌并回复生命
+skill.sk_frost_nova.name,Frost Nova,霜环
+skill.sk_frost_nova.desc,AoE frost damage and heavy slow,环状冰伤并大幅减速
+skill.sk_arc_blink.name,Arc Blink,奥术闪现
+skill.sk_arc_blink.desc,Blink forward and damage on landing,向前闪现并在落点造成伤害
+skill.sk_volley.name,Arrow Rain,箭雨
+skill.sk_volley.desc,Damage in an area ahead,朝前方区域降下箭雨
+skill.sk_snare.name,Snare Trap,束缚陷阱
+skill.sk_snare.desc,Damage and root nearby foes,伤害并强力减速附近敌人
 map.island.name,Green Island,绿岛
 map.island.desc,Classic shores · goblins & elites,经典海岛 · 哥布林与精英
 map.apocalypse.name,Apocalypse,末日废土

@@ -8,6 +8,13 @@ public enum HeroId
 	Hunter = 2,
 }
 
+public enum DifficultyId
+{
+	Normal = 0,
+	Hard = 1,
+	Nightmare = 2,
+}
+
 /// <summary>全局元进度与本局共享状态。</summary>
 public partial class Game : Node
 {
@@ -22,8 +29,12 @@ public partial class Game : Node
 	public int MetaCurrency;
 	public HeroId SelectedHero = HeroId.Hunter;
 	public MapId SelectedMap = MapId.Island;
+	public DifficultyId SelectedDifficulty = DifficultyId.Normal;
 	/// <summary>本局角色名（创建角色时输入，暗黑式开局）。</summary>
 	public string CharacterName = "";
+
+	/// <summary>各英雄局外等级（从 1 起）。</summary>
+	public Dictionary<HeroId, int> HeroMetaLevels = new();
 
 	// 本局
 	public int AdSlotsUnlocked;
@@ -70,6 +81,7 @@ public partial class Game : Node
 		if (MetaCurrency < cost) return false;
 		MetaCurrency -= cost;
 		UnlockedHeroes.Add(id);
+		EnsureHeroLevel(id);
 		Save();
 		return true;
 	}
@@ -80,6 +92,7 @@ public partial class Game : Node
 		UnlockedHeroes.Clear();
 		UnlockedHeroes.Add(id);
 		SelectedHero = id;
+		EnsureHeroLevel(id);
 		Save();
 	}
 
@@ -90,6 +103,74 @@ public partial class Game : Node
 			CharacterName = CharacterName.Substring(0, 16);
 		Save();
 	}
+
+	public int GetHeroMetaLevel(HeroId id)
+	{
+		EnsureHeroLevel(id);
+		return HeroMetaLevels[id];
+	}
+
+	public float GetMetaAttackMul(HeroId id) =>
+		MetaSkillCatalog.AttackMulForLevel(GetHeroMetaLevel(id));
+
+	public int MetaUpgradeCost(HeroId id) =>
+		MetaSkillCatalog.UpgradeCost(GetHeroMetaLevel(id));
+
+	public bool CanUpgradeHero(HeroId id)
+	{
+		if (StarterHero != null && !IsHeroUnlocked(id)) return false;
+		int lv = GetHeroMetaLevel(id);
+		if (lv >= MetaSkillCatalog.MaxMetaLevel) return false;
+		return MetaCurrency >= MetaUpgradeCost(id);
+	}
+
+	public bool TryUpgradeHero(HeroId id)
+	{
+		if (StarterHero != null && !IsHeroUnlocked(id)) return false;
+		int lv = GetHeroMetaLevel(id);
+		if (lv >= MetaSkillCatalog.MaxMetaLevel) return false;
+		int cost = MetaUpgradeCost(id);
+		if (MetaCurrency < cost) return false;
+		MetaCurrency -= cost;
+		HeroMetaLevels[id] = lv + 1;
+		Save();
+		return true;
+	}
+
+	private void EnsureHeroLevel(HeroId id)
+	{
+		if (!HeroMetaLevels.ContainsKey(id))
+			HeroMetaLevels[id] = 1;
+	}
+
+	public float DiffSpawnMul => SelectedDifficulty switch
+	{
+		DifficultyId.Hard => 1.40f,
+		DifficultyId.Nightmare => 1.85f,
+		_ => 1f,
+	};
+
+	public float DiffHpMul => SelectedDifficulty switch
+	{
+		DifficultyId.Hard => 1.45f,
+		DifficultyId.Nightmare => 2.0f,
+		_ => 1f,
+	};
+
+	public float DiffAtkMul => SelectedDifficulty switch
+	{
+		DifficultyId.Hard => 1.30f,
+		DifficultyId.Nightmare => 1.65f,
+		_ => 1f,
+	};
+
+	/// <summary>结算货币倍率（困难/噩梦略增）。</summary>
+	public float DiffRewardMul => SelectedDifficulty switch
+	{
+		DifficultyId.Hard => 1.5f,
+		DifficultyId.Nightmare => 2.0f,
+		_ => 1f,
+	};
 
 	public void ResetRunStats()
 	{
@@ -133,9 +214,15 @@ public partial class Game : Node
 		cfg.SetValue("meta", "currency", MetaCurrency);
 		if (!string.IsNullOrEmpty(CharacterName))
 			cfg.SetValue("meta", "character_name", CharacterName);
+		cfg.SetValue("meta", "difficulty", (int)SelectedDifficulty);
 		var arr = new Godot.Collections.Array();
 		foreach (var h in UnlockedHeroes) arr.Add((int)h);
 		cfg.SetValue("meta", "unlocked", arr);
+
+		var levels = new Godot.Collections.Dictionary();
+		foreach (var kv in HeroMetaLevels)
+			levels[((int)kv.Key).ToString()] = kv.Value;
+		cfg.SetValue("meta", "hero_levels", levels);
 		cfg.Save(SavePath);
 	}
 
@@ -147,6 +234,7 @@ public partial class Game : Node
 			StarterHero = (HeroId)(int)cfg.GetValue("meta", "starter");
 		MetaCurrency = (int)cfg.GetValue("meta", "currency", 0);
 		CharacterName = (string)cfg.GetValue("meta", "character_name", "");
+		SelectedDifficulty = (DifficultyId)(int)cfg.GetValue("meta", "difficulty", (int)DifficultyId.Normal);
 		UnlockedHeroes.Clear();
 		if (cfg.HasSectionKey("meta", "unlocked"))
 		{
@@ -157,6 +245,20 @@ public partial class Game : Node
 		{
 			UnlockedHeroes.Add(StarterHero.Value);
 		}
+
+		HeroMetaLevels.Clear();
+		if (cfg.HasSectionKey("meta", "hero_levels"))
+		{
+			var levels = (Godot.Collections.Dictionary)cfg.GetValue("meta", "hero_levels");
+			foreach (Variant key in levels.Keys)
+			{
+				if (int.TryParse(key.AsString(), out int id))
+					HeroMetaLevels[(HeroId)id] = Mathf.Clamp((int)levels[key], 1, MetaSkillCatalog.MaxMetaLevel);
+			}
+		}
+		foreach (HeroId id in System.Enum.GetValues(typeof(HeroId)))
+			EnsureHeroLevel(id);
+
 		if (StarterHero != null) SelectedHero = StarterHero.Value;
 	}
 }

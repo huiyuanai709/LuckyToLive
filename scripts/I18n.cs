@@ -123,6 +123,34 @@ public partial class I18n : Node
 		_ => T("map.island.desc"),
 	};
 
+	public static string DifficultyName(DifficultyId id) => id switch
+	{
+		DifficultyId.Hard => T("diff.hard.name"),
+		DifficultyId.Nightmare => T("diff.nightmare.name"),
+		_ => T("diff.normal.name"),
+	};
+
+	public static string DifficultyDesc(DifficultyId id) => id switch
+	{
+		DifficultyId.Hard => T("diff.hard.desc"),
+		DifficultyId.Nightmare => T("diff.nightmare.desc"),
+		_ => T("diff.normal.desc"),
+	};
+
+	public static string SkillName(string skillId)
+	{
+		string key = $"skill.{skillId}.name";
+		string t = T(key);
+		return t == key ? skillId : t;
+	}
+
+	public static string SkillDesc(string skillId)
+	{
+		string key = $"skill.{skillId}.desc";
+		string t = T(key);
+		return t == key ? "" : t;
+	}
+
 	public static string KindLabel(CardKind kind) => kind switch
 	{
 		CardKind.Weapon => T("card.kind.weapon"),

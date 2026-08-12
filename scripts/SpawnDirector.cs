@@ -56,8 +56,9 @@ public partial class SpawnDirector : Node
 		if (_basicSuppressLeft > 0f) _basicSuppressLeft -= dt;
 
 		// 后期加密度，但不再在最后一分钟陡增到刷怪爆炸
-		_density = 1f + Elapsed / 60f * 0.75f;
-		if (Elapsed > 240f) _density += 0.55f;
+		float diffSpawn = Game.Instance?.DiffSpawnMul ?? 1f;
+		_density = (1f + Elapsed / 60f * 0.75f) * diffSpawn;
+		if (Elapsed > 240f) _density += 0.55f * diffSpawn;
 
 		bool suppressBasic = _basicSuppressLeft > 0f
 			|| (_activeBoss != null && IsInstanceValid(_activeBoss) && _activeBoss.BossId == "island_lord");
@@ -65,8 +66,9 @@ public partial class SpawnDirector : Node
 		_spawnCd -= dt;
 		if (_spawnCd <= 0)
 		{
-			// 地板 0.5s，避免软件渲染下敌人数把帧率打崩
-			_spawnCd = Mathf.Max(0.5f, 1.35f / _density);
+			// 地板随难度略降，噩梦最快约 0.32s
+			float floor = Mathf.Max(0.32f, 0.5f / Mathf.Sqrt(diffSpawn));
+			_spawnCd = Mathf.Max(floor, 1.35f / _density);
 			if (!suppressBasic && AliveEnemyCount() < MaxAliveEnemies)
 				SpawnBasic();
 		}
@@ -151,8 +153,9 @@ public partial class SpawnDirector : Node
 		var e = new Enemy();
 		World.AddChild(e);
 		e.GlobalPosition = EdgePoint();
-		float hpMul = 1f + Elapsed / 80f;
+		float hpMul = (1f + Elapsed / 80f) * (Game.Instance?.DiffHpMul ?? 1f);
 		e.ConfigureBasic(hpMul, 1f + Elapsed / 400f);
+		e.ContactDamage *= Game.Instance?.DiffAtkMul ?? 1f;
 		Wire(e);
 	}
 
@@ -162,7 +165,9 @@ public partial class SpawnDirector : Node
 		World.AddChild(e);
 		e.GlobalPosition = EdgePoint();
 		string affix = Affixes[_rng.RandiRange(0, Affixes.Length - 1)];
-		e.ConfigureElite(1f + Elapsed / 100f, affix);
+		float hpMul = (1f + Elapsed / 100f) * (Game.Instance?.DiffHpMul ?? 1f);
+		e.ConfigureElite(hpMul, affix);
+		e.ContactDamage *= Game.Instance?.DiffAtkMul ?? 1f;
 		Wire(e);
 		EmitSignal(SignalName.EliteSpawned, e);
 		return e;
@@ -176,8 +181,9 @@ public partial class SpawnDirector : Node
 		var e = new Enemy();
 		World.AddChild(e);
 		e.GlobalPosition = EdgePoint();
-		float hpMul = 1f + Elapsed / 120f;
+		float hpMul = (1f + Elapsed / 120f) * (Game.Instance?.DiffHpMul ?? 1f);
 		e.ConfigureBoss(bossId, hpMul);
+		e.ContactDamage *= Game.Instance?.DiffAtkMul ?? 1f;
 		_activeBoss = e;
 		Wire(e);
 		EmitSignal(SignalName.EliteSpawned, e);
