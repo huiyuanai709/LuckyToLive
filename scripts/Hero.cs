@@ -42,7 +42,7 @@ public partial class Hero : CharacterBody2D
 	private Enemy _target;
 	private AnimatedSprite2D _sprite;
 	private UnitSpriteAnim _anim;
-	private Label _namePlate;
+	private string _displayName = "";
 	private readonly Vector2 _spriteBaseScale = new(0.58f, 0.58f);
 	/// <summary>最后一次移动方向；站住时射线保持该朝向。</summary>
 	private Vector2 _facing = Vector2.Right;
@@ -73,7 +73,7 @@ public partial class Hero : CharacterBody2D
 		};
 		AddChild(_sprite);
 		_anim = new UnitSpriteAnim(_sprite, _spriteBaseScale);
-		EnsureNamePlate();
+		RefreshNamePlate();
 		ApplySprite();
 		EmitSignal(SignalName.HpChanged, Hp, MaxHp);
 		EmitSignal(SignalName.XpChanged, Level, Xp, XpToNext());
@@ -93,36 +93,22 @@ public partial class Hero : CharacterBody2D
 		ApplySprite();
 	}
 
-	/// <summary>头顶角色名：血条上方居中显示本局 CharacterName。</summary>
-	private void EnsureNamePlate()
-	{
-		if (_namePlate != null && GodotObject.IsInstanceValid(_namePlate))
-			return;
-		_namePlate = new Label
-		{
-			HorizontalAlignment = HorizontalAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Center,
-			MouseFilter = Control.MouseFilterEnum.Ignore,
-			// 世界坐标下的 Control：以英雄原点为锚，宽度对称便于居中
-			Position = new Vector2(-72, -58),
-			Size = new Vector2(144, 18),
-		};
-		_namePlate.AddThemeColorOverride("font_color", new Color(1f, 0.95f, 0.75f, 0.95f));
-		_namePlate.AddThemeColorOverride("font_outline_color", new Color(0.08f, 0.08f, 0.1f, 0.9f));
-		_namePlate.AddThemeConstantOverride("outline_size", 3);
-		_namePlate.AddThemeFontSizeOverride("font_size", 13);
-		AddChild(_namePlate);
-		RefreshNamePlate();
-	}
-
+	/// <summary>头顶角色名：血条上方居中显示本局 CharacterName（_Draw + 捆绑 CJK 字体）。</summary>
 	public void RefreshNamePlate()
 	{
-		EnsureNamePlate();
 		string name = Game.Instance?.CharacterName;
 		if (string.IsNullOrWhiteSpace(name))
 			name = I18n.HeroName(HeroType);
-		_namePlate.Text = name;
-		_namePlate.Visible = !string.IsNullOrWhiteSpace(name);
+		_displayName = name ?? "";
+		QueueRedraw();
+	}
+
+	private Font ResolveUiFont()
+	{
+		if (ThemeDB.FallbackFont != null)
+			return ThemeDB.FallbackFont;
+		const string fontPath = "res://assets/fonts/NotoSansSC-Game.ttf";
+		return ResourceLoader.Exists(fontPath) ? ResourceLoader.Load<Font>(fontPath) : null;
 	}
 
 	private void ApplySprite()
@@ -487,6 +473,18 @@ public partial class Hero : CharacterBody2D
 			DrawCircle(new Vector2(0, -6), 16, body);
 			DrawCircle(new Vector2(0, 10), 12, body.Darkened(0.15f));
 		}
+
+		var font = ResolveUiFont();
+		if (font != null && !string.IsNullOrEmpty(_displayName))
+		{
+			const int nameSize = 13;
+			var namePos = new Vector2(0, -48);
+			var fill = new Color(1f, 0.95f, 0.75f, 0.95f);
+			var outline = new Color(0.08f, 0.08f, 0.1f, 0.9f);
+			DrawStringOutline(font, namePos, _displayName, HorizontalAlignment.Center, -1, nameSize, 3, outline);
+			DrawString(font, namePos, _displayName, HorizontalAlignment.Center, -1, nameSize, fill);
+		}
+
 		float w = 28f;
 		DrawRect(new Rect2(-w / 2, -34, w, 4), new Color(0.2f, 0, 0));
 		DrawRect(new Rect2(-w / 2, -34, w * (Hp / MaxHp), 4), new Color(0.2f, 0.9f, 0.3f));

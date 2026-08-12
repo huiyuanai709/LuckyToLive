@@ -11,20 +11,41 @@ public partial class ResultScreen : CanvasLayer
 	{
 		ProcessMode = ProcessModeEnum.Always;
 		Layer = 100;
+
+		// 先挂全屏根 Control，保证 CenterContainer 的锚点相对视口生效（与 CardPopup 一致）。
+		var root = new Control();
+		root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		root.MouseFilter = Control.MouseFilterEnum.Ignore;
+		AddChild(root);
+
 		var dim = new ColorRect { Color = new Color(0, 0, 0, 0.7f) };
 		dim.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-		AddChild(dim);
+		root.AddChild(dim);
 
 		var center = new CenterContainer();
 		center.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-		AddChild(center);
+		root.AddChild(center);
 
 		var panel = new PanelContainer();
 		panel.CustomMinimumSize = new Vector2(420, 360);
+		var panelStyle = new StyleBoxFlat
+		{
+			BgColor = new Color(0.1f, 0.12f, 0.16f, 0.94f),
+			ContentMarginLeft = 24,
+			ContentMarginRight = 24,
+			ContentMarginTop = 20,
+			ContentMarginBottom = 20,
+			CornerRadiusTopLeft = 8,
+			CornerRadiusTopRight = 8,
+			CornerRadiusBottomLeft = 8,
+			CornerRadiusBottomRight = 8,
+		};
+		panel.AddThemeStyleboxOverride("panel", panelStyle);
 		center.AddChild(panel);
 
 		var v = new VBoxContainer();
 		v.Alignment = BoxContainer.AlignmentMode.Center;
+		v.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		v.AddThemeConstantOverride("separation", 10);
 		panel.AddChild(v);
 
