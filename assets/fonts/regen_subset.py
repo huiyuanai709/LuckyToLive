@@ -20,11 +20,30 @@ OUT = Path(__file__).resolve().parent / "NotoSansSC-Game.ttf"
 CHARSET = Path(__file__).resolve().parent / "charset.txt"
 
 
+def gb2312_level1() -> set[str]:
+	"""GB2312 level-1 hanzi (~3755). Covers typical player-typed Chinese names.
+
+	Web/WASM cannot fall back to OS CJK fonts, so the UI subset must include more
+	than hard-coded copy — otherwise LineEdit names render as tofu/garbled.
+	"""
+	chars: set[str] = set()
+	for qu in range(16, 56):
+		for wei in range(1, 95):
+			try:
+				s = bytes([0xA0 + qu, 0xA0 + wei]).decode("gb2312")
+			except UnicodeDecodeError:
+				continue
+			if len(s) == 1 and "\u4e00" <= s <= "\u9fff":
+				chars.add(s)
+	return chars
+
+
 def collect_chars() -> str:
 	chars = set(chr(c) for c in range(0x20, 0x7F))
 	chars.update(chr(c) for c in range(0xA0, 0x100))
 	chars.update(chr(c) for c in range(0xFF01, 0xFF5F))
 	chars.update("，。！？：；、（）【】《》「」『』…—–‐‑·•‧※★☆●○◆◇■□▲△▼▽→←↑↓￥℃°±×÷％～｜／＼＿中文")
+	chars.update(gb2312_level1())
 	skip = {"/.git", "/TDProject.", "/.godot", "/node_modules", "/.scratch", "/assets/fonts"}
 	for dirpath, _, files in os.walk(ROOT):
 		if any(p in dirpath for p in skip):

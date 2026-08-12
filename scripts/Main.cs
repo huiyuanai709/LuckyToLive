@@ -197,6 +197,14 @@ public partial class Main : Node2D
 		if (I18n.Instance != null)
 			I18n.Instance.LocaleChanged += OnLocaleChanged;
 
+		// 云测：LUCKY_FORCE_DEFEAT=1 开局短暂后强制倒下，便于验收结算 UI
+		if (!string.IsNullOrEmpty(OS.GetEnvironment("LUCKY_FORCE_DEFEAT")))
+		{
+			var defeatTimer = new Timer { WaitTime = 0.9f, OneShot = true, Autostart = true };
+			AddChild(defeatTimer);
+			defeatTimer.Timeout += () => _hero?.TakeDamage(99999f);
+		}
+
 		// 开局选卡（暂停）；自动开局时直接发牌，方便无指针环境验证
 		string starterId = CardCatalog.StarterCardId(heroId);
 		var starter = CardCatalog.Get(starterId);
