@@ -153,9 +153,8 @@ public partial class SpawnDirector : Node
 		var e = new Enemy();
 		World.AddChild(e);
 		e.GlobalPosition = EdgePoint();
-		float hpMul = (1f + Elapsed / 80f) * (Game.Instance?.DiffHpMul ?? 1f);
+		float hpMul = 1f + Elapsed / 80f;
 		e.ConfigureBasic(hpMul, 1f + Elapsed / 400f);
-		e.ContactDamage *= Game.Instance?.DiffAtkMul ?? 1f;
 		Wire(e);
 	}
 
@@ -165,9 +164,7 @@ public partial class SpawnDirector : Node
 		World.AddChild(e);
 		e.GlobalPosition = EdgePoint();
 		string affix = Affixes[_rng.RandiRange(0, Affixes.Length - 1)];
-		float hpMul = (1f + Elapsed / 100f) * (Game.Instance?.DiffHpMul ?? 1f);
-		e.ConfigureElite(hpMul, affix);
-		e.ContactDamage *= Game.Instance?.DiffAtkMul ?? 1f;
+		e.ConfigureElite(1f + Elapsed / 100f, affix);
 		Wire(e);
 		EmitSignal(SignalName.EliteSpawned, e);
 		return e;
@@ -181,9 +178,8 @@ public partial class SpawnDirector : Node
 		var e = new Enemy();
 		World.AddChild(e);
 		e.GlobalPosition = EdgePoint();
-		float hpMul = (1f + Elapsed / 120f) * (Game.Instance?.DiffHpMul ?? 1f);
+		float hpMul = 1f + Elapsed / 120f;
 		e.ConfigureBoss(bossId, hpMul);
-		e.ContactDamage *= Game.Instance?.DiffAtkMul ?? 1f;
 		_activeBoss = e;
 		Wire(e);
 		EmitSignal(SignalName.EliteSpawned, e);

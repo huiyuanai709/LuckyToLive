@@ -63,9 +63,12 @@ public partial class Enemy : CharacterBody2D
 
 	public void ConfigureBasic(float hpMul, float spdMul)
 	{
-		MaxHp *= hpMul;
+		float diffHp = Game.Instance?.DiffHpMul ?? 1f;
+		float diffAtk = Game.Instance?.DiffAtkMul ?? 1f;
+		MaxHp *= hpMul * diffHp;
 		Hp = MaxHp;
 		Speed *= spdMul;
+		ContactDamage *= diffAtk;
 		XpValue = 3f + hpMul;
 		BodyRadius = 12f;
 		ApplyBodyRadius();
@@ -148,6 +151,8 @@ public partial class Enemy : CharacterBody2D
 				break;
 		}
 
+		ApplyDifficultyScales();
+
 		// AddChild 已触发 _Ready（当时还不是精英），此处补刷贴图与动效幅度
 		ApplyVisual();
 
@@ -199,10 +204,24 @@ public partial class Enemy : CharacterBody2D
 				break;
 		}
 
+		ApplyDifficultyScales();
 		ApplyBodyRadius();
 		ApplyVisual();
 		if (Affix == "orbit")
 			SpawnOrbitBalls(IsBoss ? 4 : 3);
+	}
+
+	private void ApplyDifficultyScales()
+	{
+		float diffHp = Game.Instance?.DiffHpMul ?? 1f;
+		float diffAtk = Game.Instance?.DiffAtkMul ?? 1f;
+		if (!Mathf.IsEqualApprox(diffHp, 1f))
+		{
+			MaxHp *= diffHp;
+			Hp = MaxHp;
+		}
+		if (!Mathf.IsEqualApprox(diffAtk, 1f))
+			ContactDamage *= diffAtk;
 	}
 
 	private void ApplyBodyRadius()
