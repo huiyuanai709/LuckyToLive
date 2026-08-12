@@ -42,6 +42,7 @@ public partial class Hero : CharacterBody2D
 	private Enemy _target;
 	private AnimatedSprite2D _sprite;
 	private UnitSpriteAnim _anim;
+	private Label _namePlate;
 	private readonly Vector2 _spriteBaseScale = new(0.58f, 0.58f);
 	/// <summary>最后一次移动方向；站住时射线保持该朝向。</summary>
 	private Vector2 _facing = Vector2.Right;
@@ -72,6 +73,7 @@ public partial class Hero : CharacterBody2D
 		};
 		AddChild(_sprite);
 		_anim = new UnitSpriteAnim(_sprite, _spriteBaseScale);
+		EnsureNamePlate();
 		ApplySprite();
 		EmitSignal(SignalName.HpChanged, Hp, MaxHp);
 		EmitSignal(SignalName.XpChanged, Level, Xp, XpToNext());
@@ -87,7 +89,40 @@ public partial class Hero : CharacterBody2D
 			case HeroId.Hunter: MaxHp = 100; MoveSpeed = 195; break;
 		}
 		Hp = MaxHp;
+		RefreshNamePlate();
 		ApplySprite();
+	}
+
+	/// <summary>头顶角色名：血条上方居中显示本局 CharacterName。</summary>
+	private void EnsureNamePlate()
+	{
+		if (_namePlate != null && GodotObject.IsInstanceValid(_namePlate))
+			return;
+		_namePlate = new Label
+		{
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+			MouseFilter = Control.MouseFilterEnum.Ignore,
+			// 世界坐标下的 Control：以英雄原点为锚，宽度对称便于居中
+			Position = new Vector2(-72, -58),
+			Size = new Vector2(144, 18),
+		};
+		_namePlate.AddThemeColorOverride("font_color", new Color(1f, 0.95f, 0.75f, 0.95f));
+		_namePlate.AddThemeColorOverride("font_outline_color", new Color(0.08f, 0.08f, 0.1f, 0.9f));
+		_namePlate.AddThemeConstantOverride("outline_size", 3);
+		_namePlate.AddThemeFontSizeOverride("font_size", 13);
+		AddChild(_namePlate);
+		RefreshNamePlate();
+	}
+
+	public void RefreshNamePlate()
+	{
+		EnsureNamePlate();
+		string name = Game.Instance?.CharacterName;
+		if (string.IsNullOrWhiteSpace(name))
+			name = I18n.HeroName(HeroType);
+		_namePlate.Text = name;
+		_namePlate.Visible = !string.IsNullOrWhiteSpace(name);
 	}
 
 	private void ApplySprite()
